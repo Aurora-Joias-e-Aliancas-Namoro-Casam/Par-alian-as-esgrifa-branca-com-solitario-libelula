@@ -1,0 +1,2769 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aurora Joias | Aliança Esgrifa Branca+ Solitário Libélula</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+
+    <style>
+        :root {
+            --rosegold: #B76E79;
+            --rosegold-dark: #8f4d57;
+            --offwhite: #FAF9F6;
+            --text-dark: #333333;
+        }
+
+        html {
+            background-color: var(--offwhite);
+            /* Evita o "flash" branco puro do navegador durante bounce-scroll no iOS
+               e em qualquer momento em que o conteúdo seja mais curto que a tela. */
+            height: 100%;
+        }
+
+        body {
+            background-color: var(--offwhite);
+            font-family: 'Jost', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            min-height: 100%;
+            /* min-height garante que o fundo off-white cubra toda a tela mesmo
+               quando o conteúdo visível (ex: loja) é mais curto que o viewport. */
+        }
+
+        .text-rosegold { color: var(--rosegold) !important; }
+        .bg-rosegold { background-color: var(--rosegold) !important; color: white; }
+        .border-rosegold { border-color: #e0b4bc !important; }
+        .btn-rosegold { background-color: var(--rosegold); color: white; border: none; }
+        .btn-rosegold:hover, .btn-rosegold:active { background-color: #a05d67; color: white; }
+        .btn-rosegold:disabled { background-color: #d9b4ba; }
+        .tracking-wide { letter-spacing: 2px; }
+        .placeholder-link:active { opacity: 0.5; }
+
+        .product-image-container img { width: 100%; object-fit: cover; max-height: 400px; background-color: #eee; }
+        .related-img { height: 150px; object-fit: cover; background-color: #eee; border-radius: 8px; }
+
+        /* ---- Home / vitrine da joalheria ---- */
+        .promo-carousel { position: relative; }
+        .promo-slide {
+            min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 26px 20px; color: white; position: relative; overflow: hidden;
+        }
+        .promo-slide.slide-a { background: linear-gradient(135deg, #8f4d57 0%, #B76E79 60%, #c98d96 100%); }
+        .promo-slide.slide-b { background: linear-gradient(135deg, #3a2029 0%, #4a2c34 60%, #6a3f49 100%); }
+        .promo-slide.slide-c { background: linear-gradient(135deg, #B76E79 0%, #d9a5ac 70%, #f0d9dd 100%); }
+        .promo-slide::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12), transparent 55%);
+            pointer-events: none;
+        }
+        .promo-eyebrow { font-size: 0.68rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0.85; margin-bottom: 6px; }
+        .promo-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.65rem; font-weight: 600; margin-bottom: 6px; }
+        .promo-sub { font-size: 0.82rem; opacity: 0.9; max-width: 300px; }
+        .carousel-indicators-custom { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; z-index: 5; }
+        .carousel-indicators-custom button { width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); padding: 0; }
+        .carousel-indicators-custom button.active { background: #fff; width: 16px; border-radius: 3px; }
+
+        .thumb-strip { display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+        .thumb-item {
+            width: 60px; height: 60px; border-radius: 8px; overflow: hidden; cursor: pointer;
+            border: 2px solid transparent; opacity: 0.65; transition: opacity 0.2s ease, border-color 0.2s ease; background: #eee;
+        }
+        .thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .thumb-item.active, .thumb-item:active { opacity: 1; border-color: var(--rosegold); }
+
+        .featured-ribbon {
+            display: inline-flex; align-items: center; gap: 6px; background: rgba(183,110,121,0.1);
+            border: 1px solid rgba(183,110,121,0.35); color: var(--rosegold-dark); font-size: 0.72rem;
+            letter-spacing: 1px; text-transform: uppercase; font-weight: 600; padding: 5px 12px; border-radius: 999px;
+        }
+
+        .section-divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 18px; }
+        .section-divider .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #e0b4bc, transparent); }
+        .section-divider i { color: var(--rosegold); font-size: 0.85rem; }
+
+        .about-section {
+            background: linear-gradient(180deg, #FAF9F6 0%, #f3e6e8 100%);
+            border-radius: 14px; padding: 26px 20px; text-align: center; position: relative;
+            border: 1px solid #f0d9dd;
+        }
+        .about-section .about-eyebrow { font-size: 0.68rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); font-weight: 600; }
+        .about-section h4 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin: 6px 0 12px; }
+        .about-section p { font-size: 0.88rem; color: #5a5048; line-height: 1.7; max-width: 420px; margin: 0 auto; }
+        .about-badges { display: flex; justify-content: center; gap: 22px; margin-top: 18px; flex-wrap: wrap; }
+        .about-badges .about-badge { text-align: center; }
+        .about-badges .about-badge i { font-size: 1.4rem; color: var(--rosegold); }
+        .about-badges .about-badge span { display: block; font-size: 0.68rem; color: #8a7a5c; margin-top: 4px; max-width: 80px; }
+
+        .highlight-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
+        .highlight-strip::-webkit-scrollbar { display: none; }
+        .highlight-card {
+            flex: 0 0 auto; width: 130px; background: white; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #f2e6e8;
+        }
+        .highlight-card img { width: 100%; height: 90px; object-fit: cover; background: #eee; }
+        .highlight-card .hc-label { font-size: 0.68rem; font-weight: 600; text-align: center; padding: 6px 4px; color: #5a5048; }
+
+        .trust-badges i { font-size: 1.8rem; color: #555; }
+        .security-bar { font-size: 0.75rem; background-color: #f1f1f1; }
+
+        .fullscreen-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--offwhite); z-index: 9999;
+            overflow-y: auto; display: none;
+        }
+
+        .suspense-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(20, 20, 20, 0.97); z-index: 10000;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .processing-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(20, 20, 20, 0.97); z-index: 10600;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+            color: white; text-align: center; padding: 20px;
+        }
+        .processing-steps { list-style: none; padding: 0; margin: 24px 0 0; text-align: left; max-width: 320px; }
+        .processing-steps li { padding: 8px 0; opacity: 0.35; transition: opacity 0.3s ease; font-size: 0.95rem; }
+        .processing-steps li.active { opacity: 1; font-weight: 600; }
+        .processing-steps li.done { opacity: 0.7; }
+        .processing-steps li i { margin-right: 10px; width: 18px; display: inline-block; }
+
+        .checkout-box { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .icon-circle { width: 40px; height: 40px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+        .fade-in { animation: fadeIn 1s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .reveal-up { animation: fadeUp 0.8s ease forwards; opacity: 0; }
+
+        .question-card { background: white; padding: 28px 24px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; width: 100%; max-width: 400px; position: relative; }
+        .question-eyebrow { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold); font-weight: 600; }
+        .question-dots { display: flex; justify-content: center; gap: 6px; margin: 10px 0 4px; }
+        .question-dots span { width: 6px; height: 6px; border-radius: 50%; background: #e6d3d6; transition: all 0.3s ease; }
+        .question-dots span.done { background: var(--rosegold); }
+
+        .polaroid {
+            background: white; padding: 16px 16px 44px 16px; box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+            border-radius: 6px; max-width: 95%; width: 320px; opacity: 0;
+            transition: opacity 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .polaroid.foto-visivel { opacity: 1; }
+        .polaroid img { width: 100%; height: auto; border-radius: 3px; display: block; }
+        .polaroid-caption { font-family: 'Courier New', Courier, monospace; text-align: center; margin-top: 14px; font-weight: bold; color: #333; font-size: 1.05rem; }
+        .polaroid-stack { position: relative; width: 100%; max-width: 96vw; height: 480px; margin: 0 auto; }
+        @media (min-width: 400px) { .polaroid-stack { max-width: 440px; height: 520px; } }
+        .polaroid-stack .polaroid { position: absolute; top: 0; left: 50%; }
+
+        .typing-container {
+            min-height: 150px; padding: 20px; font-size: 1.25rem; font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic;
+            color: white; text-align: center; line-height: 1.7; display: none; max-width: 440px;
+        }
+        .cursor { display: inline-block; width: 3px; background-color: white; margin-left: 2px; animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .text-shadow { text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .final-photo { max-height: 52vh; width: 100%; max-width: 420px; object-fit: cover; border: 4px solid var(--rosegold); border-radius: 12px; background-color: #eee; }
+
+        .maintenance-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6); z-index: 10500;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .maintenance-box { background: white; border-radius: 16px; padding: 25px; max-width: 340px; margin: 0 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+        .signature-pad-wrap { background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        #signatureCanvas { border: 2px dashed var(--rosegold); border-radius: 8px; touch-action: none; width: 100%; height: 160px; background: #fff; display: block; }
+        .signature-hint { font-size: 0.75rem; color: #999; margin-top: 8px; }
+
+        .tracking-box { text-align: center; color: white; width: 100%; max-width: 420px; }
+        .tracking-distance { font-size: 3rem; font-weight: bold; font-variant-numeric: tabular-nums; }
+        .tracking-bar-outer { width: 90%; max-width: 320px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 15px auto; overflow: hidden; }
+        .tracking-bar-inner { height: 100%; background: var(--rosegold); width: 0%; transition: width 0.4s linear; }
+
+        /* ---- Verificação de identidade (interrompe a entrega antes de 0km) ---- */
+        .verification-box { text-align: center; color: white; width: 100%; max-width: 380px; padding: 10px; }
+        .verification-icon {
+            width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px;
+            background: rgba(240, 173, 78, 0.15); border: 1px solid rgba(240, 173, 78, 0.5);
+            display: flex; align-items: center; justify-content: center; font-size: 1.7rem; color: #f0ad4e;
+        }
+        .verification-eyebrow { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: #f0ad4e; font-weight: 600; margin-bottom: 6px; }
+        .verification-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
+        .verification-text { font-size: 0.92rem; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 18px; }
+
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 15px 4px rgba(183, 110, 121, 0.6); }
+            50% { box-shadow: 0 0 35px 12px rgba(183, 110, 121, 0.95); }
+        }
+        .glow-effect { animation: glowPulse 1.6s ease-in-out infinite; }
+
+        .romance-page {
+            display: none; min-height: 100vh; width: 100%;
+            background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%);
+            color: white; padding: 50px 20px 60px;
+        }
+        .romance-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 2.6rem; font-weight: 600; }
+        .romance-divider { width: 60px; height: 1px; background: var(--rosegold); margin: 22px auto; position: relative; }
+        .romance-divider::before { content: '♥'; position: absolute; top: -9px; left: 50%; transform: translateX(-50%); color: var(--rosegold); font-size: 0.8rem; background: transparent; }
+        .romance-date-badge { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.05rem; letter-spacing: 1px; color: #f0d9dd; margin-top: 6px; }
+        .timeline-item { background: rgba(255,255,255,0.06); border-left: 3px solid var(--rosegold); border-radius: 8px; padding: 16px 18px; margin-bottom: 15px; }
+        .timeline-item strong { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.1rem; color: #f0d9dd; }
+        .romance-section-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; text-align:center; margin-bottom: 20px; }
+        .romance-video-wrap video { width: 100%; border-radius: 12px; border: 3px solid var(--rosegold); background:#000; }
+        .contract-box { background: rgba(255,255,255,0.08); border: 1px solid rgba(183,110,121,0.5); border-radius: 14px; padding: 20px; text-align:center; }
+        .contract-signature-img { max-width: 260px; width: 100%; border-radius: 8px; padding: 6px; margin-top: 10px; background: transparent; }
+        .contract-box p.text-start { text-align: left !important; }
+
+        /* Documento de contrato com aparência de papel impresso */
+        .contract-paper {
+            background: #FBF7F0;
+            color: #2b2523;
+            border-radius: 4px;
+            border: 1px solid #d9c9ab;
+            box-shadow: 0 22px 45px rgba(0,0,0,0.45);
+            padding: clamp(22px, 6vw, 40px) clamp(18px, 5vw, 34px);
+            position: relative;
+        }
+        .contract-paper::before {
+            content: '';
+            position: absolute; inset: 8px;
+            border: 1px solid #e3d5ba;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+        .contract-inner { position: relative; font-family: 'Cormorant Garamond', Georgia, serif; }
+        .contract-kicker {
+            text-align: center; font-family: 'Jost', sans-serif; font-size: 0.68rem;
+            letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); margin-bottom: 6px; font-weight: 600;
+        }
+        .contract-title {
+            text-align: center; font-size: 1.55rem; font-weight: 600; letter-spacing: 1.5px;
+            text-transform: uppercase; margin-bottom: 4px; color: #2b2523;
+        }
+        .contract-paper .romance-divider { background: var(--rosegold-dark); }
+        .contract-paper .romance-divider::before { color: var(--rosegold-dark); }
+        .contract-intro { font-size: 1rem; line-height: 1.75; text-align: justify; margin-bottom: 16px; }
+        .contract-parties { font-family: 'Jost', sans-serif; font-size: 0.85rem; line-height: 1.8; margin-bottom: 20px; }
+        .contract-articles { list-style: none; padding: 0; margin: 0 0 18px; }
+        .contract-articles li { font-size: 0.95rem; line-height: 1.7; text-align: justify; margin-bottom: 13px; }
+        .contract-articles li strong { color: var(--rosegold-dark); margin-right: 4px; }
+        .contract-closing { font-size: 0.95rem; line-height: 1.75; text-align: justify; font-style: italic; margin-bottom: 22px; }
+        .contract-local-data { text-align: center; font-family: 'Jost', sans-serif; font-size: 0.8rem; letter-spacing: 0.5px; color: #5a5048; margin-bottom: 30px; }
+        .contract-signatures { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin-bottom: 26px; }
+        .signature-block { flex: 1 1 200px; max-width: 240px; text-align: center; }
+        .signature-img { max-height: 68px; max-width: 100%; object-fit: contain; display: block; margin: 0 auto; }
+        .signature-cursive {
+            font-family: 'Alex Brush', cursive; font-size: 2.5rem; color: #2b2523; line-height: 1;
+            transform: rotate(-2deg); margin: 4px 0 2px;
+        }
+        .signature-line { border-top: 1px solid #b3a184; margin-top: 6px; padding-top: 6px; }
+        .signature-name { font-family: 'Jost', sans-serif; font-size: 0.85rem; font-weight: 600; margin: 0; color: #2b2523; }
+        .signature-role { font-family: 'Jost', sans-serif; font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: #8a7a5c; margin: 2px 0 0; }
+        .contract-witness { max-width: 240px; margin: 0 auto; text-align: center; }
+        .contract-witness .signature-line { border-top-style: dashed; }
+        .counter-badge {
+            display: inline-block; background: rgba(183,110,121,0.15); border: 1px solid rgba(183,110,121,0.5);
+            border-radius: 999px; padding: 8px 18px; font-size: 0.85rem; margin-top: 14px;
+        }
+        .btn-share {
+            background: transparent; border: 1px solid var(--rosegold); color: var(--rosegold);
+            border-radius: 999px; padding: 10px 22px; font-weight: bold;
+        }
+        .btn-share:hover { background: var(--rosegold); color: white; }
+
+        /* Scattered "photos on a table" gallery */
+        .table-gallery { position: relative; max-width: 480px; margin: 0 auto; padding: 34px 8px 55px; }
+        .table-photo {
+            background: #fff; padding: 10px 10px 32px 10px; border-radius: 3px; box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+            width: 47%; display: inline-block; margin: 2.5% 1%; vertical-align: top;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, z-index 0s;
+        }
+        .table-photo img { width: 100%; height: 190px; object-fit: cover; display: block; border-radius: 1px; background:#3a2a2f; }
+        .table-photo:active { transform: scale(1.08) rotate(0deg) !important; z-index: 20; box-shadow: 0 14px 30px rgba(0,0,0,0.55); }
+        .table-photo:nth-child(1) { transform: rotate(-6deg) translateY(6px); margin-right: -4%; z-index: 4; }
+        .table-photo:nth-child(2) { transform: rotate(4deg); z-index: 3; }
+        .table-photo:nth-child(3) { transform: rotate(3deg) translateY(10px); margin-top: -6%; z-index: 2; margin-left: -3%; }
+        .table-photo:nth-child(4) { transform: rotate(-4deg); z-index: 1; }
+
+        .rotate-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+        .rotate-hint .phone-icon { font-size: 3.2rem; display: inline-block; animation: rotatePhone 1.8s ease-in-out infinite; }
+        @keyframes rotatePhone {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+        #conteudoGravacao .signature-pad-wrap { max-width: 520px !important; }
+        #videoPreview, #videoPlayback { aspect-ratio: 16 / 9 !important; }
+        .rec-dot { width: 10px; height: 10px; background: #ff3b3b; border-radius: 50%; display: inline-block; margin-right: 6px; animation: recBlink 1s step-start infinite; }
+        @keyframes recBlink { 50% { opacity: 0; } }
+        .save-status { font-size: 0.75rem; margin-top: 8px; min-height: 16px; }
+        .save-status.ok { color: #7ee787; }
+        .save-status.pending { color: #f0d9dd; }
+        .save-status.err { color: #ff8a8a; }
+
+        .skip-link { color: rgba(255,255,255,0.35); font-size: 0.72rem; text-decoration: underline; background: none; border: none; margin-top: 18px; }
+
+        .post-record-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 16px; color: white; text-align: center; padding: 10px;
+        }
+        .post-record-screen .check-circle {
+            width: 64px; height: 64px; border-radius: 50%; background: rgba(183,110,121,0.18);
+            border: 1px solid rgba(183,110,121,0.6); display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; color: var(--rosegold);
+        }
+        .post-record-screen .phone-icon-portrait { font-size: 3rem; display: inline-block; animation: rotatePhoneBack 1.8s ease-in-out infinite; color: var(--rosegold); }
+        @keyframes rotatePhoneBack {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+        }
+        .btn-link-muted { color: rgba(255,255,255,0.5); font-size: 0.8rem; background: none; border: none; text-decoration: underline; margin-top: 6px; }
+
+        /* ---- Flashback cinematográfico (transição antes de "Nossa História") ---- */
+        .flashback-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0608; z-index: 10800;
+            display: none; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .flashback-photo {
+            position: absolute; width: 62vw; max-width: 300px; border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7); opacity: 0; filter: blur(6px);
+            transform: scale(0.85);
+            transition: opacity 0.28s ease, transform 0.55s ease, filter 0.45s ease;
+        }
+        .flashback-photo img { width: 100%; display: block; border-radius: 8px; }
+        .flashback-photo.fb-ativa { opacity: 1; filter: blur(0); transform: scale(1.04); }
+        .flashback-flash {
+            position: absolute; inset: 0; background: white; opacity: 0; pointer-events: none;
+            transition: opacity 0.12s ease;
+        }
+        .flashback-flash.fb-piscar { opacity: 0.22; }
+        .flashback-label {
+            position: absolute; bottom: 12%; left: 0; right: 0; text-align: center;
+            color: rgba(255,255,255,0.55); font-family: 'Cormorant Garamond', Georgia, serif;
+            font-style: italic; font-size: 1rem; letter-spacing: 1px; opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        .flashback-label.fb-visivel { opacity: 1; }
+
+        /* ---- Carta final (envelope + carta manuscrita) ---- */
+        .letter-stage {
+            perspective: 1400px; width: 100%; max-width: 320px; margin: 22px auto 6px;
+            min-height: 300px; position: relative;
+        }
+        .envelope {
+            position: relative; width: 100%; padding-top: 68%; cursor: pointer;
+            opacity: 0; transform: translateY(14px) scale(0.96);
+            transition: opacity 0.9s ease, transform 0.9s ease;
+        }
+        .envelope.envelope-visivel { opacity: 1; transform: translateY(0) scale(1); }
+        .envelope-back {
+            position: absolute; inset: 0; border-radius: 6px;
+            background: linear-gradient(160deg, #f4ead9 0%, #e6d5b8 100%);
+            box-shadow: 0 22px 45px rgba(0,0,0,0.55);
+        }
+        .envelope-back::before, .envelope-back::after {
+            content: ''; position: absolute; bottom: 0; width: 52%; height: 78%;
+            background: linear-gradient(135deg, #efe1c9, #ddc79f); z-index: 2;
+        }
+        .envelope-back::before { left: 0; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+        .envelope-back::after { right: 0; clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+        .envelope-flap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 58%;
+            background: linear-gradient(150deg, #eaddc4, #d7c39c);
+            clip-path: polygon(0 0, 100% 0, 50% 92%);
+            transform-origin: top center; transform-style: preserve-3d;
+            transition: transform 1.15s cubic-bezier(0.65, 0, 0.35, 1);
+            z-index: 4; border-radius: 6px 6px 0 0;
+        }
+        .envelope.aberto .envelope-flap { transform: rotateX(180deg); }
+        .envelope-seal {
+            position: absolute; top: 34%; left: 50%; width: 42px; height: 42px;
+            transform: translate(-50%, -50%); border-radius: 50%; background: var(--rosegold);
+            display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.45); z-index: 6;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .envelope.aberto .envelope-seal { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+        .letter-paper {
+            position: absolute; left: 50%; bottom: 4%; width: 86%; min-height: 62%;
+            background: #FBF7F0; border-radius: 3px; box-shadow: 0 14px 34px rgba(0,0,0,0.4);
+            padding: 20px 16px 16px; z-index: 3;
+            transform: translate(-50%, 6%) scale(0.82); opacity: 0;
+            transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s, opacity 0.9s ease 0.55s, z-index 0s 0.55s;
+        }
+        .envelope.aberto .letter-paper { transform: translate(-50%, -62%) scale(1.06); opacity: 1; z-index: 7; }
+        .letter-paper::before {
+            content: ''; position: absolute; inset: 6px; border: 1px solid #e3d5ba; pointer-events: none;
+        }
+        .letter-eyebrow {
+            font-family: 'Jost', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--rosegold-dark); text-align: center; margin-bottom: 10px; opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        .letter-eyebrow.visivel { opacity: 1; }
+        .letter-text {
+            font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.02rem;
+            line-height: 1.75; color: #2b2523; text-align: left; min-height: 90px; margin: 0;
+            white-space: pre-wrap; opacity: 0; transition: opacity 1s ease;
+        }
+        .letter-text.versiculo-visivel { opacity: 1; }
+        .letter-text .amor-swap {
+            display: inline-block; color: var(--rosegold-dark); font-weight: 600;
+            transition: opacity 0.42s ease;
+        }
+        .letter-signoff {
+            font-family: 'Alex Brush', cursive; font-size: 1.7rem; color: var(--rosegold-dark);
+            margin-top: 10px; opacity: 0; transition: opacity 0.6s ease;
+        }
+        .letter-signoff.visivel { opacity: 1; }
+        .envelope-hint {
+            text-align: center; color: rgba(255,255,255,0.45); font-size: 0.72rem; letter-spacing: 1px;
+            text-transform: uppercase; margin-top: 8px; opacity: 0; transition: opacity 0.6s ease;
+        }
+        .envelope-hint.visivel { opacity: 1; }
+        #finalContinuarWrap { transition: opacity 0.8s ease; }
+
+        /* ---- Seleção de regras do contrato ---- */
+        .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .rule-card {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35);
+            border-radius: 12px; padding: 16px 10px 14px; text-align: center; cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+            position: relative; user-select: none;
+        }
+        .rule-card i.rule-icon { font-size: 1.35rem; color: var(--rosegold); display: block; margin-bottom: 8px; }
+        .rule-card p { font-size: 0.74rem; color: #f0d9dd; margin: 0; line-height: 1.4; }
+        .rule-card:active { transform: scale(0.97); }
+        .rule-card.selecionada { background: rgba(183,110,121,0.28); border-color: var(--rosegold); }
+        .rule-card.disabled { opacity: 0.35; pointer-events: none; }
+        .rule-check {
+            position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.35); background: rgba(0,0,0,0.15);
+            display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: transparent;
+        }
+        .rule-card.selecionada .rule-check { background: var(--rosegold); border-color: var(--rosegold); color: #fff; }
+        #btnGerarContrato:disabled { opacity: 0.5; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .glow-effect, .rotate-hint .phone-icon, .rec-dot, .cursor, .phone-icon-portrait { animation: none !important; }
+            .reveal-up { animation: none !important; opacity: 1 !important; }
+            .flashback-photo { transition: opacity 0.2s ease !important; filter: none !important; transform: none !important; }
+            .envelope, .envelope-flap, .letter-paper, .envelope-seal { transition: none !important; }
+            .vinheta-logo, .vinheta-particula { animation: none !important; }
+        }
+
+        /* ---- Vinheta de abertura (uma vez por sessão) ---- */
+        .vinheta-abertura {
+            position: fixed; inset: 0; z-index: 11000;
+            background: radial-gradient(circle at 50% 40%, #3a2029 0%, #1a0f13 75%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; transition: opacity 0.7s ease;
+        }
+        .vinheta-abertura.vinheta-saida { opacity: 0; pointer-events: none; }
+        .vinheta-brilho {
+            position: absolute; width: 340px; height: 340px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(183,110,121,0.55) 0%, transparent 70%);
+            animation: vinhetaBrilhoPulse 2.4s ease-in-out infinite;
+        }
+        @keyframes vinhetaBrilhoPulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+        .vinheta-logo {
+            font-family: 'Cormorant Garamond', Georgia, serif; color: #FAF9F6; font-size: 2.6rem;
+            letter-spacing: 8px; font-weight: 600; z-index: 2; margin: 0;
+            animation: vinhetaLogoEntra 1.4s ease forwards;
+            opacity: 0;
+        }
+        .vinheta-sub {
+            font-family: 'Jost', sans-serif; color: var(--rosegold); font-size: 0.75rem;
+            letter-spacing: 6px; z-index: 2; margin-top: 6px;
+            animation: vinhetaLogoEntra 1.4s ease 0.3s forwards;
+            opacity: 0;
+        }
+        @keyframes vinhetaLogoEntra {
+            from { opacity: 0; transform: translateY(10px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .vinheta-particula {
+            position: absolute; width: 4px; height: 4px; border-radius: 50%;
+            background: var(--rosegold); opacity: 0; z-index: 1;
+            animation: vinhetaParticulaFlutuar 3.2s ease-in-out infinite;
+        }
+        .vinheta-particula.p1 { top: 30%; left: 25%; animation-delay: 0s; }
+        .vinheta-particula.p2 { top: 65%; left: 70%; animation-delay: 0.5s; }
+        .vinheta-particula.p3 { top: 40%; left: 78%; animation-delay: 1s; }
+        .vinheta-particula.p4 { top: 70%; left: 30%; animation-delay: 1.5s; }
+        .vinheta-particula.p5 { top: 20%; left: 55%; animation-delay: 2s; }
+        @keyframes vinhetaParticulaFlutuar {
+            0%, 100% { opacity: 0; transform: translateY(0); }
+            50% { opacity: 0.9; transform: translateY(-18px); }
+        }
+
+        /* ---- Popup de cupom falso ---- */
+        .cupom-overlay {
+            position: fixed; inset: 0; z-index: 10400; background: rgba(20,20,20,0.55);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .cupom-box {
+            background: white; border-radius: 18px; padding: 30px 24px 24px; max-width: 340px; width: 100%;
+            text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            animation: fadeUp 0.5s ease forwards;
+        }
+        .cupom-close {
+            position: absolute; top: 12px; right: 14px; background: none; border: none;
+            font-size: 1.4rem; line-height: 1; color: #999;
+        }
+        .cupom-icon {
+            width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 12px;
+            background: rgba(183,110,121,0.12); display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: var(--rosegold);
+        }
+        .cupom-eyebrow { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--rosegold-dark); font-weight: 600; margin-bottom: 4px; }
+        .cupom-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; }
+        .cupom-text { font-size: 0.9rem; color: #5a5048; margin-bottom: 14px; }
+        .cupom-code-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 4px; }
+        .cupom-code {
+            display: inline-block; border: 2px dashed var(--rosegold); border-radius: 8px;
+            padding: 8px 20px; font-weight: bold; letter-spacing: 3px; color: var(--rosegold-dark);
+            font-size: 1.1rem; background: rgba(183,110,121,0.06);
+        }
+
+        /* ---- Contador vivo (relacionamento) ---- */
+        .live-counter-wrap { margin-top: 18px; }
+        .live-counter-label {
+            font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55);
+            margin-bottom: 10px;
+        }
+        .live-counter-grid {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-width: 420px; margin: 0 auto;
+        }
+        .lc-unit {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 10px;
+            padding: 8px 2px; display: flex; flex-direction: column; align-items: center;
+        }
+        .lc-num {
+            font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 600; color: #f0d9dd;
+            font-variant-numeric: tabular-nums;
+        }
+        .lc-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+        @media (max-width: 360px) {
+            .lc-num { font-size: 1.05rem; }
+        }
+
+        /* ---- Mini quiz "O quanto você me conhece?" ---- */
+        .quiz-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 16px; padding: 22px 18px; }
+        .quiz-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; }
+        .quiz-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: all 0.3s ease; }
+        .quiz-dots span.done { background: var(--rosegold); }
+        .quiz-question { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; text-align: center; margin-bottom: 16px; color: #fff; }
+        .quiz-opcoes { display: flex; flex-direction: column; gap: 8px; }
+        .quiz-opcao-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #f0d9dd;
+            border-radius: 10px; padding: 10px 14px; font-size: 0.88rem; text-align: left;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+        }
+        .quiz-opcao-btn:active { transform: scale(0.98); }
+        .quiz-opcao-btn.selecionada.certa { background: rgba(126,231,135,0.18); border-color: #7ee787; color: #d9ffe0; }
+        .quiz-opcao-btn.selecionada.errada { background: rgba(255,138,138,0.15); border-color: #ff8a8a; color: #ffd9d9; }
+        .quiz-opcao-btn:disabled { opacity: 0.6; }
+        .quiz-reacao { text-align: center; font-size: 0.85rem; color: #f0d9dd; margin-top: 14px; min-height: 20px; opacity: 0; transition: opacity 0.4s ease; }
+        .quiz-reacao.visivel { opacity: 1; }
+
+        /* ---- Mensagem para o futuro (modal de gravação) ---- */
+        .futuro-overlay {
+            position: fixed; inset: 0; z-index: 10450; background: rgba(20,20,20,0.65);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .futuro-box {
+            background: white; border-radius: 18px; padding: 26px 22px; max-width: 380px; width: 100%;
+            position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        }
+        .futuro-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 600; text-align: center; margin-bottom: 6px; }
+        .futuro-sub { font-size: 0.85rem; color: #5a5048; text-align: center; margin-bottom: 14px; }
+    </style>
+</head>
+<body>
+
+    <div id="vinhetaAbertura" class="vinheta-abertura">
+        <div class="vinheta-brilho"></div>
+        <div class="vinheta-particula p1"></div>
+        <div class="vinheta-particula p2"></div>
+        <div class="vinheta-particula p3"></div>
+        <div class="vinheta-particula p4"></div>
+        <div class="vinheta-particula p5"></div>
+        <h1 class="vinheta-logo">AURORA</h1>
+        <p class="vinheta-sub">JOIAS</p>
+    </div>
+
+    <div id="cupomPopup" class="cupom-overlay d-none">
+        <div class="cupom-box">
+            <button id="btnFecharCupom" class="cupom-close" aria-label="Fechar">&times;</button>
+            <div class="cupom-icon"><i class="bi bi-gift-fill"></i></div>
+            <p class="cupom-eyebrow">Oferta exclusiva para você</p>
+            <h5 class="cupom-title">Parabéns! 🎁</h5>
+            <p class="cupom-text">Você acaba de ganhar <strong>100% de desconto</strong> no Amor Eterno.</p>
+            <p class="cupom-code-label">Utilize o cupom</p>
+            <div class="cupom-code">PARASEMPRE</div>
+            <button id="btnFecharCupomBtn" class="btn btn-rosegold w-100 rounded-pill fw-bold mt-3">Usar cupom</button>
+        </div>
+    </div>
+
+    <div id="maintenancePopup" class="maintenance-overlay">
+        <div class="maintenance-box">
+            <i class="bi bi-tools text-rosegold" style="font-size: 2.2rem;"></i>
+            <h5 class="fw-bold mt-3 mb-2">Estamos em manutenção</h5>
+            <p class="small text-muted mb-3">Algumas áreas do site estão passando por manutenção programada. Por enquanto, apenas a página de produto e o checkout estão disponíveis.</p>
+            <button id="btnFecharManutencao" class="btn btn-rosegold w-100 rounded-pill fw-bold">Entendi</button>
+        </div>
+    </div>
+
+    <div id="lojaScreen">
+        <div class="bg-dark text-white text-center py-1 small fw-light">
+            Frete Grátis para todo o Brasil via Sedex Expresso
+        </div>
+
+        <nav class="navbar navbar-light bg-white shadow-sm px-3 sticky-top d-flex justify-content-between align-items-center">
+            <i class="bi bi-list fs-2 text-rosegold placeholder-link"></i>
+            <span class="navbar-brand mb-0 h1 text-rosegold fw-bold tracking-wide mx-auto">AURORA</span>
+            <div class="d-flex gap-3">
+                <i class="bi bi-search fs-4 text-rosegold placeholder-link"></i>
+                <i class="bi bi-bag fs-4 text-rosegold placeholder-link position-relative">
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                </i>
+            </div>
+        </nav>
+
+        <div id="promoCarousel" class="promo-carousel">
+            <div class="promo-slide slide-a" data-slide="0">
+                <p class="promo-eyebrow">Coleção Esgrifa</p>
+                <h2 class="promo-title">Alianças que contam histórias</h2>
+                <p class="promo-sub">Prata 950 com acabamento artesanal e garantia vitalícia.</p>
+            </div>
+            <div class="promo-slide slide-b d-none" data-slide="1">
+                <p class="promo-eyebrow">Edição Flor Rosa</p>
+                <h2 class="promo-title">Solitário Libélula, brinde exclusivo</h2>
+                <p class="promo-sub">Em toda compra de aliança Esgrifa Branca+ deste mês.</p>
+            </div>
+            <div class="promo-slide slide-c d-none" data-slide="2">
+                <p class="promo-eyebrow">Frete e Pagamento</p>
+                <h2 class="promo-title">Frete grátis para todo o Brasil</h2>
+                <p class="promo-sub">10% de desconto no Pix ou em até 10x sem juros no cartão.</p>
+            </div>
+            <div class="carousel-indicators-custom" id="promoIndicators">
+                <button class="active" data-go="0" aria-label="Slide 1"></button>
+                <button data-go="1" aria-label="Slide 2"></button>
+                <button data-go="2" aria-label="Slide 3"></button>
+            </div>
+        </div>
+
+        <div class="container-fluid pt-3 pb-5 mb-5">
+
+            <nav aria-label="breadcrumb" class="small mb-2 px-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted placeholder-link">Início</a></li>
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted placeholder-link">Alianças</a></li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Prata 950</li>
+                </ol>
+            </nav>
+
+            <div class="px-2 mb-2">
+                <span class="featured-ribbon"><i class="bi bi-award-fill"></i> Mais vendida da coleção</span>
+            </div>
+
+            <div class="product-image-container text-center my-2 position-relative">
+                <img id="imagemPrincipalProduto" src="https://via.placeholder.com/600x600/FAF9F6/B76E79?text=Ali%C3%A7na+Esgrifa+Branca%2B" alt="Par de Alianças Esgrifa Branca+ com Solitário Libélula" class="img-fluid rounded shadow-sm">
+                <div class="badge bg-rosegold position-absolute mt-3 ms-3 top-0 start-0 fs-6 shadow">20% OFF</div>
+                <div class="position-absolute bottom-0 end-0 mb-3 me-3 bg-white rounded-circle p-2 shadow-sm placeholder-link">
+                    <i class="bi bi-heart fs-5 text-muted"></i>
+                </div>
+            </div>
+
+            <div class="thumb-strip">
+                <div class="thumb-item active" data-img="https://via.placeholder.com/600x600/FAF9F6/B76E79?text=Ali%C3%A7na+Esgrifa+Branca%2B">
+                    <img src="https://via.placeholder.com/120x120/FAF9F6/B76E79?text=1" alt="Miniatura 1">
+                </div>
+                <div class="thumb-item" data-img="https://via.placeholder.com/600x600/f0d9dd/8f4d57?text=Detalhe+Libélula">
+                    <img src="https://via.placeholder.com/120x120/f0d9dd/8f4d57?text=2" alt="Miniatura 2">
+                </div>
+                <div class="thumb-item" data-img="https://via.placeholder.com/600x600/4a2c34/fff?text=No+Estojo">
+                    <img src="https://via.placeholder.com/120x120/4a2c34/fff?text=3" alt="Miniatura 3">
+                </div>
+                <div class="thumb-item" data-img="https://via.placeholder.com/600x600/B76E79/fff?text=Par+Completo">
+                    <img src="https://via.placeholder.com/120x120/B76E79/fff?text=4" alt="Miniatura 4">
+                </div>
+            </div>
+
+            <div class="px-2 mt-3">
+                <p class="text-muted small mb-1">Ref: AU-31207-PRT</p>
+                <h1 class="fs-4 fw-bold text-dark lh-sm">Aliança Esgrifa Branca+ Solitário Libélula - 2 Milímetros Prata 950 (Flor Rosa)</h1>
+
+                <div class="d-flex align-items-center mb-3 mt-2">
+                    <div class="text-warning small">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                    </div>
+                    <span class="ms-2 text-muted small text-decoration-underline placeholder-link">(96 avaliações)</span>
+                </div>
+
+                <h2 class="fs-1 fw-bold text-rosegold mb-0">R$ 749,00</h2>
+                <p class="text-muted mb-0 small"><s>de R$ 939,00</s> <span class="text-success fw-bold ms-1">Economize R$ 190</span></p>
+                <p class="text-dark small fw-bold mt-1">ou 10x de R$ 74,90 sem juros no cartão</p>
+            </div>
+
+            <div class="px-2 mt-4 d-flex justify-content-between align-items-center trust-badges border-top border-bottom py-3">
+                <div class="text-center"><i class="bi bi-credit-card"></i><br><span class="small" style="font-size: 0.65rem;">Até 10x s/ juros</span></div>
+                <div class="text-center text-success"><i class="bi bi-qr-code"></i><br><span class="small" style="font-size: 0.65rem;">10% no Pix</span></div>
+                <div class="text-center"><i class="bi bi-shield-check"></i><br><span class="small" style="font-size: 0.65rem;">Compra Segura</span></div>
+                <div class="text-center"><i class="bi bi-award"></i><br><span class="small" style="font-size: 0.65rem;">Garantia Vitalícia</span></div>
+            </div>
+
+            <div class="px-2 mt-4 bg-white p-3 rounded shadow-sm border">
+                <h5 class="fs-6 fw-bold mb-2"><i class="bi bi-truck text-rosegold me-2"></i>Consultar Frete e Prazo</h5>
+                <div class="input-group input-group-sm mb-2">
+                    <input type="text" class="form-control" placeholder="00000-000" maxlength="9">
+                    <button class="btn btn-outline-secondary placeholder-link" type="button" onclick="document.getElementById('freteResult').classList.remove('d-none')">Calcular</button>
+                </div>
+                <div id="freteResult" class="d-none mt-2 text-success small fw-bold bg-light p-2 rounded">
+                    Sedex Expresso - Frete Grátis (Chega em 2 a 3 dias úteis)
+                </div>
+            </div>
+
+            <div class="px-2 mt-4">
+                <h4 class="fs-5 fw-bold mb-3 border-bottom pb-2">Personalize seu pedido</h4>
+
+                <div class="bg-white p-3 rounded shadow-sm border mb-3">
+                    <h6 class="fw-bold text-dark"><i class="bi bi-gender-male text-primary me-2"></i>Aliança Masculina - Esgrifa Branca+</h6>
+                    <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
+                    <select id="tamanhoMasc" class="form-select border-rosegold mb-2">
+                        <option value="" selected>Selecione o aro</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                    </select>
+                    <label class="form-label small text-muted">Gravação (Ex: Nome e Data)</label>
+                    <input id="gravacaoMasc" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?">
+                </div>
+
+                <div class="bg-white p-3 rounded shadow-sm border mb-3">
+                    <h6 class="fw-bold text-dark"><i class="bi bi-gender-female text-danger me-2"></i>Aliança Feminina - Esgrifa Branca+</h6>
+                    <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
+                    <select id="tamanhoFem" class="form-select border-rosegold mb-2">
+                        <option value="" selected>Selecione o aro</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                    </select>
+                    <label class="form-label small text-muted">Gravação (Ex: Nome e Data)</label>
+                    <input id="gravacaoFem" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?">
+                </div>
+
+                <div class="bg-white p-3 rounded shadow-sm border mb-3">
+                    <h6 class="fw-bold text-dark"><i class="bi bi-gem text-info me-2"></i>Anel Solitário Libélula (Flor Rosa) - Brinde</h6>
+                    <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
+                    <select id="tamanhoSolitario" class="form-select border-rosegold">
+                        <option value="" selected>Selecione o aro</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                    </select>
+                </div>
+                <div id="selecaoErro" class="text-danger small fw-bold mt-2 d-none">
+                    <i class="bi bi-exclamation-circle me-1"></i>Preencha todos os tamanhos e gravações antes de continuar.
+                </div>
+            </div>
+
+            <div class="px-2 mt-4">
+                <h4 class="fs-6 fw-bold mb-2">Detalhes do Produto</h4>
+                <ul class="small text-muted ps-3 lh-lg">
+                    <li><strong>Modelo:</strong> Esgrifa Branca+</li>
+                    <li><strong>Material:</strong> Prata 950</li>
+                    <li><strong>Peso Aproximado:</strong> 4.2g (o par)</li>
+                    <li><strong>Largura:</strong> 2.0 mm</li>
+                    <li><strong>Acabamento:</strong> Polido fosco com detalhe floral em esmalte Flor Rosa</li>
+                    <li><strong>Anel Solitário:</strong> Design Libélula, zircônia central e detalhe em Flor Rosa</li>
+                    <li><strong>Garantia:</strong> Vitalícia contra defeitos de fabricação</li>
+                </ul>
+            </div>
+
+            <div class="px-2 mt-5">
+                <div class="section-divider"><span class="line"></span><i class="bi bi-gem"></i><span class="line"></span></div>
+                <h4 class="fs-6 fw-bold mb-2">Destaques da coleção</h4>
+                <div class="highlight-strip">
+                    <div class="highlight-card">
+                        <img src="https://via.placeholder.com/260x180/f0d9dd/8f4d57?text=Flor+Rosa" alt="Coleção Flor Rosa">
+                        <p class="hc-label mb-0">Flor Rosa</p>
+                    </div>
+                    <div class="highlight-card">
+                        <img src="https://via.placeholder.com/260x180/4a2c34/fff?text=Libélula" alt="Coleção Libélula">
+                        <p class="hc-label mb-0">Libélula</p>
+                    </div>
+                    <div class="highlight-card">
+                        <img src="https://via.placeholder.com/260x180/B76E79/fff?text=Prata+950" alt="Linha Prata 950">
+                        <p class="hc-label mb-0">Prata 950</p>
+                    </div>
+                    <div class="highlight-card">
+                        <img src="https://via.placeholder.com/260x180/8f4d57/fff?text=Estojos" alt="Estojos presenteáveis">
+                        <p class="hc-label mb-0">Estojos</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-2 mt-5">
+                <div class="about-section">
+                    <p class="about-eyebrow">Nossa história</p>
+                    <h4>Feita à mão, pensada para durar</h4>
+                    <p>Desde 2009, a Aurora Joias trabalha com prata 950 e design autoral, unindo tradição joalheira e acabamento artesanal em cada peça. Cada aliança carrega um pouco desse cuidado — e a intenção de acompanhar histórias importantes por muitos anos.</p>
+                    <div class="about-badges">
+                        <div class="about-badge"><i class="bi bi-gem"></i><span>Design autoral</span></div>
+                        <div class="about-badge"><i class="bi bi-award"></i><span>Garantia vitalícia</span></div>
+                        <div class="about-badge"><i class="bi bi-box-seam"></i><span>Embalagem premium</span></div>
+                        <div class="about-badge"><i class="bi bi-truck"></i><span>Frete grátis Brasil</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-2 mt-5">
+                <div class="section-divider"><span class="line"></span><i class="bi bi-heart-fill"></i><span class="line"></span></div>
+                <h4 class="fs-6 fw-bold mb-3">Você também pode gostar</h4>
+                <div class="row row-cols-2 g-2">
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;">
+                            <img src="https://via.placeholder.com/300x300/eee/999?text=Colar+Lib%C3%A9lula" class="card-img-top related-img" alt="Colar Libélula Prata 950">
+                            <div class="card-body p-2 text-center">
+                                <p class="card-title small fw-bold mb-0 text-truncate">Colar Libélula Prata 950</p>
+                                <p class="text-rosegold fw-bold small mt-1 mb-0">R$ 259,00</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;">
+                            <img src="https://via.placeholder.com/300x300/eee/999?text=Brinco+Flor+Rosa" class="card-img-top related-img" alt="Brincos Flor Rosa Prata 950">
+                            <div class="card-body p-2 text-center">
+                                <p class="card-title small fw-bold mb-0 text-truncate">Brincos Flor Rosa Prata 950</p>
+                                <p class="text-rosegold fw-bold small mt-1 mb-0">R$ 189,00</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;">
+                            <img src="https://via.placeholder.com/300x300/eee/999?text=Pulseira+Esgrifa" class="card-img-top related-img" alt="Pulseira Esgrifa Prata 950">
+                            <div class="card-body p-2 text-center">
+                                <p class="card-title small fw-bold mb-0 text-truncate">Pulseira Esgrifa Prata 950</p>
+                                <p class="text-rosegold fw-bold small mt-1 mb-0">R$ 219,00</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;">
+                            <img src="https://via.placeholder.com/300x300/eee/999?text=Estojo+Aurora" class="card-img-top related-img" alt="Estojo Presenteável Aurora">
+                            <div class="card-body p-2 text-center">
+                                <p class="card-title small fw-bold mb-0 text-truncate">Estojo Presenteável Aurora</p>
+                                <p class="text-rosegold fw-bold small mt-1 mb-0">R$ 59,00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-2 mt-5 mb-4">
+                <div class="section-divider"><span class="line"></span><i class="bi bi-star-fill"></i><span class="line"></span></div>
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <h4 class="fs-6 fw-bold mb-0">Avaliações (96)</h4>
+                    <div class="text-warning small"><i class="bi bi-star-fill"></i> 4.8/5</div>
+                </div>
+                <div class="card border-0 shadow-sm mb-3 bg-white">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="card-subtitle mb-1 fw-bold text-dark small">Rafael T. <i class="bi bi-patch-check-fill text-success"></i></h6>
+                            <span class="text-muted" style="font-size: 0.7rem;">Há 2 dias</span>
+                        </div>
+                        <div class="text-warning mb-2" style="font-size: 0.7rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                        <p class="card-text small text-muted mb-0">O detalhe da libélula no solitário é ainda mais bonito de perto. Acabamento impecável e chegou antes do prazo.</p>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm mb-3 bg-white">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="card-subtitle mb-1 fw-bold text-dark small">Beatriz S. <i class="bi bi-patch-check-fill text-success"></i></h6>
+                            <span class="text-muted" style="font-size: 0.7rem;">Há 5 dias</span>
+                        </div>
+                        <div class="text-warning mb-2" style="font-size: 0.7rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                        <p class="card-text small text-muted mb-0">Prata 950 muito leve e confortável no dia a dia. O tom flor rosa é sutil e super elegante.</p>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm mb-3 bg-white">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="card-subtitle mb-1 fw-bold text-dark small">Gabriel P. <i class="bi bi-patch-check-fill text-success"></i></h6>
+                            <span class="text-muted" style="font-size: 0.7rem;">Há 1 dia</span>
+                        </div>
+                        <div class="text-warning mb-2" style="font-size: 0.7rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                        <p class="card-text small text-muted mb-0">Ainda não recebi minha encomenda, mas já sei que vai ser a única compra da minha vida que eu não vou querer devolver de jeito nenhum.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="bg-light pt-4 pb-5 border-top text-center" style="margin-bottom: 70px;">
+            <h5 class="text-rosegold fw-bold tracking-wide mb-3">AURORA JOIAS</h5>
+            <div class="d-flex justify-content-center gap-4 mb-3">
+                <i class="bi bi-instagram fs-4 text-muted placeholder-link"></i>
+                <i class="bi bi-whatsapp fs-4 text-muted placeholder-link"></i>
+                <i class="bi bi-envelope fs-4 text-muted placeholder-link"></i>
+            </div>
+            <div class="small text-muted mb-2 placeholder-link">Política de Trocas | Termos de Serviço | Rastreio</div>
+            <p class="small text-muted" style="font-size: 0.7rem;">
+                Aurora Joias Exclusivas S.A. | CNPJ: 45.123.987/0001-09<br>
+                Rua Fictícia, 123 - Centro, São Paulo - SP<br>
+                © 2026 Todos os direitos reservados.
+            </p>
+        </footer>
+
+        <div class="fixed-bottom bg-white p-3 shadow-lg border-top">
+            <button id="btnIrParaCheckout" class="btn btn-rosegold w-100 py-3 fs-5 fw-bold rounded-pill shadow">
+                Comprar Agora
+            </button>
+        </div>
+    </div>
+
+    <div id="processingOverlay" class="processing-overlay">
+        <div class="spinner-border text-rosegold mb-2" role="status" style="width: 2.6rem; height: 2.6rem; border-width: 0.25em;"></div>
+        <ul class="processing-steps" id="processingSteps">
+            <li data-step="0"><i class="bi bi-circle"></i>Validando pedido</li>
+            <li data-step="1"><i class="bi bi-circle"></i>Verificando disponibilidade</li>
+            <li data-step="2"><i class="bi bi-circle"></i>Reservando produto</li>
+            <li data-step="3"><i class="bi bi-circle"></i>Preparando envio</li>
+        </ul>
+    </div>
+
+    <div id="checkoutScreen" class="fullscreen-overlay">
+        <nav class="navbar navbar-light bg-white shadow-sm px-3 sticky-top">
+            <i class="bi bi-lock-fill text-success me-2"></i>
+            <span class="fw-bold fs-5 text-dark">Pagamento Seguro</span>
+            <i class="bi bi-shield-check text-muted ms-auto fs-4"></i>
+        </nav>
+
+        <div class="container-fluid py-4 pb-5 mb-5">
+            <h5 class="fw-bold mb-3">Resumo do Pedido</h5>
+
+            <div class="checkout-box d-flex align-items-start">
+                <div class="icon-circle me-3"><i class="bi bi-gem text-rosegold fs-5"></i></div>
+                <div>
+                    <h6 class="fw-bold mb-1">Aliança Esgrifa Branca+</h6>
+                    <p class="small text-muted mb-0 lh-sm">Solitário Libélula - 2mm Prata 950 (Flor Rosa)</p>
+                    <p class="small text-muted mb-0 lh-sm mt-1" id="resumoTamanhos"></p>
+                    <p class="small text-muted mb-0 lh-sm" id="resumoGravacoes"></p>
+                </div>
+            </div>
+
+            <div class="checkout-box d-flex align-items-start">
+                <div class="icon-circle me-3"><i class="bi bi-geo-alt-fill text-rosegold fs-5"></i></div>
+                <div>
+                    <h6 class="fw-bold mb-1">Endereço de Entrega</h6>
+                    <p class="small text-muted mb-0 lh-sm">
+                        Rua São José, 197<br>
+                        Centro - Complemento: Casa tijolo a vista<br>
+                        Nuporanga, SP<br>
+                        CEP 14670-000
+                    </p>
+                </div>
+            </div>
+
+            <div class="checkout-box d-flex align-items-start">
+                <div class="icon-circle me-3"><i class="bi bi-credit-card-fill text-primary fs-5"></i></div>
+                <div class="w-100">
+                    <h6 class="fw-bold mb-1">Forma de Pagamento</h6>
+                    <p class="small text-muted mb-0">Cartão de Crédito final 4321</p>
+                    <p class="small text-muted mb-0">1x de R$ 749,00</p>
+                </div>
+            </div>
+
+            <div class="checkout-box">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Subtotal</span>
+                    <span class="fw-bold">R$ 749,00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Frete (Sedex)</span>
+                    <span class="text-success fw-bold">Grátis</span>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold fs-5">Total</span>
+                    <span class="text-rosegold fw-bold fs-4">R$ 749,00</span>
+                </div>
+            </div>
+
+            <p class="text-center small text-muted mt-3">
+                <i class="bi bi-lock-fill"></i> Seus dados estão criptografados.
+            </p>
+        </div>
+
+        <div class="fixed-bottom bg-white p-3 shadow-lg border-top">
+            <button id="btnConfirmarPedido" class="btn btn-success w-100 py-3 fs-5 fw-bold rounded-pill shadow">
+                Confirmar Pagamento
+            </button>
+        </div>
+    </div>
+
+
+    <div id="suspenseOverlay" class="suspense-overlay">
+
+        <div id="loaderSuspense" class="text-center text-white">
+            <div class="spinner-border text-rosegold mb-3" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;"></div>
+            <p class="fs-6 fw-bold tracking-wide text-uppercase" id="loaderText">Processando Pagamento...</p>
+        </div>
+
+        <div id="questionBox" class="d-none question-card">
+            <p class="question-eyebrow mb-0">Enquanto confirmamos seu pedido</p>
+            <div class="question-dots" id="questionDots"></div>
+            <h5 id="questionText" class="text-dark mt-3 mb-4 lh-base fw-bold"></h5>
+            <div class="d-flex flex-column gap-3">
+                <button id="btnYes" class="btn btn-rosegold py-3 fw-bold rounded-pill shadow-sm"></button>
+                <button id="btnNo" class="btn btn-light border py-3 fw-bold text-muted rounded-pill"></button>
+            </div>
+        </div>
+
+        <div id="photoGallery" class="d-none w-100 text-center">
+            <p class="text-white-50 small text-uppercase tracking-wide mb-3">Arquivos da Loja</p>
+            <div class="polaroid-stack">
+                <div class="polaroid" id="foto1" style="transform: translateX(-50%) rotate(-8deg);">
+                    <img src="https://via.placeholder.com/400x400/B76E79/fff?text=Foto+1" alt="Nós">
+                    <div class="polaroid-caption">Nosso início</div>
+                </div>
+                <div class="polaroid" id="foto2" style="transform: translateX(-50%) rotate(5deg) translateY(18px);">
+                    <img src="https://via.placeholder.com/400x400/B76E79/fff?text=Foto+2" alt="Nós">
+                    <div class="polaroid-caption">Nossos sorrisos</div>
+                </div>
+                <div class="polaroid" id="foto3" style="transform: translateX(-50%) rotate(-3deg) translateY(36px);">
+                    <img src="https://via.placeholder.com/400x400/B76E79/fff?text=Foto+3" alt="Nós">
+                    <div class="polaroid-caption">Nosso amor</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="typingScreen" class="typing-container">
+            <span id="typedText"></span><span class="cursor">|</span>
+        </div>
+
+        <div id="signatureScreen" class="d-none w-100 px-3 text-center">
+            <p class="text-white fw-bold mb-1">Assine para confirmar o recebimento do pedido</p>
+            <p class="text-white-50 small mb-3">Use o dedo para assinar na área abaixo</p>
+            <div class="signature-pad-wrap">
+                <canvas id="signatureCanvas" width="320" height="160"></canvas>
+                <p class="signature-hint" id="signatureHint">Toque e arraste para assinar</p>
+                <div class="d-flex gap-2 mt-2">
+                    <button id="btnLimparAssinatura" class="btn btn-light border flex-fill rounded-pill small fw-bold">Limpar</button>
+                    <button id="btnConfirmarAssinatura" class="btn btn-rosegold flex-fill rounded-pill fw-bold">Confirmar Assinatura</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="trackingScreen" class="d-none tracking-box">
+            <p id="confirmMsg" class="fs-5 fw-bold mb-4">Assinatura confirmada! Suas alianças já saíram para entrega.</p>
+            <i class="bi bi-truck" style="font-size: 2.2rem; color: var(--rosegold);"></i>
+            <p class="text-uppercase small mt-2 mb-1 text-white-50">As alianças estão a</p>
+            <div class="tracking-distance" id="trackingDistance">100km</div>
+            <div class="tracking-bar-outer"><div class="tracking-bar-inner" id="trackingBar"></div></div>
+        </div>
+
+        <div id="verificacaoScreen" class="d-none verification-box">
+            <div class="verification-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <p class="verification-eyebrow">Verificação necessária</p>
+            <h5 class="verification-title">Identidade do casal não confirmada</h5>
+            <p class="verification-text">Para finalizar esta entrega, é necessário confirmar a identidade.</p>
+            <button id="btnConfirmarIdentidade" class="btn btn-rosegold rounded-pill fw-bold px-4 py-2">Confirmar identidade</button>
+        </div>
+
+        <div id="videoScreen" class="d-none w-100 px-3 text-center">
+            <div id="orientacaoMsg" class="text-white rotate-hint">
+                <i class="bi bi-phone-landscape phone-icon"></i>
+                <p class="mt-2 mb-0 fw-bold">Vire o celular para a posição horizontal para continuar.</p>
+            </div>
+            <div id="permissaoNegadaMsg" class="text-white d-none">
+                <i class="bi bi-camera-video-off fs-1 text-danger"></i>
+                <p class="mt-2 mb-2">Precisamos de acesso à câmera e ao microfone para continuar.</p>
+                <button id="btnPedirPermissaoNovamente" class="btn btn-rosegold rounded-pill btn-sm fw-bold">Permitir câmera e microfone</button>
+            </div>
+            <div id="conteudoGravacao" class="d-none">
+                <p class="text-white fw-bold mb-1">Grave para confirmar sua identidade.</p>
+                <div class="signature-pad-wrap" style="max-width: 420px;">
+                    <video id="videoPreview" autoplay playsinline muted style="width:100%;border-radius:8px;background:#000;aspect-ratio:16/9;object-fit:cover;"></video>
+                    <video id="videoPlayback" style="width:100%;border-radius:8px;display:none;aspect-ratio:16/9;object-fit:cover;" controls></video>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button id="btnIniciarGravacao" class="btn btn-rosegold flex-fill rounded-pill fw-bold btn-sm">
+                            <i class="bi bi-record-circle me-1"></i>Gravar
+                        </button>
+                        <button id="btnPararGravacao" class="btn btn-danger flex-fill rounded-pill fw-bold btn-sm d-none">
+                            <span class="rec-dot"></span>Parar
+                        </button>
+                    </div>
+                    <p id="saveStatus" class="save-status"></p>
+
+                    <div id="videoActions" class="d-none mt-2 d-flex flex-column gap-2">
+                        <button id="btnRegravar" class="btn btn-light border rounded-pill btn-sm fw-bold">Regravar</button>
+                    </div>
+                </div>
+            </div>
+            <div id="postRecordScreen" class="d-none post-record-screen">
+                <div class="check-circle"><i class="bi bi-check-lg"></i></div>
+                <h5 class="fw-bold mb-0">Gravação concluída</h5>
+                <p class="text-white-50 small mb-0" style="max-width: 300px;">Perfeito. Agora vire o celular de volta para a posição vertical para continuarmos.</p>
+                <i class="bi bi-phone-vibrate phone-icon-portrait"></i>
+                <button id="btnRegravarPos" class="btn-link-muted">Regravar</button>
+            </div>
+        </div>
+
+        <div id="finalScreen" class="d-none text-center w-100 px-3 fade-in">
+            <img id="finalPhoto" src="https://via.placeholder.com/400x500/B76E79/fff?text=Nossa+Foto+Final" class="img-fluid final-photo shadow-lg mb-4" alt="Nós">
+            <h1 class="text-white fw-bold display-5 text-shadow mb-3">Identidade confirmada.</h1>
+
+            <div class="letter-stage">
+                <div id="envelope" class="envelope">
+                    <div class="envelope-back"></div>
+                    <div class="letter-paper" id="letterPaper">
+                        <p class="letter-eyebrow" id="letterEyebrow">1 Coríntios 13</p>
+                        <p class="letter-text" id="letterTextFinal"></p>
+                        <p class="letter-signoff" id="letterSignoff"></p>
+                    </div>
+                    <div class="envelope-flap" id="envelopeFlap"></div>
+                    <div class="envelope-seal" id="envelopeSeal"><i class="bi bi-heart-fill"></i></div>
+                </div>
+                <p class="envelope-hint" id="envelopeHint">toque para abrir</p>
+            </div>
+
+            <div id="finalContinuarWrap" class="d-none">
+                <button id="btnVerHistoria" class="btn btn-rosegold rounded-pill fw-bold mt-4 px-4 py-2 glow-effect">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="flashbackScreen" class="flashback-screen">
+        <div class="flashback-flash" id="flashbackFlash"></div>
+        <div class="flashback-photo" id="fbFoto1"><img src="https://via.placeholder.com/400x400/B76E79/fff?text=Foto+1" alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto2"><img src="https://via.placeholder.com/400x400/4a2c34/fff?text=Foto+2" alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto3"><img src="https://via.placeholder.com/400x400/8f4d57/fff?text=Foto+3" alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto4"><img src="https://via.placeholder.com/400x400/B76E79/fff?text=Foto+4" alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto5"><img src="https://via.placeholder.com/400x400/3a2029/fff?text=Foto+5" alt="Momento do casal"></div>
+        <p class="flashback-label" id="flashbackLabel">nossa história até aqui...</p>
+    </div>
+
+    <div id="romancePage" class="romance-page">
+        <div class="text-center mb-4 reveal-up">
+            <p class="text-rosegold text-uppercase small tracking-wide mb-1">Para <span class="js-nome"></span></p>
+            <h1 class="romance-title">Nossa Trajetória</h1>
+            <div class="romance-divider"></div>
+            <p class="fs-6 fw-light" style="max-width: 420px; margin: 0 auto;">
+                <span class="js-nome"></span>, tudo que você acabou de passar era só uma desculpa boba pra chegar até aqui. Não tinha aliança nenhuma no correio — a única coisa que eu queria entregar era isso: tudo o que a gente construiu até hoje, contado do meu jeito.
+            </p>
+            <p class="romance-date-badge" id="dataPedidoTexto"></p>
+            <div id="counterBadge" class="counter-badge">
+                <i class="bi bi-heart-fill text-rosegold me-1"></i> <span id="counterText">calculando...</span>
+            </div>
+
+            <div class="live-counter-wrap">
+                <p class="live-counter-label">Juntos há</p>
+                <div class="live-counter-grid" id="liveCounterGrid">
+                    <div class="lc-unit"><span class="lc-num" id="lcAnos">0</span><span class="lc-label">anos</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcMeses">0</span><span class="lc-label">meses</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcDias">0</span><span class="lc-label">dias</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcHoras">00</span><span class="lc-label">h</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcMinutos">00</span><span class="lc-label">min</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcSegundos">00</span><span class="lc-label">s</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="max-width: 420px; margin: 0 auto;" class="reveal-up">
+            <p class="romance-section-title">Nossa linha do tempo</p>
+            <div class="timeline-item">
+                <strong>[Data do primeiro encontro / conversa]</strong>
+                <p class="small mb-0 mt-1">Descreva aqui como foi a primeira vez que vocês se falaram ou se viram — o que você sentiu, o que achou engraçado ou especial.</p>
+            </div>
+            <div class="timeline-item">
+                <strong>[Data de um momento marcante]</strong>
+                <p class="small mb-0 mt-1">Conte uma viagem, um perrengue resolvido junto, uma piada interna — algo que só vocês dois entendem.</p>
+            </div>
+            <div class="timeline-item">
+                <strong id="dataPedidoTimeline">[Hoje]</strong>
+                <p class="small mb-0 mt-1">Fale sobre o presente: por que hoje, por que ela, por que agora.</p>
+            </div>
+        </div>
+
+        <div class="mt-5 reveal-up">
+            <p class="romance-section-title">Nossos momentos</p>
+            <div class="table-gallery">
+                <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+1" alt="Foto do casal 1"></div>
+                <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+2" alt="Foto do casal 2"></div>
+                <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+3" alt="Foto do casal 3"></div>
+                <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+4" alt="Foto do casal 4"></div>
+            </div>
+        </div>
+
+        <div id="romanceVideoWrap" class="mt-5 d-none romance-video-wrap reveal-up" style="max-width: 420px; margin: 0 auto;">
+            <p class="romance-section-title">O momento em que você descobriu</p>
+            <video id="romanceVideo" controls playsinline></video>
+        </div>
+
+        <div id="romanceSignatureWrap" class="mt-5 d-none reveal-up" style="max-width: 420px; margin: 0 auto;">
+            <p class="romance-section-title">Sem saber, você já tinha assinado</p>
+            <div class="contract-box">
+                <i class="bi bi-heart-fill text-rosegold" style="font-size: 1.5rem;"></i>
+                <p class="small mt-2 mb-0">Lá atrás, quando você "confirmou o recebimento do pedido", essa foi a assinatura que ficou:</p>
+                <img id="romanceSignatureImg" class="contract-signature-img" alt="Assinatura">
+                <p class="small text-white-50 mt-2 mb-0">Guardo ela como o começo simbólico da nossa história.</p>
+            </div>
+        </div>
+
+        <div id="quizWrap" class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
+            <p class="romance-section-title">O quanto você me conhece?</p>
+            <div class="quiz-card" id="quizCard">
+                <div class="quiz-dots" id="quizDots"></div>
+                <h5 class="quiz-question" id="quizPergunta"></h5>
+                <div class="quiz-opcoes" id="quizOpcoes"></div>
+                <p class="quiz-reacao" id="quizReacao"></p>
+            </div>
+            <div id="quizFinalMsg" class="d-none text-center mt-3">
+                <i class="bi bi-heart-fill text-rosegold" style="font-size: 1.3rem;"></i>
+                <p class="small text-white-50 mt-2 mb-0" id="quizResumoTexto"></p>
+            </div>
+        </div>
+
+        <div id="regrasSelecaoWrap" class="mt-5 reveal-up" style="max-width: 460px; margin: 0 auto;">
+            <p class="romance-section-title">Escolha as regras do nosso contrato</p>
+            <p class="text-center text-white-50 small mb-3" style="max-width: 360px; margin: 0 auto;">
+                Selecione de 2 a 3 combinados pra virarem cláusulas oficiais (e bem afetivas) do nosso contrato de namoro.
+            </p>
+            <div class="rules-grid" id="rulesGrid"></div>
+            <div class="text-center mt-3">
+                <p id="regrasContador" class="small text-white-50 mb-2">0 de 3 selecionadas (mínimo 2)</p>
+                <button id="btnGerarContrato" class="btn btn-rosegold rounded-pill fw-bold px-4" disabled>Gerar nosso contrato</button>
+            </div>
+        </div>
+
+        <div id="contratoWrap" class="mt-5 d-none reveal-up" style="max-width: 460px; margin: 0 auto;">
+            <p class="romance-section-title">Contrato (sem validade jurídica, validade eterna)</p>
+            <div class="contract-paper">
+                <div class="contract-inner">
+                    <p class="contract-kicker">Instrumento Particular</p>
+                    <h2 class="contract-title">Contrato de Adesão ao Namoro</h2>
+                    <div class="romance-divider"></div>
+
+                    <p class="contract-intro">As partes abaixo identificadas resolvem celebrar o presente Contrato de Namoro, comprometendo-se, de livre e espontânea vontade — e de um bocado de paixão — a cumprir integralmente as cláusulas personalizadas descritas a seguir, escolhidas a dedo por <span class="js-nome"></span>.</p>
+
+                    <p class="contract-parties">
+                        <strong>CONTRATANTE:</strong> <span class="js-nome-dele"></span><br>
+                        <strong>CONTRATADA:</strong> <span class="js-nome"></span><br>
+                        doravante denominados, em conjunto, "as Partes Apaixonadas".
+                    </p>
+
+                    <ol class="contract-articles" id="contractArticlesList"></ol>
+
+                    <p class="contract-closing">E por estarem justas e apaixonadas, as Partes firmam o presente instrumento, em caráter irrevogável (do coração), para que produza os seus efeitos afetivos.</p>
+
+                    <p class="contract-local-data" id="contratoLocalData">Nuporanga - SP</p>
+
+                    <div class="contract-signatures">
+                        <div class="signature-block">
+                            <img id="contratoSignatureImg" class="signature-img" alt="Assinatura da namorada">
+                            <div class="signature-line"></div>
+                            <p class="signature-name js-nome"></p>
+                            <p class="signature-role">Namorada</p>
+                        </div>
+                        <div class="signature-block">
+                            <p class="signature-cursive js-nome-dele"></p>
+                            <div class="signature-line"></div>
+                            <p class="signature-name js-nome-dele"></p>
+                            <p class="signature-role">Namorado</p>
+                        </div>
+                    </div>
+
+                    <div class="contract-witness">
+                        <div class="signature-line"></div>
+                        <p class="signature-role">Testemunha do Amor <span style="text-transform:none; letter-spacing:0;">(opcional, mas recomendada)</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 reveal-up">
+            <button id="btnMensagemFuturo" class="btn btn-share">
+                <i class="bi bi-mic-fill me-2"></i>Deixe uma mensagem para nós do futuro
+            </button>
+        </div>
+
+        <div class="text-center mt-5 reveal-up">
+            <i class="bi bi-heart-fill text-rosegold" style="font-size: 1.8rem;"></i>
+            <p class="fs-5 fw-light mt-3" style="max-width: 420px; margin: 0 auto;">
+                <span class="js-nome"></span>, obrigado por topar essa vida comigo, dia após dia. Isso aqui é só um jeito diferente de dizer o que eu já sinto todos os dias: eu escolho você.
+            </p>
+            <button id="btnCompartilhar" class="btn btn-share mt-4">
+                <i class="bi bi-share-fill me-2"></i>Compartilhar
+            </button>
+            <div class="mt-4 text-center">
+                <button id="btnResetar" class="btn btn-outline-danger btn-sm rounded-pill mt-2">Resetar site</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="futuroOverlay" class="futuro-overlay d-none">
+        <div class="futuro-box">
+            <button id="btnFecharFuturo" class="cupom-close" aria-label="Fechar">&times;</button>
+            <h5 class="futuro-title">Mensagem para nós do futuro</h5>
+            <p class="futuro-sub" id="futuroSub">Escolha como quer gravar:</p>
+
+            <div id="futuroEscolha" class="d-flex gap-2 justify-content-center">
+                <button id="btnFuturoVoz" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-mic-fill me-1"></i>Voz</button>
+                <button id="btnFuturoVideo" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-camera-video-fill me-1"></i>Vídeo</button>
+            </div>
+
+            <div id="futuroGravacaoArea" class="d-none mt-3">
+                <video id="futuroPreviewVideo" autoplay playsinline muted class="d-none" style="width:100%;border-radius:8px;background:#000;aspect-ratio:16/9;object-fit:cover;"></video>
+                <div id="futuroVozIndicador" class="d-none text-center py-4">
+                    <i class="bi bi-mic-fill" style="font-size: 2rem; color: var(--rosegold);"></i>
+                    <p class="small text-muted mt-2 mb-0">Pronto para gravar áudio...</p>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button id="btnFuturoIniciar" class="btn btn-rosegold flex-fill rounded-pill fw-bold btn-sm">
+                        <i class="bi bi-record-circle me-1"></i>Gravar
+                    </button>
+                    <button id="btnFuturoParar" class="btn btn-danger flex-fill rounded-pill fw-bold btn-sm d-none">
+                        <span class="rec-dot"></span>Parar
+                    </button>
+                </div>
+                <p id="futuroStatus" class="save-status"></p>
+            </div>
+
+            <div id="futuroSucesso" class="d-none text-center mt-3">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 1.8rem;"></i>
+                <p class="small mt-2 mb-0">Mensagem guardada com carinho. Um dia a gente ouve/assiste isso de novo, juntos.</p>
+            </div>
+        </div>
+    </div>
+
+    <audio id="musicaFundo" preload="auto" loop>
+        <source src="musica.mp3" type="audio/mpeg">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        Seu navegador não suporta áudio.
+    </audio>
+
+    <script>
+        const db = new Dexie("AuroraDB");
+        db.version(1).stores({ arquivos: 'id' });
+
+        let mediaStream = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let gravacaoBlob = null;
+        let permissoesLiberadas = false;
+        let videoJaSalvo = false;
+        let aguardandoRetornoPortrait = false;
+
+        const NOME_DELA = "Ana";
+        const NOME_DELE = "Gabriel";
+        // Data/hora em que o relacionamento começou de verdade — ajuste para a data real.
+        // Usada pelo contador vivo (anos/meses/dias/horas/min/seg) em "Nossa Trajetória".
+        const DATA_INICIO_RELACIONAMENTO = '2020-01-01T00:00:00';
+
+        /* ---------------- Seleções reais do pedido ---------------- */
+        const pedido = { tamMasc: '', tamFem: '', tamSolitario: '', gravMasc: '', gravFem: '' };
+
+        /* ---------------- Perguntas emocionais ---------------- */
+        const perguntas = [
+            { texto: "Antes de continuarmos... você acredita que o amor pode crescer um pouco mais a cada dia, mesmo depois de anos?", sim: "Acredito, cada dia mais", nao: "Com certeza acredito" },
+            { texto: "Você confia em mim pra construir um futuro do nosso jeito, mesmo sem saber exatamente como ele vai ser?", sim: "Confio de olhos fechados", nao: "Sim, confio em nós" },
+            { texto: "Se pudesse reviver um momento nosso quantas vezes quisesse, você escolheria viver de novo?", sim: "Sem pensar duas vezes", nao: "Sim, sempre" },
+            { texto: "Você já se imaginou comigo daqui a 10, 20, 50 anos, dividindo a mesma casa, a mesma vida?", sim: "Consigo nos ver lá", nao: "Sim, me imagino" },
+            { texto: "Última coisa antes de seguirmos: você está feliz com a vida que a gente está construindo juntos?", sim: "Muito feliz", nao: "Sim, muito" }
+        ];
+        let perguntaAtual = 0;
+
+        /* ---------------- Mini quiz "O quanto você me conhece?" ---------------- */
+        // Edite as opções entre colchetes com as respostas reais de vocês dois —
+        // e ajuste "certa" (índice, começando em 0) para a opção correta de cada uma.
+        const quizPerguntas = [
+            {
+                pergunta: "Qual é a nossa comida favorita quando saímos para comer?",
+                opcoes: ["[Opção A — ex: Pizza]", "[Opção B — ex: Sushi]", "[Opção C — ex: Hambúrguer]", "[Opção D — ex: Churrasco]"],
+                certa: 0,
+                certoMsg: "Isso mesmo! 😍",
+                erradoMsg: "Quase — mas o carinho conta mais que a resposta certa 💗"
+            },
+            {
+                pergunta: "Qual foi o nosso primeiro lugar de viagem juntos?",
+                opcoes: ["[Opção A — ex: Praia]", "[Opção B — ex: Serra]", "[Opção C — ex: Outra cidade]", "[Opção D]"],
+                certa: 0,
+                certoMsg: "Você lembrou! 🥹",
+                erradoMsg: "Foi lá, sim — vou te lembrar mais vezes desse dia 😄"
+            },
+            {
+                pergunta: "Qual é a nossa música?",
+                opcoes: ["[Música 1]", "[Música 2]", "[Música 3]", "[Música 4]"],
+                certa: 0,
+                certoMsg: "Com certeza! 🎶",
+                erradoMsg: "Quase — a gente ainda vai criar muitas outras 🎵"
+            },
+            {
+                pergunta: "Onde foi o nosso primeiro encontro?",
+                opcoes: ["[Local 1]", "[Local 2]", "[Local 3]", "[Local 4]"],
+                certa: 0,
+                certoMsg: "Perfeito! Nunca esqueço desse dia 💛",
+                erradoMsg: "Foi um dia inesquecível pra mim, mesmo que os detalhes fujam às vezes 😅"
+            }
+        ];
+        let quizIndiceAtual = 0;
+
+        function renderizarQuizDots() {
+            const dots = document.getElementById('quizDots');
+            if (!dots) return;
+            dots.innerHTML = '';
+            quizPerguntas.forEach((_, i) => {
+                const span = document.createElement('span');
+                if (i < quizIndiceAtual) span.classList.add('done');
+                dots.appendChild(span);
+            });
+        }
+
+        function mostrarPerguntaQuiz() {
+            const p = quizPerguntas[quizIndiceAtual];
+            renderizarQuizDots();
+            document.getElementById('quizPergunta').textContent = p.pergunta;
+
+            const opcoesWrap = document.getElementById('quizOpcoes');
+            opcoesWrap.innerHTML = '';
+            const reacaoEl = document.getElementById('quizReacao');
+            reacaoEl.textContent = '';
+            reacaoEl.classList.remove('visivel');
+
+            p.opcoes.forEach((opcao, i) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'quiz-opcao-btn';
+                btn.textContent = opcao;
+                btn.addEventListener('click', () => responderQuiz(i, btn));
+                opcoesWrap.appendChild(btn);
+            });
+        }
+
+        function responderQuiz(indiceEscolhido, btnClicado) {
+            const p = quizPerguntas[quizIndiceAtual];
+            document.querySelectorAll('#quizOpcoes .quiz-opcao-btn').forEach(b => { b.disabled = true; });
+
+            const acertou = indiceEscolhido === p.certa;
+            btnClicado.classList.add('selecionada', acertou ? 'certa' : 'errada');
+
+            const reacaoEl = document.getElementById('quizReacao');
+            reacaoEl.textContent = acertou ? p.certoMsg : p.erradoMsg;
+            reacaoEl.classList.add('visivel');
+
+            if (acertou && typeof confetti === 'function') {
+                confetti({ particleCount: 40, spread: 55, origin: { y: 0.6 }, colors: ['#B76E79', '#FAF9F6', '#ffffff'] });
+            }
+
+            // Independentemente da resposta, o quiz sempre segue em frente —
+            // as respostas só existem para gerar essas pequenas reações.
+            setTimeout(() => {
+                quizIndiceAtual++;
+                if (quizIndiceAtual < quizPerguntas.length) {
+                    mostrarPerguntaQuiz();
+                } else {
+                    document.getElementById('quizCard').classList.add('d-none');
+                    const finalMsg = document.getElementById('quizFinalMsg');
+                    document.getElementById('quizResumoTexto').textContent =
+                        `Não importa quantas você acertou — o que importa é que a gente continua escrevendo essas respostas juntos, todos os dias, ${NOME_DELA}.`;
+                    finalMsg.classList.remove('d-none');
+                    finalMsg.classList.add('reveal-up');
+                }
+            }, 1600);
+        }
+
+        function iniciarQuiz() {
+            quizIndiceAtual = 0;
+            document.getElementById('quizCard').classList.remove('d-none');
+            document.getElementById('quizFinalMsg').classList.add('d-none');
+            mostrarPerguntaQuiz();
+        }
+
+        /* ---------------- Regras do contrato (personalização) ---------------- */
+        const opcoesRegras = [
+            { id: 'batata', icon: 'bi-basket2', label: 'Dividir a última batata frita', artigo: 'Fica estabelecido o compartilhamento voluntário de qualquer petisco, sendo o mínimo aceitável oferecer pelo menos a última batata frita antes de terminar o prato sozinho(a).' },
+            { id: 'abraco', icon: 'bi-people-fill', label: 'Nunca negar um abraço', artigo: 'Ficam os abraços decretados obrigatórios em qualquer horário, sem necessidade de justificativa prévia.' },
+            { id: 'filmes', icon: 'bi-film', label: 'Assistir filmes juntos', artigo: 'Fica instituído o regime de maratonas de filmes e séries em conjunto, com direito a pausas para pipoca e comentários espontâneos sobre a trama.' },
+            { id: 'passeios', icon: 'bi-signpost-2', label: 'Passeios surpresa', artigo: 'São garantidos passeios inesperados e planos espontâneos, desde que comunicados com, no mínimo, entusiasmo.' },
+            { id: 'sobremesa', icon: 'bi-cup-hot', label: 'Comer sobremesa juntos', artigo: 'Fica instituído o direito à divisão de qualquer sobremesa, com pelo menos uma garfada compartilhada, ressalvado o direito de recusa por parte de quem não gosta de doce.' },
+            { id: 'conchinha', icon: 'bi-moon-stars-fill', label: 'Dormir de conchinha sempre que possível', artigo: 'O cobertor será dividido de forma equânime, ficando garantida a posição de conchinha sempre que possível, vedado o "efeito casulo" unilateral durante a madrugada.' },
+            { id: 'bomdia', icon: 'bi-sunrise-fill', label: 'Mandar mensagem de bom dia', artigo: 'As mensagens de bom dia constituem cláusula pétrea deste contrato, não podendo ser suprimidas nem mesmo por emenda constitucional do sono.' },
+            { id: 'sonhos', icon: 'bi-stars', label: 'Apoiar os sonhos um do outro', artigo: 'É dever de ambas as Partes apoiar incondicionalmente os sonhos, planos e ideias malucas uma da outra.' }
+        ];
+        let regrasSelecionadas = [];
+        const MAX_REGRAS = 3;
+        const MIN_REGRAS = 2;
+
+        function renderRulesGrid() {
+            const grid = document.getElementById('rulesGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            opcoesRegras.forEach(op => {
+                const card = document.createElement('div');
+                card.className = 'rule-card';
+                card.dataset.id = op.id;
+                card.innerHTML = `<div class="rule-check"><i class="bi bi-check-lg"></i></div><i class="bi ${op.icon} rule-icon"></i><p>${op.label}</p>`;
+                card.addEventListener('click', () => toggleRegra(op.id, card));
+                grid.appendChild(card);
+            });
+            atualizarEstadoSelecaoRegras();
+        }
+
+        function toggleRegra(id, card) {
+            const idx = regrasSelecionadas.indexOf(id);
+            if (idx >= 0) {
+                regrasSelecionadas.splice(idx, 1);
+                card.classList.remove('selecionada');
+            } else {
+                if (regrasSelecionadas.length >= MAX_REGRAS) return;
+                regrasSelecionadas.push(id);
+                card.classList.add('selecionada');
+            }
+            atualizarEstadoSelecaoRegras();
+        }
+
+        function atualizarEstadoSelecaoRegras() {
+            const contador = document.getElementById('regrasContador');
+            const btn = document.getElementById('btnGerarContrato');
+            if (!contador || !btn) return;
+            const n = regrasSelecionadas.length;
+            contador.textContent = `${n} de ${MAX_REGRAS} selecionadas (mínimo ${MIN_REGRAS})`;
+            btn.disabled = n < MIN_REGRAS;
+            document.querySelectorAll('.rule-card').forEach(c => {
+                const isSel = regrasSelecionadas.includes(c.dataset.id);
+                if (!isSel && n >= MAX_REGRAS) c.classList.add('disabled');
+                else c.classList.remove('disabled');
+            });
+        }
+
+        function gerarContratoPersonalizado(idsEscolhidos) {
+            const lista = document.getElementById('contractArticlesList');
+            if (!lista) return;
+            lista.innerHTML = '';
+            idsEscolhidos.forEach((id, i) => {
+                const regra = opcoesRegras.find(o => o.id === id);
+                if (!regra) return;
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>Art. ${i + 1}º —</strong> ${regra.artigo}`;
+                lista.appendChild(li);
+            });
+            const selecaoWrap = document.getElementById('regrasSelecaoWrap');
+            const contratoWrap = document.getElementById('contratoWrap');
+            if (selecaoWrap) selecaoWrap.classList.add('d-none');
+            if (contratoWrap) {
+                contratoWrap.classList.remove('d-none');
+                setTimeout(() => contratoWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+            }
+        }
+
+        /* Prepara o contrato ao chegar na página "Nossa História": se as regras já
+           foram escolhidas anteriormente (ex: após um reload), pula direto para o
+           contrato gerado; caso contrário, exibe a seleção. */
+        function prepararContrato() {
+            renderRulesGrid();
+            let salvo = null;
+            try { salvo = JSON.parse(localStorage.getItem('aurora_regras_contrato') || 'null'); } catch (e) { salvo = null; }
+
+            if (Array.isArray(salvo) && salvo.length >= MIN_REGRAS) {
+                regrasSelecionadas = salvo.slice(0, MAX_REGRAS);
+                document.querySelectorAll('.rule-card').forEach(c => {
+                    if (regrasSelecionadas.includes(c.dataset.id)) c.classList.add('selecionada');
+                });
+                atualizarEstadoSelecaoRegras();
+                gerarContratoPersonalizado(regrasSelecionadas);
+            }
+        }
+
+        /* ---------------- Carta final (envelope com 1 Coríntios 13) ---------------- */
+        // Texto adaptado a partir da tradução tradicional/de domínio público de
+        // 1 Coríntios 13:4-7 (não reproduz nenhuma tradução moderna específica,
+        // por respeito a direitos autorais de edições recentes da Bíblia).
+        // Cada ocorrência da palavra "amor" é marcada com {AMOR} para ser
+        // substituída, com uma transição suave, pelo nome dela.
+        function textoVersiculoBase() {
+            return "O {AMOR} é paciente, o {AMOR} é benigno; não é invejoso, não se vangloria, não se ensoberbece. Não se conduz com indecência, não busca os seus próprios interesses, não se irrita, não guarda mágoa. Não se alegra com a injustiça, mas se alegra com a verdade. Tudo sofre, tudo crê, tudo espera, tudo suporta.";
+        }
+
+        function montarHtmlVersiculo() {
+            let contador = 0;
+            return textoVersiculoBase().replace(/\{AMOR\}/g, () => {
+                const id = `amorSwap${contador++}`;
+                return `<span class="amor-swap" id="${id}">amor</span>`;
+            });
+        }
+
+        function iniciarCartaFinal() {
+            const envelope = document.getElementById('envelope');
+            const envelopeHint = document.getElementById('envelopeHint');
+            const letterEyebrow = document.getElementById('letterEyebrow');
+            const letterTextEl = document.getElementById('letterTextFinal');
+            const letterSignoff = document.getElementById('letterSignoff');
+            const continuarWrap = document.getElementById('finalContinuarWrap');
+            if (!envelope || !letterTextEl) return;
+
+            let jaAbriu = false;
+            letterTextEl.innerHTML = '';
+            letterTextEl.classList.remove('versiculo-visivel');
+            letterEyebrow.classList.remove('visivel');
+            letterSignoff.classList.remove('visivel');
+            letterSignoff.textContent = `Assim eu quero te amar, ${NOME_DELA}.`;
+            continuarWrap.classList.add('d-none');
+
+            function revelarVersiculo() {
+                letterEyebrow.classList.add('visivel');
+                letterTextEl.innerHTML = montarHtmlVersiculo();
+                requestAnimationFrame(() => letterTextEl.classList.add('versiculo-visivel'));
+
+                // Depois que o versículo termina de aparecer, cada "amor" vira,
+                // um de cada vez, o nome dela — suavemente, com um pequeno
+                // intervalo entre cada troca para dar tempo de perceber o efeito.
+                setTimeout(() => {
+                    const trocas = Array.from(letterTextEl.querySelectorAll('.amor-swap'));
+                    trocas.forEach((span, i) => {
+                        setTimeout(() => {
+                            span.style.opacity = '0';
+                            setTimeout(() => {
+                                span.textContent = NOME_DELA;
+                                span.style.opacity = '1';
+                            }, 420);
+                        }, i * 900);
+                    });
+
+                    const tempoTotalTrocas = trocas.length * 900 + 900;
+                    setTimeout(() => {
+                        letterSignoff.classList.add('visivel');
+                        setTimeout(() => {
+                            continuarWrap.classList.remove('d-none');
+                            continuarWrap.classList.add('reveal-up');
+                        }, 700);
+                    }, tempoTotalTrocas);
+                }, 1200);
+            }
+
+            function abrirEnvelope() {
+                if (jaAbriu) return;
+                jaAbriu = true;
+                envelopeHint.classList.remove('visivel');
+                envelope.classList.add('aberto');
+                setTimeout(revelarVersiculo, 900);
+            }
+
+            envelope.addEventListener('click', abrirEnvelope);
+
+            // Surge suavemente na tela e, pouco depois, começa a abrir sozinho
+            // (a pessoa também pode tocar para abrir antes, se quiser).
+            requestAnimationFrame(() => {
+                envelope.classList.add('envelope-visivel');
+                setTimeout(() => envelopeHint.classList.add('visivel'), 500);
+            });
+            setTimeout(abrirEnvelope, 2200);
+        }
+
+        /* ---------------- Vinheta de abertura (uma vez por sessão) ---------------- */
+        function iniciarVinheta() {
+            const tela = document.getElementById('vinhetaAbertura');
+            if (!tela) return;
+
+            // Se estamos retomando direto na página final (aurora_stage === 'final')
+            // ou se a vinheta já foi mostrada nesta sessão, pula direto sem exibi-la.
+            const jaExibida = sessionStorage.getItem('aurora_vinheta_exibida');
+            const retomandoNoFinal = localStorage.getItem('aurora_stage') === 'final';
+            if (jaExibida || retomandoNoFinal) {
+                tela.style.display = 'none';
+                return;
+            }
+            sessionStorage.setItem('aurora_vinheta_exibida', '1');
+
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                tela.style.display = 'none';
+                return;
+            }
+
+            setTimeout(() => {
+                tela.classList.add('vinheta-saida');
+                setTimeout(() => { tela.style.display = 'none'; }, 750);
+            }, 2400);
+        }
+
+        /* ---------------- Cupom falso (detalhe de imersão da "loja") ---------------- */
+        function iniciarCupomFalso() {
+            // Só mostra se a pessoa realmente estiver navegando pela loja (não em
+            // sessões que já retomam direto na página final) e só uma vez.
+            if (localStorage.getItem('aurora_stage') === 'final') return;
+
+            setTimeout(() => {
+                const loja = document.getElementById('lojaScreen');
+                if (!loja || loja.style.display === 'none') return; // já saiu da loja
+                document.getElementById('cupomPopup').classList.remove('d-none');
+            }, 7000);
+        }
+
+        function fecharCupomFalso() {
+            document.getElementById('cupomPopup').classList.add('d-none');
+        }
+
+        /* ---------------- Contador vivo do relacionamento ---------------- */
+        function calcularDuracaoRelacionamento(inicioIso) {
+            const inicio = new Date(inicioIso);
+            const agora = new Date();
+            let anos = agora.getFullYear() - inicio.getFullYear();
+            let meses = agora.getMonth() - inicio.getMonth();
+            let dias = agora.getDate() - inicio.getDate();
+            let horas = agora.getHours() - inicio.getHours();
+            let minutos = agora.getMinutes() - inicio.getMinutes();
+            let segundos = agora.getSeconds() - inicio.getSeconds();
+
+            if (segundos < 0) { segundos += 60; minutos--; }
+            if (minutos < 0) { minutos += 60; horas--; }
+            if (horas < 0) { horas += 24; dias--; }
+            if (dias < 0) {
+                const ultimoDiaMesAnterior = new Date(agora.getFullYear(), agora.getMonth(), 0).getDate();
+                dias += ultimoDiaMesAnterior;
+                meses--;
+            }
+            if (meses < 0) { meses += 12; anos--; }
+
+            return { anos: Math.max(0, anos), meses: Math.max(0, meses), dias: Math.max(0, dias), horas, minutos, segundos };
+        }
+
+        let contadorVivoIntervalo = null;
+        function iniciarContadorVivo() {
+            const grid = document.getElementById('liveCounterGrid');
+            if (!grid) return;
+            if (contadorVivoIntervalo) clearInterval(contadorVivoIntervalo);
+
+            function atualizar() {
+                const d = calcularDuracaoRelacionamento(DATA_INICIO_RELACIONAMENTO);
+                document.getElementById('lcAnos').textContent = d.anos;
+                document.getElementById('lcMeses').textContent = d.meses;
+                document.getElementById('lcDias').textContent = d.dias;
+                document.getElementById('lcHoras').textContent = String(d.horas).padStart(2, '0');
+                document.getElementById('lcMinutos').textContent = String(d.minutos).padStart(2, '0');
+                document.getElementById('lcSegundos').textContent = String(d.segundos).padStart(2, '0');
+            }
+            atualizar();
+            contadorVivoIntervalo = setInterval(atualizar, 1000);
+        }
+
+        /* ---------------- Utilidades ---------------- */
+        // Antes esta função verificava se o celular estava na VERTICAL (comportamento
+        // que forçava a gravação em modo retrato). Agora fazemos o oposto: verificamos
+        // se o celular está na HORIZONTAL (paisagem), que é a orientação exigida.
+        function ehPaisagem() {
+            const angle = (screen.orientation && typeof screen.orientation.angle === 'number')
+                ? screen.orientation.angle
+                : window.orientation || 0;
+            // 90/-90/270 = celular deitado (paisagem), independentemente do formato da janela.
+            if (angle === 90 || angle === -90 || angle === 270) return true;
+            // Sem suporte à Screen Orientation API: usa as dimensões da janela como respaldo.
+            return window.innerWidth > window.innerHeight;
+        }
+
+        async function solicitarPermissoes() {
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    // Resolução pedida em formato paisagem (largura > altura), para que a
+                    // câmera já entregue os quadros no formato horizontal desejado.
+                    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: true
+                });
+                permissoesLiberadas = true;
+                const preview = document.getElementById('videoPreview');
+                if (preview) preview.srcObject = mediaStream;
+            } catch (err) {
+                permissoesLiberadas = false;
+                console.error('Permissão de câmera/microfone negada:', err);
+            }
+        }
+
+        function verificarOrientacao() {
+            const orientacaoMsg = document.getElementById('orientacaoMsg');
+            const conteudoGravacao = document.getElementById('conteudoGravacao');
+            const permissaoNegadaMsg = document.getElementById('permissaoNegadaMsg');
+            const videoScreen = document.getElementById('videoScreen');
+            const postRecordScreen = document.getElementById('postRecordScreen');
+
+            if (videoScreen.classList.contains('d-none')) return;
+
+            // Se estamos na etapa de "vire para vertical" após a gravação, essa etapa
+            // tem sua própria lógica de detecção (ver iniciarEsperaPortrait) e não deve
+            // ser sobrescrita pela verificação padrão de paisagem.
+            if (aguardandoRetornoPortrait) return;
+
+            if (!permissoesLiberadas) {
+                orientacaoMsg.classList.add('d-none');
+                conteudoGravacao.classList.add('d-none');
+                postRecordScreen.classList.add('d-none');
+                permissaoNegadaMsg.classList.remove('d-none');
+                return;
+            }
+            permissaoNegadaMsg.classList.add('d-none');
+
+            if (ehPaisagem()) {
+                orientacaoMsg.classList.add('d-none');
+                conteudoGravacao.classList.remove('d-none');
+                const preview = document.getElementById('videoPreview');
+                if (mediaStream && !preview.srcObject && !videoJaSalvo) preview.srcObject = mediaStream;
+            } else {
+                orientacaoMsg.classList.remove('d-none');
+                conteudoGravacao.classList.add('d-none');
+            }
+        }
+
+        window.addEventListener("orientationchange", verificarOrientacao);
+        window.addEventListener("resize", verificarOrientacao);
+        if (screen.orientation) {
+            screen.orientation.addEventListener('change', verificarOrientacao);
+        }
+
+        function getSupportedMimeType() {
+            const tipos = [
+                'video/webm;codecs=vp9,opus',
+                'video/webm;codecs=vp8,opus',
+                'video/webm',
+                'video/mp4'
+            ];
+            for (const t of tipos) {
+                if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+            }
+            return '';
+        }
+
+        // Variante usada pela "mensagem para o futuro": quando é só voz, os tipos de
+        // vídeo acima não servem (MediaRecorder rejeita mimeType de vídeo num stream
+        // sem faixa de vídeo), então usamos uma lista de tipos de áudio própria.
+        function getSupportedMimeTypeParaModo(modo) {
+            if (modo === 'video') return getSupportedMimeType();
+            const tiposAudio = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+            for (const t of tiposAudio) {
+                if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+            }
+            return '';
+        }
+
+        /* ---------------- Mensagem para o futuro (voz ou vídeo) ---------------- */
+        let futuroStream = null;
+        let futuroRecorder = null;
+        let futuroChunks = [];
+        let futuroModo = null; // 'voz' | 'video'
+
+        function abrirFuturoOverlay() {
+            document.getElementById('futuroOverlay').classList.remove('d-none');
+            document.getElementById('futuroEscolha').classList.remove('d-none');
+            document.getElementById('futuroGravacaoArea').classList.add('d-none');
+            document.getElementById('futuroSucesso').classList.add('d-none');
+            document.getElementById('futuroStatus').textContent = '';
+        }
+
+        function fecharFuturoOverlay() {
+            document.getElementById('futuroOverlay').classList.add('d-none');
+            if (futuroRecorder && futuroRecorder.state !== 'inactive') futuroRecorder.stop();
+            if (futuroStream) {
+                futuroStream.getTracks().forEach(track => track.stop());
+                futuroStream = null;
+            }
+        }
+
+        async function escolherModoFuturo(modo) {
+            futuroModo = modo;
+            document.getElementById('futuroEscolha').classList.add('d-none');
+            document.getElementById('futuroGravacaoArea').classList.remove('d-none');
+
+            const previewVideo = document.getElementById('futuroPreviewVideo');
+            const vozIndicador = document.getElementById('futuroVozIndicador');
+            const statusEl = document.getElementById('futuroStatus');
+
+            try {
+                const constraints = modo === 'video' ? { video: true, audio: true } : { audio: true };
+                futuroStream = await navigator.mediaDevices.getUserMedia(constraints);
+                if (modo === 'video') {
+                    previewVideo.srcObject = futuroStream;
+                    previewVideo.classList.remove('d-none');
+                    vozIndicador.classList.add('d-none');
+                } else {
+                    previewVideo.classList.add('d-none');
+                    vozIndicador.classList.remove('d-none');
+                }
+            } catch (err) {
+                statusEl.textContent = 'Não foi possível acessar o microfone/câmera. Verifique as permissões.';
+                statusEl.className = 'save-status err';
+                console.error('Permissão negada para mensagem do futuro:', err);
+            }
+        }
+
+        function iniciarGravacaoFuturo() {
+            if (!futuroStream) return;
+            futuroChunks = [];
+            const mimeType = getSupportedMimeTypeParaModo(futuroModo);
+            futuroRecorder = mimeType ? new MediaRecorder(futuroStream, { mimeType }) : new MediaRecorder(futuroStream);
+
+            futuroRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) futuroChunks.push(e.data); };
+
+            futuroRecorder.onstop = async () => {
+                const tipoFinal = futuroRecorder.mimeType || (futuroModo === 'video' ? 'video/webm' : 'audio/webm');
+                const blob = new Blob(futuroChunks, { type: tipoFinal });
+                const statusEl = document.getElementById('futuroStatus');
+                statusEl.textContent = 'Salvando mensagem...';
+                statusEl.className = 'save-status pending';
+
+                try {
+                    await db.arquivos.put({ id: 'mensagem_futuro', data: blob, tipo: futuroModo, criadoEm: Date.now() });
+                    document.getElementById('futuroGravacaoArea').classList.add('d-none');
+                    document.getElementById('futuroSucesso').classList.remove('d-none');
+                } catch (err) {
+                    statusEl.textContent = 'Não foi possível salvar a mensagem. Tente novamente.';
+                    statusEl.className = 'save-status err';
+                    console.error('Falha ao salvar mensagem do futuro', err);
+                }
+
+                if (futuroStream) {
+                    futuroStream.getTracks().forEach(track => track.stop());
+                    futuroStream = null;
+                }
+            };
+
+            futuroRecorder.start();
+            document.getElementById('btnFuturoIniciar').classList.add('d-none');
+            document.getElementById('btnFuturoParar').classList.remove('d-none');
+        }
+
+        function pararGravacaoFuturo() {
+            if (futuroRecorder && futuroRecorder.state !== 'inactive') futuroRecorder.stop();
+            document.getElementById('btnFuturoParar').classList.add('d-none');
+        }
+
+        // Baixa o vídeo automaticamente, sem exigir nenhum clique do usuário.
+        // Nome amigável: "pedido-de-namoro.<extensão real do arquivo>".
+        // Obs.: a extensão acompanha o codec real gravado pelo navegador (webm na
+        // maioria dos Android/Chrome, mp4 quando suportado), pois renomear o arquivo
+        // para .mp4 sem realmente ser um container MP4 pode impedir sua abertura.
+        function baixarVideoAutomaticamente(blob, mimeType) {
+            try {
+                const extensao = mimeType.includes('mp4') ? 'mp4' : 'webm';
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pedido-de-namoro.${extensao}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 4000);
+            } catch (err) {
+                console.error('Falha ao baixar o vídeo automaticamente:', err);
+            }
+        }
+
+        /* Salva o vídeo com múltiplas camadas de segurança: IndexedDB principal,
+           uma chave de backup, e SEMPRE dispara o download automático do vídeo
+           (não apenas como contingência), conforme solicitado. */
+        async function salvarVideoComSeguranca(blob, mimeType) {
+            const statusEl = document.getElementById('saveStatus');
+            if (statusEl) { statusEl.textContent = 'Salvando vídeo com segurança...'; statusEl.className = 'save-status pending'; }
+
+            let sucesso = false;
+            try {
+                await db.arquivos.put({ id: 'video_casal', data: blob, criadoEm: Date.now() });
+                sucesso = true;
+            } catch (err) {
+                console.error('Falha ao salvar no IndexedDB (principal):', err);
+            }
+
+            try {
+                await db.arquivos.put({ id: 'video_casal_backup', data: blob, criadoEm: Date.now() });
+            } catch (err2) {
+                console.error('Falha ao salvar backup no IndexedDB:', err2);
+            }
+
+            // Confere se o vídeo realmente está lá antes de declarar sucesso.
+            try {
+                const confere = await db.arquivos.get('video_casal');
+                sucesso = !!(confere && confere.data && confere.data.size > 0);
+            } catch (errConfere) {
+                sucesso = false;
+            }
+
+            // Download automático sempre acontece, garantindo a cópia local
+            // independentemente do resultado do salvamento no IndexedDB.
+            baixarVideoAutomaticamente(blob, mimeType);
+
+            if (statusEl) {
+                if (sucesso) {
+                    statusEl.textContent = 'Vídeo salvo com sucesso. Baixando uma cópia automaticamente...';
+                    statusEl.className = 'save-status ok';
+                } else {
+                    statusEl.textContent = 'Não foi possível confirmar o salvamento interno, mas o download automático foi iniciado — não feche o app até ele terminar.';
+                    statusEl.className = 'save-status err';
+                }
+            }
+            return sucesso;
+        }
+
+        function tentarTocarMusica() {
+            const audio = document.getElementById('musicaFundo');
+            const promessa = audio.play();
+            if (promessa !== undefined) {
+                promessa.catch(() => {
+                    const liberar = () => { audio.play().catch(() => {}); };
+                    document.body.addEventListener('click', liberar, { once: true });
+                    document.body.addEventListener('touchstart', liberar, { once: true });
+                });
+            }
+        }
+
+        /* ---------------- Vitrine da home: carrossel promocional e miniaturas ---------------- */
+        let promoSlideAtual = 0;
+        let promoIntervalo = null;
+
+        function irParaSlide(indice) {
+            const slides = document.querySelectorAll('.promo-slide');
+            const dots = document.querySelectorAll('#promoIndicators button');
+            if (!slides.length) return;
+            promoSlideAtual = ((indice % slides.length) + slides.length) % slides.length;
+            slides.forEach((s, i) => s.classList.toggle('d-none', i !== promoSlideAtual));
+            dots.forEach((d, i) => d.classList.toggle('active', i === promoSlideAtual));
+        }
+
+        function iniciarCarrosselPromocional() {
+            const dots = document.querySelectorAll('#promoIndicators button');
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    irParaSlide(parseInt(dot.dataset.go, 10));
+                    reiniciarAutoRotacaoPromo();
+                });
+            });
+            reiniciarAutoRotacaoPromo();
+        }
+
+        function reiniciarAutoRotacaoPromo() {
+            if (promoIntervalo) clearInterval(promoIntervalo);
+            promoIntervalo = setInterval(() => irParaSlide(promoSlideAtual + 1), 4500);
+        }
+
+        function iniciarThumbsProduto() {
+            const thumbs = document.querySelectorAll('.thumb-item');
+            const principal = document.getElementById('imagemPrincipalProduto');
+            if (!thumbs.length || !principal) return;
+            thumbs.forEach(thumb => {
+                thumb.addEventListener('click', () => {
+                    thumbs.forEach(t => t.classList.remove('active'));
+                    thumb.classList.add('active');
+                    principal.src = thumb.dataset.img;
+                });
+            });
+        }
+
+        /* ---------------- Bloqueio de zoom (pinça, duplo toque e gestos) ---------------- */
+        function bloquearZoom() {
+            // Pinça em iOS Safari dispara eventos "gesture*" que ignoram o
+            // user-scalable=no do viewport — precisam ser bloqueados manualmente.
+            document.addEventListener('gesturestart', (e) => e.preventDefault());
+            document.addEventListener('gesturechange', (e) => e.preventDefault());
+            document.addEventListener('gestureend', (e) => e.preventDefault());
+
+            // Pinça em navegadores baseados em Chromium chega como touchmove
+            // com 2+ toques simultâneos.
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches && e.touches.length > 1) e.preventDefault();
+            }, { passive: false });
+
+            // Duplo toque para zoom: se dois toques rápidos acontecerem perto
+            // um do outro, cancela o segundo antes que o navegador dê zoom.
+            let ultimoToque = 0;
+            document.addEventListener('touchend', (e) => {
+                const agora = Date.now();
+                if (agora - ultimoToque <= 300) e.preventDefault();
+                ultimoToque = agora;
+            }, { passive: false });
+
+            // Zoom via trackpad/ctrl+scroll em navegadores desktop.
+            document.addEventListener('wheel', (e) => {
+                if (e.ctrlKey) e.preventDefault();
+            }, { passive: false });
+
+            // Zoom via teclado (Ctrl +/-/0), caso o usuário conecte um teclado.
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '0'].includes(e.key)) e.preventDefault();
+            });
+        }
+
+        /* ---------------- Assinatura (canvas com fundo transparente) ---------------- */
+        let sigCtx, sigCanvasRef, sigDesenhando = false, sigTemTraco = false;
+
+        // Pinta o canvas inteiro de branco sólido. Isso é essencial: sem isso, as
+        // áreas não desenhadas ficam com alpha = 0 (transparente) e, ao gerar o PNG
+        // final, o algoritmo de remoção de fundo interpreta esses pixels transparentes
+        // como pretos (pois getImageData devolve r=g=b=0 quando alpha=0). Era essa a
+        // causa do fundo preto na assinatura.
+        function pintarFundoBrancoCanvas(canvas, ctx) {
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+
+        function ajustarCanvasSignature(canvas) {
+            const ratio = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            // Resolução interna em alta definição (para o traço não ficar borrado em telas retina)...
+            canvas.width = rect.width * ratio;
+            canvas.height = 160 * ratio;
+            // ...mas o tamanho VISUAL na tela precisa ficar travado em CSS,
+            // senão o navegador usa os atributos width/height como pixels de
+            // exibição e a caixa de assinatura fica gigante em celulares com
+            // devicePixelRatio > 1 (a maioria dos iPhones e Androids atuais).
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = '160px';
+            const ctx = canvas.getContext('2d');
+            pintarFundoBrancoCanvas(canvas, ctx);
+            ctx.scale(ratio, ratio);
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#2b2b2b';
+            return ctx;
+        }
+
+        function coordsDoEvento(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const ponto = evt.touches ? evt.touches[0] : evt;
+            return { x: ponto.clientX - rect.left, y: ponto.clientY - rect.top };
+        }
+
+        function iniciarSignaturePad() {
+            const canvas = document.getElementById('signatureCanvas');
+            sigCanvasRef = canvas;
+            sigCtx = ajustarCanvasSignature(canvas);
+            sigTemTraco = false;
+
+            const comecar = (evt) => {
+                evt.preventDefault();
+                sigDesenhando = true;
+                sigTemTraco = true;
+                const { x, y } = coordsDoEvento(canvas, evt);
+                sigCtx.beginPath();
+                sigCtx.moveTo(x, y);
+            };
+            const desenhar = (evt) => {
+                if (!sigDesenhando) return;
+                evt.preventDefault();
+                const { x, y } = coordsDoEvento(canvas, evt);
+                sigCtx.lineTo(x, y);
+                sigCtx.stroke();
+            };
+            const parar = () => { sigDesenhando = false; };
+
+            canvas.addEventListener('mousedown', comecar);
+            canvas.addEventListener('mousemove', desenhar);
+            window.addEventListener('mouseup', parar);
+            canvas.addEventListener('touchstart', comecar, { passive: false });
+            canvas.addEventListener('touchmove', desenhar, { passive: false });
+            canvas.addEventListener('touchend', parar);
+
+            document.getElementById('btnLimparAssinatura').onclick = () => {
+                // Repinta o fundo branco em vez de apenas limpar (clearRect deixaria
+                // a área transparente de novo e reproduziria o mesmo bug do fundo preto).
+                sigCtx.save();
+                sigCtx.setTransform(1, 0, 0, 1, 0, 0);
+                sigCtx.fillStyle = '#ffffff';
+                sigCtx.fillRect(0, 0, canvas.width, canvas.height);
+                sigCtx.restore();
+                sigTemTraco = false;
+                document.getElementById('signatureHint').textContent = 'Toque e arraste para assinar';
+                document.getElementById('signatureHint').style.color = '#999';
+            };
+        }
+
+        // Converte o canvas (agora com fundo branco sólido) em um PNG com fundo
+        // transparente, preservando apenas o traço desenhado em tom escuro.
+        function gerarAssinaturaTransparente(canvas) {
+            const largura = canvas.width, altura = canvas.height;
+            const origem = canvas.getContext('2d').getImageData(0, 0, largura, altura);
+            const saida = document.createElement('canvas');
+            saida.width = largura; saida.height = altura;
+            const outCtx = saida.getContext('2d');
+            const destino = outCtx.createImageData(largura, altura);
+
+            for (let i = 0; i < origem.data.length; i += 4) {
+                const r = origem.data[i], g = origem.data[i + 1], b = origem.data[i + 2];
+                const luminosidade = (r + g + b) / 3;
+                if (luminosidade > 245) {
+                    destino.data[i + 3] = 0; // pixel quase branco -> transparente
+                } else {
+                    destino.data[i] = r; destino.data[i + 1] = g; destino.data[i + 2] = b;
+                    // suaviza a opacidade da borda dos traços
+                    destino.data[i + 3] = Math.min(255, Math.round((255 - luminosidade) * 1.15));
+                }
+            }
+            outCtx.putImageData(destino, 0, 0);
+            return saida.toDataURL('image/png');
+        }
+
+        /* ---------------- Sequência principal de suspense ---------------- */
+        function mostrarPergunta() {
+            const p = perguntas[perguntaAtual];
+            document.getElementById('questionText').textContent = p.texto;
+            document.getElementById('btnYes').textContent = p.sim;
+            document.getElementById('btnNo').textContent = p.nao;
+
+            const dots = document.getElementById('questionDots');
+            dots.innerHTML = '';
+            perguntas.forEach((_, i) => {
+                const span = document.createElement('span');
+                if (i < perguntaAtual) span.classList.add('done');
+                dots.appendChild(span);
+            });
+        }
+
+        function avancarPergunta() {
+            perguntaAtual++;
+            if (perguntaAtual < perguntas.length) {
+                mostrarPergunta();
+            } else {
+                document.getElementById('questionBox').classList.add('d-none');
+                iniciarGaleriaFotos();
+            }
+        }
+
+        function iniciarGaleriaFotos() {
+            document.getElementById('photoGallery').classList.remove('d-none');
+            const fotos = ['foto1', 'foto2', 'foto3'];
+            const intervaloEntreFotos = 1300; // cada foto surge com mais calma
+            const tempoDeContemplacao = 5600; // tempo parado no final, olhando as fotos maiores com calma
+
+            fotos.forEach((id, i) => {
+                setTimeout(() => {
+                    const el = document.getElementById(id);
+                    el.style.display = 'block';
+                    // pequeno delay para garantir que o navegador aplique o estado inicial
+                    // (opacidade 0) antes de disparar a transição — senão o fade não roda.
+                    requestAnimationFrame(() => { el.classList.add('foto-visivel'); });
+                }, i * intervaloEntreFotos);
+            });
+
+            setTimeout(() => {
+                document.getElementById('photoGallery').classList.add('d-none');
+                iniciarDigitacao();
+            }, fotos.length * intervaloEntreFotos + tempoDeContemplacao);
+        }
+
+        function iniciarDigitacao() {
+            const mensagem = `Cada uma dessas fotos guarda um pedaço da gente. E o pedido que você acabou de "fazer" também guarda um segredo...`;
+            const typingScreen = document.getElementById('typingScreen');
+            const typedText = document.getElementById('typedText');
+            typedText.textContent = '';
+            typingScreen.style.display = 'block';
+
+            let i = 0;
+            const intervalo = setInterval(() => {
+                typedText.textContent += mensagem.charAt(i);
+                i++;
+                if (i >= mensagem.length) {
+                    clearInterval(intervalo);
+                    setTimeout(() => {
+                        typingScreen.style.display = 'none';
+                        iniciarAssinatura();
+                    }, 1400);
+                }
+            }, 35);
+        }
+
+        function iniciarAssinatura() {
+            document.getElementById('signatureScreen').classList.remove('d-none');
+            iniciarSignaturePad();
+
+            document.getElementById('btnConfirmarAssinatura').onclick = async () => {
+                if (!sigTemTraco) {
+                    const hint = document.getElementById('signatureHint');
+                    hint.textContent = 'Assine antes de confirmar :)';
+                    hint.style.color = '#c0392b';
+                    return;
+                }
+                const canvas = document.getElementById('signatureCanvas');
+                const assinaturaPng = gerarAssinaturaTransparente(canvas);
+
+                try {
+                    await db.arquivos.put({ id: 'assinatura', data: assinaturaPng });
+                } catch (e) { console.error('Falha ao salvar assinatura no IndexedDB', e); }
+                try {
+                    localStorage.setItem('aurora_assinatura', assinaturaPng);
+                } catch (e) { console.error('Falha ao salvar assinatura no localStorage', e); }
+
+                // A data do pedido de namoro é o momento exato desta assinatura.
+                if (!localStorage.getItem('aurora_data_pedido')) {
+                    localStorage.setItem('aurora_data_pedido', new Date().toISOString());
+                }
+
+                if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
+
+                document.getElementById('signatureScreen').classList.add('d-none');
+                iniciarRastreio();
+            };
+        }
+
+        function iniciarRastreio() {
+            document.getElementById('trackingScreen').classList.remove('d-none');
+            let distancia = 100;
+            const distEl = document.getElementById('trackingDistance');
+            const barEl = document.getElementById('trackingBar');
+            distEl.textContent = distancia + 'km';
+            barEl.style.width = '0%';
+
+            // A entrega nunca chega a 0km: para pouco antes do fim, dando lugar
+            // à "verificação de identidade" que conduz à câmera — é durante essa
+            // gravação que o pedido acontece de verdade, pessoalmente.
+            const distanciaParada = Math.floor(Math.random() * 4) + 3; // entre 3km e 6km
+
+            const intervalo = setInterval(() => {
+                distancia -= Math.ceil(Math.random() * 14) + 6;
+                if (distancia <= distanciaParada) {
+                    distancia = distanciaParada;
+                    clearInterval(intervalo);
+                    distEl.textContent = distancia + 'km';
+                    barEl.style.width = (100 - distancia) + '%';
+                    setTimeout(() => {
+                        document.getElementById('trackingScreen').classList.add('d-none');
+                        iniciarVerificacaoIdentidade();
+                    }, 1400);
+                    return;
+                }
+                distEl.textContent = distancia + 'km';
+                barEl.style.width = (100 - distancia) + '%';
+            }, 550);
+        }
+
+        function iniciarVerificacaoIdentidade() {
+            const tela = document.getElementById('verificacaoScreen');
+            tela.classList.remove('d-none');
+            tela.classList.add('reveal-up');
+        }
+
+        function iniciarTelaDeVideo() {
+            document.getElementById('videoScreen').classList.remove('d-none');
+            aguardandoRetornoPortrait = false;
+            // A permissão de câmera/microfone só é solicitada agora, no momento em que
+            // faz sentido dentro da história (confirmar o recebimento da entrega) — e
+            // não no carregamento inicial da "loja". Pedir isso na home quebraria
+            // completamente a ilusão de e-commerce real, já que nenhuma loja pede
+            // acesso à câmera assim que a página abre.
+            if (!permissoesLiberadas) {
+                solicitarPermissoes().then(verificarOrientacao);
+            } else {
+                verificarOrientacao();
+            }
+        }
+
+        /* Após a gravação: mostra tela elegante pedindo retorno à posição vertical
+           e só avança quando a orientação retrato for de fato detectada. */
+        function iniciarEsperaPortrait() {
+            aguardandoRetornoPortrait = true;
+            document.getElementById('orientacaoMsg').classList.add('d-none');
+            document.getElementById('conteudoGravacao').classList.add('d-none');
+            document.getElementById('permissaoNegadaMsg').classList.add('d-none');
+            document.getElementById('postRecordScreen').classList.remove('d-none');
+
+            const checar = () => {
+                if (!aguardandoRetornoPortrait) return;
+                if (!ehPaisagem()) {
+                    aguardandoRetornoPortrait = false;
+                    document.getElementById('postRecordScreen').classList.add('d-none');
+                    if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+                    finalizarSequencia();
+                    window.removeEventListener('orientationchange', checar);
+                    window.removeEventListener('resize', checar);
+                    if (screen.orientation) screen.orientation.removeEventListener('change', checar);
+                }
+            };
+            window.addEventListener('orientationchange', checar);
+            window.addEventListener('resize', checar);
+            if (screen.orientation) screen.orientation.addEventListener('change', checar);
+            // Confere o estado atual imediatamente, caso o celular já esteja em pé.
+            checar();
+        }
+
+        function finalizarSequencia() {
+            document.getElementById('videoScreen').classList.add('d-none');
+            document.getElementById('finalScreen').classList.remove('d-none');
+
+            if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
+
+            dispararConfetesRomanticos();
+            iniciarCartaFinal();
+        }
+
+        // Gera formas de emoji (❤️ 🌹 ✨) para o canvas-confetti quando o navegador
+        // suporta confetti.shapeFromText (disponível desde a v1.6). Se não suportar,
+        // devolve null e quem chamou usa o fallback de confete colorido tradicional.
+        function obterFormasRomanticas() {
+            try {
+                if (typeof confetti !== 'undefined' && typeof confetti.shapeFromText === 'function') {
+                    return ['❤️', '🌹', '✨'].map(emoji => confetti.shapeFromText({ text: emoji, scalar: 2.6 }));
+                }
+            } catch (e) {
+                console.error('Não foi possível gerar formas de emoji para o confete, usando fallback.', e);
+            }
+            return null;
+        }
+
+        // Efeito de celebração no instante do pedido físico, com corações, rosas e
+        // brilhos em vez do confete tradicional.
+        function dispararConfetesRomanticos() {
+            if (typeof confetti !== 'function') return;
+            const formas = obterFormasRomanticas();
+            const duracao = 3000;
+            const fim = Date.now() + duracao;
+            (function disparar() {
+                const opcoesBase = formas
+                    ? { shapes: formas, scalar: 2.6, gravity: 0.7 }
+                    : { colors: ['#B76E79', '#FAF9F6', '#ffffff'] };
+                confetti(Object.assign({
+                    particleCount: formas ? 3 : 4, angle: 60, spread: 70, origin: { x: 0 }
+                }, opcoesBase));
+                confetti(Object.assign({
+                    particleCount: formas ? 3 : 4, angle: 120, spread: 70, origin: { x: 1 }
+                }, opcoesBase));
+                if (Date.now() < fim) requestAnimationFrame(disparar);
+            })();
+        }
+
+        /* ---------------- Flashback cinematográfico ---------------- */
+        // Transição de "filme passando pela cabeça" exibida antes da página
+        // "Nossa História": fotos surgem rapidamente com leve desfoque, variação
+        // de escala e pequenos flashes de luz, transmitindo nostalgia e expectativa.
+        function iniciarFlashback(aoTerminar) {
+            const tela = document.getElementById('flashbackScreen');
+            const flash = document.getElementById('flashbackFlash');
+            const label = document.getElementById('flashbackLabel');
+            const fotos = ['fbFoto1', 'fbFoto2', 'fbFoto3', 'fbFoto4', 'fbFoto5'];
+
+            // Respeita a preferência do usuário por menos movimento: pula direto.
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                aoTerminar();
+                return;
+            }
+
+            tela.style.display = 'flex';
+            fotos.forEach(id => document.getElementById(id).classList.remove('fb-ativa'));
+            label.classList.remove('fb-visivel');
+
+            const intervaloEntreFotos = 260;
+            fotos.forEach((id, i) => {
+                setTimeout(() => {
+                    fotos.forEach(outroId => document.getElementById(outroId).classList.remove('fb-ativa'));
+                    document.getElementById(id).classList.add('fb-ativa');
+                    // Pequeno flash de luz a cada troca de foto, discreto e rápido.
+                    flash.classList.add('fb-piscar');
+                    setTimeout(() => flash.classList.remove('fb-piscar'), 90);
+                }, i * intervaloEntreFotos);
+            });
+
+            setTimeout(() => label.classList.add('fb-visivel'), fotos.length * intervaloEntreFotos - 150);
+
+            const duracaoTotal = fotos.length * intervaloEntreFotos + 550;
+            setTimeout(() => {
+                tela.style.display = 'none';
+                fotos.forEach(id => document.getElementById(id).classList.remove('fb-ativa'));
+                label.classList.remove('fb-visivel');
+                aoTerminar();
+            }, duracaoTotal);
+        }
+
+        /* ---------------- Resumo dinâmico do checkout ---------------- */
+        function atualizarResumoCheckout() {
+            document.getElementById('resumoTamanhos').textContent =
+                `Aro masculino: ${pedido.tamMasc} · Aro feminino: ${pedido.tamFem} · Solitário: ${pedido.tamSolitario}`;
+            const gravacoes = [];
+            if (pedido.gravMasc) gravacoes.push(`Masculina: "${pedido.gravMasc}"`);
+            if (pedido.gravFem) gravacoes.push(`Feminina: "${pedido.gravFem}"`);
+            document.getElementById('resumoGravacoes').textContent = gravacoes.length
+                ? `Gravações — ${gravacoes.join(' · ')}`
+                : '';
+        }
+
+        /* ---------------- Tela de processamento do "Comprar Agora" ---------------- */
+        function iniciarProcessamentoCompra(onFinish) {
+            const overlay = document.getElementById('processingOverlay');
+            const itens = document.querySelectorAll('#processingSteps li');
+            overlay.style.display = 'flex';
+            itens.forEach(li => { li.classList.remove('active', 'done'); li.querySelector('i').className = 'bi bi-circle'; });
+
+            let passo = 0;
+            function proximoPasso() {
+                if (passo > 0) {
+                    itens[passo - 1].classList.remove('active');
+                    itens[passo - 1].classList.add('done');
+                    itens[passo - 1].querySelector('i').className = 'bi bi-check-circle-fill text-success';
+                }
+                if (passo >= itens.length) {
+                    setTimeout(() => { overlay.style.display = 'none'; onFinish(); }, 500);
+                    return;
+                }
+                itens[passo].classList.add('active');
+                passo++;
+                setTimeout(proximoPasso, 700 + Math.random() * 400);
+            }
+            proximoPasso();
+        }
+
+        /* ---------------- Página "Nossa História" ---------------- */
+        function formatarDataPedido(iso) {
+            const d = new Date(iso);
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        async function goToRomancePage() {
+            document.getElementById('lojaScreen').style.display = 'none';
+            document.getElementById('checkoutScreen').style.display = 'none';
+            document.getElementById('suspenseOverlay').style.display = 'none';
+            document.getElementById('processingOverlay').style.display = 'none';
+            document.getElementById('romancePage').style.display = 'block';
+            window.scrollTo(0, 0);
+            tentarTocarMusica();
+            prepararContrato();
+            iniciarContadorVivo();
+            iniciarQuiz();
+
+            const dataPedidoIso = localStorage.getItem('aurora_data_pedido');
+            if (dataPedidoIso) {
+                const texto = `Nosso pedido: ${formatarDataPedido(dataPedidoIso)}`;
+                document.getElementById('dataPedidoTexto').textContent = texto;
+                document.getElementById('dataPedidoTimeline').textContent = formatarDataPedido(dataPedidoIso);
+
+                const dias = Math.max(0, Math.floor((Date.now() - new Date(dataPedidoIso).getTime()) / 86400000));
+                document.getElementById('counterText').textContent = dias === 0
+                    ? 'hoje é o nosso primeiro dia'
+                    : `${dias} dia${dias === 1 ? '' : 's'} desde que topamos essa juntos`;
+
+                const localData = document.getElementById('contratoLocalData');
+                if (localData) {
+                    // Reaproveita a mesma cidade do endereço de entrega usado no checkout,
+                    // mantendo a coerência da história contada pelo site.
+                    localData.textContent = `Nuporanga - SP, ${formatarDataPedido(dataPedidoIso)}.`;
+                }
+            }
+
+            try {
+                const video = await db.arquivos.get('video_casal');
+                if (video && video.data) {
+                    const vid = document.getElementById('romanceVideo');
+                    vid.src = URL.createObjectURL(video.data);
+                    document.getElementById('romanceVideoWrap').classList.remove('d-none');
+                }
+            } catch (e) { console.error('Não foi possível carregar o vídeo salvo', e); }
+
+            try {
+                let assinatura = null;
+                const registro = await db.arquivos.get('assinatura');
+                if (registro && registro.data) assinatura = registro.data;
+                else assinatura = localStorage.getItem('aurora_assinatura');
+
+                if (assinatura) {
+                    document.getElementById('romanceSignatureImg').src = assinatura;
+                    document.getElementById('contratoSignatureImg').src = assinatura;
+                    document.getElementById('romanceSignatureWrap').classList.remove('d-none');
+                }
+            } catch (e) { console.error('Não foi possível carregar a assinatura salva', e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.querySelectorAll('.js-nome').forEach(el => { el.textContent = NOME_DELA; });
+            document.querySelectorAll('.js-nome-dele').forEach(el => { el.textContent = NOME_DELE; });
+
+            const lojaScreen = document.getElementById('lojaScreen');
+            const checkoutScreen = document.getElementById('checkoutScreen');
+            const suspenseOverlay = document.getElementById('suspenseOverlay');
+
+            bloquearZoom();
+            iniciarCarrosselPromocional();
+            iniciarThumbsProduto();
+            iniciarVinheta();
+            iniciarCupomFalso();
+
+            document.getElementById('btnFecharCupom').addEventListener('click', fecharCupomFalso);
+            document.getElementById('btnFecharCupomBtn').addEventListener('click', fecharCupomFalso);
+
+            document.getElementById('btnFecharManutencao').addEventListener('click', () => {
+                document.getElementById('maintenancePopup').style.display = 'none';
+            });
+
+            if (localStorage.getItem('aurora_stage') === 'final') {
+                document.getElementById('maintenancePopup').style.display = 'none';
+                goToRomancePage();
+            }
+
+            document.getElementById('btnIrParaCheckout').addEventListener('click', () => {
+                pedido.tamMasc = document.getElementById('tamanhoMasc').value;
+                pedido.tamFem = document.getElementById('tamanhoFem').value;
+                pedido.tamSolitario = document.getElementById('tamanhoSolitario').value;
+                pedido.gravMasc = document.getElementById('gravacaoMasc').value.trim();
+                pedido.gravFem = document.getElementById('gravacaoFem').value.trim();
+                const erroBox = document.getElementById('selecaoErro');
+
+                if (!pedido.tamMasc || !pedido.tamFem || !pedido.tamSolitario || !pedido.gravMasc || !pedido.gravFem) {
+                    erroBox.classList.remove('d-none');
+                    erroBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+                erroBox.classList.add('d-none');
+
+                iniciarProcessamentoCompra(() => {
+                    atualizarResumoCheckout();
+                    checkoutScreen.style.display = 'block';
+                    window.scrollTo(0, 0);
+                });
+            });
+
+            document.getElementById('btnConfirmarPedido').addEventListener('click', (evt) => {
+                evt.target.disabled = true;
+                // Inicia a música aqui, no gesto real do usuário — isso evita bloqueios
+                // de autoplay do navegador e faz o áudio já tocar durante toda a
+                // sequência de suspense, não só ao chegar na página final.
+                tentarTocarMusica();
+                suspenseOverlay.style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('loaderSuspense').classList.add('d-none');
+                    perguntaAtual = 0;
+                    mostrarPergunta();
+                    document.getElementById('questionBox').classList.remove('d-none');
+                }, 2000);
+            });
+
+            document.getElementById('btnYes').addEventListener('click', avancarPergunta);
+            document.getElementById('btnNo').addEventListener('click', avancarPergunta);
+
+            document.getElementById('btnConfirmarIdentidade').addEventListener('click', () => {
+                document.getElementById('verificacaoScreen').classList.add('d-none');
+                iniciarTelaDeVideo();
+            });
+
+            document.getElementById('btnIniciarGravacao').addEventListener('click', async () => {
+                if (!mediaStream) {
+                    await solicitarPermissoes();
+                    verificarOrientacao();
+                    if (!mediaStream) return;
+                }
+                recordedChunks = [];
+                videoJaSalvo = false;
+                document.getElementById('saveStatus').textContent = '';
+                const mimeType = getSupportedMimeType();
+                mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+
+                mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+
+                mediaRecorder.onstop = async () => {
+                    const tipoFinal = mediaRecorder.mimeType || 'video/webm';
+                    gravacaoBlob = new Blob(recordedChunks, { type: tipoFinal });
+
+                    document.getElementById('videoPreview').style.display = 'none';
+                    const playback = document.getElementById('videoPlayback');
+                    playback.src = URL.createObjectURL(gravacaoBlob);
+                    playback.style.display = 'block';
+
+                    const sucesso = await salvarVideoComSeguranca(gravacaoBlob, tipoFinal);
+                    videoJaSalvo = true;
+
+                    // Em vez de esperar um clique em "Continuar", avançamos direto para a
+                    // tela que pede o retorno à posição vertical.
+                    setTimeout(() => { iniciarEsperaPortrait(); }, 900);
+                };
+
+                mediaRecorder.start();
+                document.getElementById('btnIniciarGravacao').classList.add('d-none');
+                document.getElementById('btnPararGravacao').classList.remove('d-none');
+            });
+
+            document.getElementById('btnPararGravacao').addEventListener('click', () => {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+                document.getElementById('btnPararGravacao').classList.add('d-none');
+            });
+
+            function voltarParaRegravacao() {
+                document.getElementById('videoActions').classList.add('d-none');
+                document.getElementById('saveStatus').textContent = '';
+                const playback = document.getElementById('videoPlayback');
+                playback.style.display = 'none';
+                playback.removeAttribute('src');
+                document.getElementById('videoPreview').style.display = 'block';
+                document.getElementById('btnIniciarGravacao').classList.remove('d-none');
+                videoJaSalvo = false;
+                if (mediaStream) document.getElementById('videoPreview').srcObject = mediaStream;
+            }
+
+            document.getElementById('btnRegravar').addEventListener('click', voltarParaRegravacao);
+
+            document.getElementById('btnRegravarPos').addEventListener('click', () => {
+                aguardandoRetornoPortrait = false;
+                document.getElementById('postRecordScreen').classList.add('d-none');
+                voltarParaRegravacao();
+                verificarOrientacao();
+            });
+
+            document.getElementById('btnPedirPermissaoNovamente').addEventListener('click', async () => {
+                await solicitarPermissoes();
+                verificarOrientacao();
+            });
+
+            document.getElementById('btnVerHistoria').addEventListener('click', () => {
+                localStorage.setItem('aurora_stage', 'final');
+                iniciarFlashback(() => { goToRomancePage(); });
+            });
+
+            const btnGerarContrato = document.getElementById('btnGerarContrato');
+            if (btnGerarContrato) {
+                btnGerarContrato.addEventListener('click', () => {
+                    if (regrasSelecionadas.length < MIN_REGRAS) return;
+                    try { localStorage.setItem('aurora_regras_contrato', JSON.stringify(regrasSelecionadas)); } catch (e) { console.error('Falha ao salvar regras do contrato', e); }
+                    gerarContratoPersonalizado(regrasSelecionadas);
+                });
+            }
+
+            document.getElementById('btnMensagemFuturo').addEventListener('click', abrirFuturoOverlay);
+            document.getElementById('btnFecharFuturo').addEventListener('click', fecharFuturoOverlay);
+            document.getElementById('btnFuturoVoz').addEventListener('click', () => escolherModoFuturo('voz'));
+            document.getElementById('btnFuturoVideo').addEventListener('click', () => escolherModoFuturo('video'));
+            document.getElementById('btnFuturoIniciar').addEventListener('click', iniciarGravacaoFuturo);
+            document.getElementById('btnFuturoParar').addEventListener('click', pararGravacaoFuturo);
+
+            document.getElementById('btnCompartilhar').addEventListener('click', async () => {
+                try {
+                    if (navigator.share) {
+                        await navigator.share({ title: 'Nossa Trajetória', text: 'Um momento nosso ❤️', url: window.location.href });
+                    }
+                } catch (e) { /* usuário cancelou o compartilhamento, sem problema */ }
+            });
+
+            document.getElementById('btnResetar').addEventListener('click', async () => {
+                try { await db.arquivos.clear(); } catch (e) { console.error('Falha ao limpar IndexedDB', e); }
+                localStorage.clear();
+                location.reload();
+            });
+
+            verificarOrientacao();
+        });
+    </script>
+</body>
+</html>
