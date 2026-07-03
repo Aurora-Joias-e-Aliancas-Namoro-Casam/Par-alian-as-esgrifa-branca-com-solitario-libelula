@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
     <style>
         :root {
@@ -591,6 +593,25 @@
         }
         .futuro-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 600; text-align: center; margin-bottom: 6px; }
         .futuro-sub { font-size: 0.85rem; color: #5a5048; text-align: center; margin-bottom: 14px; }
+
+        /* ---- Área de lembranças (prints de conversas antigas) ---- */
+        .lembrancas-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;
+        }
+        .lembranca-item {
+            border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(183,110,121,0.35); aspect-ratio: 3 / 4; cursor: pointer; padding: 0;
+        }
+        .lembranca-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .lembranca-lightbox {
+            position: fixed; inset: 0; z-index: 10460; background: rgba(0,0,0,0.92);
+            display: flex; align-items: center; justify-content: center; padding: 24px;
+        }
+        .lembranca-lightbox img { max-width: 100%; max-height: 88vh; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .lembranca-lightbox-close {
+            position: absolute; top: 18px; right: 20px; background: none; border: none;
+            color: #fff; font-size: 2rem; line-height: 1; z-index: 2;
+        }
     </style>
 </head>
 <body>
@@ -1217,6 +1238,21 @@
             </div>
         </div>
 
+        <div class="mt-5 reveal-up" style="max-width: 460px; margin: 0 auto;">
+            <p class="romance-section-title">Nossas lembranças</p>
+            <p class="text-center text-white-50 small mb-3" style="max-width: 360px; margin: 0 auto;">
+                Prints de conversas antigas, guardados aqui pra gente nunca esquecer como tudo começou.
+            </p>
+            <div class="lembrancas-grid" id="lembrancasGrid"></div>
+            <p id="lembrancasVazio" class="text-center text-white-50 small mb-0">Nenhuma lembrança adicionada ainda.</p>
+            <div class="text-center mt-3">
+                <button id="btnAdicionarLembranca" class="btn btn-outline-light btn-sm rounded-pill">
+                    <i class="bi bi-plus-lg me-1"></i>Adicionar lembrança
+                </button>
+                <input type="file" id="inputLembrancas" accept="image/*" multiple class="d-none">
+            </div>
+        </div>
+
         <div id="romanceVideoWrap" class="mt-5 d-none romance-video-wrap reveal-up" style="max-width: 420px; margin: 0 auto;">
             <p class="romance-section-title">O momento em que você descobriu</p>
             <video id="romanceVideo" controls playsinline></video>
@@ -1317,10 +1353,45 @@
             <button id="btnCompartilhar" class="btn btn-share mt-4">
                 <i class="bi bi-share-fill me-2"></i>Compartilhar
             </button>
+
+            <div class="d-flex gap-2 justify-content-center mt-3 flex-wrap">
+                <button id="btnExportarImagem" class="btn btn-outline-light btn-sm rounded-pill">
+                    <i class="bi bi-image me-1"></i>Exportar carta como imagem
+                </button>
+                <button id="btnExportarPDF" class="btn btn-outline-light btn-sm rounded-pill">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Exportar carta como PDF
+                </button>
+            </div>
+            <p id="exportarStatus" class="save-status"></p>
+
             <div class="mt-4 text-center">
+                <button id="btnBackup" class="btn btn-share">
+                    <i class="bi bi-cloud-arrow-down-fill me-2"></i>Backup da Nossa História
+                </button>
+                <br>
+                <button id="btnRestaurarBackup" class="btn btn-outline-light btn-sm rounded-pill mt-2">
+                    <i class="bi bi-cloud-arrow-up-fill me-1"></i>Restaurar Backup
+                </button>
+                <input type="file" id="inputRestaurarBackup" accept="application/json,.json" class="d-none">
+                <p id="restaurarStatus" class="save-status"></p>
+            </div>
+
+            <div class="mt-3 text-center">
                 <button id="btnResetar" class="btn btn-outline-danger btn-sm rounded-pill mt-2">Resetar site</button>
             </div>
         </div>
+    </div>
+
+    <!-- Versão "limpa" da carta (fora da tela), usada só para exportar como imagem/PDF -->
+    <div id="cartaExportavel" aria-hidden="true" style="position: fixed; left: -9999px; top: 0; width: 380px; background: #FBF7F0; padding: 34px 28px; font-family: 'Cormorant Garamond', Georgia, serif; color: #2b2523;">
+        <p style="text-align:center; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8f4d57; margin-bottom:14px;">1 Coríntios 13</p>
+        <p id="cartaExportavelTexto" style="font-style:italic; font-size:17px; line-height:1.8; text-align:left; white-space:pre-wrap; margin:0;"></p>
+        <p id="cartaExportavelAssinatura" style="font-family:'Alex Brush',cursive; font-size:30px; color:#8f4d57; margin-top:18px;"></p>
+    </div>
+
+    <div id="lembrancaLightbox" class="lembranca-lightbox d-none">
+        <button id="btnFecharLembranca" class="lembranca-lightbox-close" aria-label="Fechar">&times;</button>
+        <img id="lembrancaLightboxImg" src="" alt="Lembrança ampliada">
     </div>
 
     <div id="futuroOverlay" class="futuro-overlay d-none">
@@ -1368,6 +1439,174 @@
         const db = new Dexie("AuroraDB");
         db.version(1).stores({ arquivos: 'id' });
 
+        /* ---------------- Sistema completo de backup / restauração ---------------- */
+        function blobParaDataURL(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function dataURLParaBlob(dataUrl) {
+            const partes = dataUrl.split(',');
+            const mimeMatch = partes[0].match(/:(.*?);/);
+            const mime = mimeMatch ? mimeMatch[1] : '';
+            const binario = atob(partes[1]);
+            const array = new Uint8Array(binario.length);
+            for (let i = 0; i < binario.length; i++) array[i] = binario.charCodeAt(i);
+            return new Blob([array], { type: mime });
+        }
+
+        function lerJsonDoLocalStorage(chave) {
+            try { return JSON.parse(localStorage.getItem(chave) || 'null'); } catch (e) { return null; }
+        }
+
+        // Reúne tudo o que existe até agora: assinatura, vídeo do pedido, mensagem
+        // para o futuro, respostas do quiz, contrato e as demais configurações —
+        // sempre incluindo apenas o que estiver realmente disponível.
+        async function gerarBackupCompleto() {
+            const backup = {
+                versao: 1,
+                criadoEm: new Date().toISOString(),
+                nomeDela: NOME_DELA,
+                nomeDele: NOME_DELE,
+                dataInicioRelacionamento: obterOuCriarDataPrimeiroAcesso(),
+                dataPedido: localStorage.getItem('aurora_data_pedido'),
+                stage: localStorage.getItem('aurora_stage'),
+                regrasContrato: lerJsonDoLocalStorage('aurora_regras_contrato'),
+                quizRespostas: lerJsonDoLocalStorage('aurora_quiz_respostas'),
+                assinatura: null,
+                video: null,
+                videoMime: null,
+                mensagemFuturo: null,
+                mensagemFuturoMime: null,
+                mensagemFuturoTipo: null,
+                lembrancas: null
+            };
+
+            try {
+                const registroAssinatura = await db.arquivos.get('assinatura');
+                backup.assinatura = (registroAssinatura && registroAssinatura.data) || localStorage.getItem('aurora_assinatura') || null;
+            } catch (e) { console.error('Backup: falha ao ler assinatura', e); }
+
+            try {
+                const registroVideo = await db.arquivos.get('video_casal');
+                if (registroVideo && registroVideo.data) {
+                    backup.video = await blobParaDataURL(registroVideo.data);
+                    backup.videoMime = registroVideo.data.type || 'video/webm';
+                }
+            } catch (e) { console.error('Backup: falha ao ler vídeo', e); }
+
+            try {
+                const registroFuturo = await db.arquivos.get('mensagem_futuro');
+                if (registroFuturo && registroFuturo.data) {
+                    backup.mensagemFuturo = await blobParaDataURL(registroFuturo.data);
+                    backup.mensagemFuturoMime = registroFuturo.data.type || 'application/octet-stream';
+                    backup.mensagemFuturoTipo = registroFuturo.tipo || null;
+                }
+            } catch (e) { console.error('Backup: falha ao ler mensagem do futuro', e); }
+
+            try {
+                const registroLembrancas = await db.arquivos.get('lembrancas');
+                if (registroLembrancas && Array.isArray(registroLembrancas.data) && registroLembrancas.data.length) {
+                    backup.lembrancas = await Promise.all(registroLembrancas.data.map(async (item) => ({
+                        imagem: await blobParaDataURL(item.blob),
+                        nome: item.nome || null
+                    })));
+                }
+            } catch (e) { console.error('Backup: falha ao ler lembranças', e); }
+
+            return backup;
+        }
+
+        async function baixarBackupCompleto() {
+            const botao = document.getElementById('btnBackup');
+            const textoOriginal = botao.innerHTML;
+            botao.disabled = true;
+            botao.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Preparando backup...';
+
+            try {
+                const backup = await gerarBackupCompleto();
+                const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup-nossa-historia-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 4000);
+            } catch (err) {
+                console.error('Falha ao gerar backup completo', err);
+                alert('Não foi possível gerar o backup agora. Tente novamente.');
+            } finally {
+                botao.disabled = false;
+                botao.innerHTML = textoOriginal;
+            }
+        }
+
+        // Restaura o backup em QUALQUER navegador/dispositivo compatível: grava de
+        // volta no localStorage e no IndexedDB e recarrega a página, que então
+        // detecta o estágio salvo e retoma a experiência a partir dali.
+        async function restaurarBackupDeArquivo(arquivo) {
+            const statusEl = document.getElementById('restaurarStatus');
+            statusEl.textContent = 'Lendo arquivo de backup...';
+            statusEl.className = 'save-status pending';
+
+            try {
+                const texto = await arquivo.text();
+                const backup = JSON.parse(texto);
+
+                if (!backup || backup.versao !== 1) {
+                    statusEl.textContent = 'Este arquivo não parece ser um backup válido.';
+                    statusEl.className = 'save-status err';
+                    return;
+                }
+
+                if (backup.dataPedido) localStorage.setItem('aurora_data_pedido', backup.dataPedido);
+                if (backup.dataInicioRelacionamento) localStorage.setItem('aurora_primeiro_acesso', backup.dataInicioRelacionamento);
+                if (backup.stage) localStorage.setItem('aurora_stage', backup.stage);
+                if (backup.regrasContrato) localStorage.setItem('aurora_regras_contrato', JSON.stringify(backup.regrasContrato));
+                if (backup.quizRespostas) localStorage.setItem('aurora_quiz_respostas', JSON.stringify(backup.quizRespostas));
+
+                if (backup.assinatura) {
+                    localStorage.setItem('aurora_assinatura', backup.assinatura);
+                    try { await db.arquivos.put({ id: 'assinatura', data: backup.assinatura }); } catch (e) { console.error('Restaurar: falha na assinatura', e); }
+                }
+
+                if (backup.video) {
+                    try {
+                        const blobVideo = dataURLParaBlob(backup.video);
+                        await db.arquivos.put({ id: 'video_casal', data: blobVideo, criadoEm: Date.now() });
+                    } catch (e) { console.error('Restaurar: falha no vídeo', e); }
+                }
+
+                if (backup.mensagemFuturo) {
+                    try {
+                        const blobFuturo = dataURLParaBlob(backup.mensagemFuturo);
+                        await db.arquivos.put({ id: 'mensagem_futuro', data: blobFuturo, tipo: backup.mensagemFuturoTipo, criadoEm: Date.now() });
+                    } catch (e) { console.error('Restaurar: falha na mensagem do futuro', e); }
+                }
+
+                if (backup.lembrancas && Array.isArray(backup.lembrancas)) {
+                    try {
+                        const lista = backup.lembrancas.map(item => ({ blob: dataURLParaBlob(item.imagem), nome: item.nome }));
+                        await db.arquivos.put({ id: 'lembrancas', data: lista });
+                    } catch (e) { console.error('Restaurar: falha nas lembranças', e); }
+                }
+
+                statusEl.textContent = 'Backup restaurado com sucesso! Recarregando...';
+                statusEl.className = 'save-status ok';
+                setTimeout(() => location.reload(), 1200);
+            } catch (err) {
+                console.error('Falha ao restaurar backup', err);
+                statusEl.textContent = 'Não foi possível ler esse arquivo de backup.';
+                statusEl.className = 'save-status err';
+            }
+        }
+
         let mediaStream = null;
         let mediaRecorder = null;
         let recordedChunks = [];
@@ -1378,9 +1617,19 @@
 
         const NOME_DELA = "Ana";
         const NOME_DELE = "Gabriel";
-        // Data/hora em que o relacionamento começou de verdade — ajuste para a data real.
-        // Usada pelo contador vivo (anos/meses/dias/horas/min/seg) em "Nossa Trajetória".
-        const DATA_INICIO_RELACIONAMENTO = '2020-01-01T00:00:00';
+
+        // O contador "Juntos há" conta a partir da primeira vez que o site foi
+        // aberto no aparelho dela — não exige saber de antemão a data exata do
+        // pedido. Na primeira visita, grava esse instante; depois disso, sempre
+        // reutiliza a mesma data salva.
+        function obterOuCriarDataPrimeiroAcesso() {
+            let data = localStorage.getItem('aurora_primeiro_acesso');
+            if (!data) {
+                data = new Date().toISOString();
+                try { localStorage.setItem('aurora_primeiro_acesso', data); } catch (e) { console.error('Falha ao salvar data do primeiro acesso', e); }
+            }
+            return data;
+        }
 
         /* ---------------- Seleções reais do pedido ---------------- */
         const pedido = { tamMasc: '', tamFem: '', tamSolitario: '', gravMasc: '', gravFem: '' };
@@ -1429,6 +1678,7 @@
             }
         ];
         let quizIndiceAtual = 0;
+        let quizRespostasEscolhidas = [];
 
         function renderizarQuizDots() {
             const dots = document.getElementById('quizDots');
@@ -1469,6 +1719,8 @@
             const acertou = indiceEscolhido === p.certa;
             btnClicado.classList.add('selecionada', acertou ? 'certa' : 'errada');
 
+            quizRespostasEscolhidas.push({ pergunta: p.pergunta, resposta: p.opcoes[indiceEscolhido], acertou });
+
             const reacaoEl = document.getElementById('quizReacao');
             reacaoEl.textContent = acertou ? p.certoMsg : p.erradoMsg;
             reacaoEl.classList.add('visivel');
@@ -1478,7 +1730,8 @@
             }
 
             // Independentemente da resposta, o quiz sempre segue em frente —
-            // as respostas só existem para gerar essas pequenas reações.
+            // as respostas só existem para gerar essas pequenas reações (e para
+            // ficarem guardadas no backup da experiência).
             setTimeout(() => {
                 quizIndiceAtual++;
                 if (quizIndiceAtual < quizPerguntas.length) {
@@ -1490,12 +1743,14 @@
                         `Não importa quantas você acertou — o que importa é que a gente continua escrevendo essas respostas juntos, todos os dias, ${NOME_DELA}.`;
                     finalMsg.classList.remove('d-none');
                     finalMsg.classList.add('reveal-up');
+                    try { localStorage.setItem('aurora_quiz_respostas', JSON.stringify(quizRespostasEscolhidas)); } catch (e) { console.error('Falha ao salvar respostas do quiz', e); }
                 }
             }, 1600);
         }
 
         function iniciarQuiz() {
             quizIndiceAtual = 0;
+            quizRespostasEscolhidas = [];
             document.getElementById('quizCard').classList.remove('d-none');
             document.getElementById('quizFinalMsg').classList.add('d-none');
             mostrarPerguntaQuiz();
@@ -1672,13 +1927,76 @@
 
             envelope.addEventListener('click', abrirEnvelope);
 
-            // Surge suavemente na tela e, pouco depois, começa a abrir sozinho
-            // (a pessoa também pode tocar para abrir antes, se quiser).
+            // O envelope só surge na tela e aguarda o toque — não abre mais
+            // sozinho, para não sobrepor a foto final antes da hora.
             requestAnimationFrame(() => {
                 envelope.classList.add('envelope-visivel');
                 setTimeout(() => envelopeHint.classList.add('visivel'), 500);
             });
-            setTimeout(abrirEnvelope, 2200);
+        }
+
+        /* ---------------- Exportar a carta (imagem / PDF) ---------------- */
+        // Usa uma versão "limpa" (sem os efeitos 3D do envelope) da carta,
+        // já com "amor" substituído pelo nome dela, para gerar um arquivo
+        // que fique bonito fora do site.
+        function prepararCartaExportavel() {
+            const textoFinal = textoVersiculoBase().replace(/\{AMOR\}/g, NOME_DELA);
+            document.getElementById('cartaExportavelTexto').textContent = textoFinal;
+            document.getElementById('cartaExportavelAssinatura').textContent = `Assim eu quero te amar, ${NOME_DELA}.`;
+        }
+
+        function mostrarStatusExportar(mensagem, tipo) {
+            const statusEl = document.getElementById('exportarStatus');
+            if (!statusEl) return;
+            statusEl.textContent = mensagem;
+            statusEl.className = tipo ? `save-status ${tipo}` : 'save-status';
+        }
+
+        async function exportarCartaComoImagem() {
+            if (typeof html2canvas !== 'function') {
+                mostrarStatusExportar('Não foi possível carregar o exportador de imagem. Verifique sua conexão.', 'err');
+                return;
+            }
+            mostrarStatusExportar('Gerando imagem da carta...', 'pending');
+            prepararCartaExportavel();
+            try {
+                const elemento = document.getElementById('cartaExportavel');
+                const canvas = await html2canvas(elemento, { backgroundColor: '#FBF7F0', scale: 2 });
+                const link = document.createElement('a');
+                link.download = 'nossa-carta.png';
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                mostrarStatusExportar('Imagem exportada com sucesso.', 'ok');
+            } catch (err) {
+                console.error('Falha ao exportar carta como imagem', err);
+                mostrarStatusExportar('Não foi possível exportar a imagem.', 'err');
+            }
+        }
+
+        async function exportarCartaComoPDF() {
+            if (typeof html2canvas !== 'function' || typeof window.jspdf === 'undefined') {
+                mostrarStatusExportar('Não foi possível carregar o exportador de PDF. Verifique sua conexão.', 'err');
+                return;
+            }
+            mostrarStatusExportar('Gerando PDF da carta...', 'pending');
+            prepararCartaExportavel();
+            try {
+                const elemento = document.getElementById('cartaExportavel');
+                const canvas = await html2canvas(elemento, { backgroundColor: '#FBF7F0', scale: 2 });
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const larguraMM = 120;
+                const alturaMM = larguraMM * (canvas.height / canvas.width);
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [larguraMM, alturaMM] });
+                pdf.addImage(imgData, 'PNG', 0, 0, larguraMM, alturaMM);
+                pdf.save('nossa-carta.pdf');
+                mostrarStatusExportar('PDF exportado com sucesso.', 'ok');
+            } catch (err) {
+                console.error('Falha ao exportar carta como PDF', err);
+                mostrarStatusExportar('Não foi possível exportar o PDF.', 'err');
+            }
         }
 
         /* ---------------- Vinheta de abertura (uma vez por sessão) ---------------- */
@@ -1755,7 +2073,7 @@
             if (contadorVivoIntervalo) clearInterval(contadorVivoIntervalo);
 
             function atualizar() {
-                const d = calcularDuracaoRelacionamento(DATA_INICIO_RELACIONAMENTO);
+                const d = calcularDuracaoRelacionamento(obterOuCriarDataPrimeiroAcesso());
                 document.getElementById('lcAnos').textContent = d.anos;
                 document.getElementById('lcMeses').textContent = d.meses;
                 document.getElementById('lcDias').textContent = d.dias;
@@ -1952,6 +2270,64 @@
         function pararGravacaoFuturo() {
             if (futuroRecorder && futuroRecorder.state !== 'inactive') futuroRecorder.stop();
             document.getElementById('btnFuturoParar').classList.add('d-none');
+        }
+
+        /* ---------------- Área de lembranças (prints de conversas antigas) ---------------- */
+        async function adicionarLembrancas(fileList) {
+            const arquivos = Array.from(fileList || []).filter(f => f.type && f.type.startsWith('image/'));
+            if (!arquivos.length) return;
+
+            let registro = null;
+            try { registro = await db.arquivos.get('lembrancas'); } catch (e) { console.error('Falha ao ler lembranças existentes', e); }
+            const lista = (registro && Array.isArray(registro.data)) ? registro.data : [];
+
+            arquivos.forEach(file => lista.push({ blob: file, nome: file.name }));
+
+            try {
+                await db.arquivos.put({ id: 'lembrancas', data: lista });
+            } catch (e) {
+                console.error('Falha ao salvar lembranças', e);
+                alert('Não foi possível salvar essas imagens. Tente novamente.');
+                return;
+            }
+            renderizarLembrancas();
+        }
+
+        async function renderizarLembrancas() {
+            const grid = document.getElementById('lembrancasGrid');
+            const vazio = document.getElementById('lembrancasVazio');
+            if (!grid) return;
+
+            let registro = null;
+            try { registro = await db.arquivos.get('lembrancas'); } catch (e) { console.error('Falha ao carregar lembranças', e); }
+            const lista = (registro && Array.isArray(registro.data)) ? registro.data : [];
+
+            grid.innerHTML = '';
+            if (!lista.length) {
+                vazio.classList.remove('d-none');
+                return;
+            }
+            vazio.classList.add('d-none');
+
+            lista.forEach(item => {
+                const url = URL.createObjectURL(item.blob);
+                const botao = document.createElement('button');
+                botao.type = 'button';
+                botao.className = 'lembranca-item';
+                botao.innerHTML = `<img src="${url}" alt="Print de uma conversa antiga">`;
+                botao.addEventListener('click', () => abrirLembrancaAmpliada(url));
+                grid.appendChild(botao);
+            });
+        }
+
+        function abrirLembrancaAmpliada(url) {
+            document.getElementById('lembrancaLightboxImg').src = url;
+            document.getElementById('lembrancaLightbox').classList.remove('d-none');
+        }
+
+        function fecharLembrancaAmpliada() {
+            document.getElementById('lembrancaLightbox').classList.add('d-none');
+            document.getElementById('lembrancaLightboxImg').src = '';
         }
 
         // Baixa o vídeo automaticamente, sem exigir nenhum clique do usuário.
@@ -2450,13 +2826,23 @@
 
         /* ---------------- Flashback cinematográfico ---------------- */
         // Transição de "filme passando pela cabeça" exibida antes da página
-        // "Nossa História": fotos surgem rapidamente com leve desfoque, variação
-        // de escala e pequenos flashes de luz, transmitindo nostalgia e expectativa.
+        // "Nossa História": fotos surgem em ritmo calmo, cada uma com uma
+        // legenda própria, contando um pedacinho da história em vez de só
+        // piscar rápido sem contexto.
         function iniciarFlashback(aoTerminar) {
             const tela = document.getElementById('flashbackScreen');
             const flash = document.getElementById('flashbackFlash');
             const label = document.getElementById('flashbackLabel');
             const fotos = ['fbFoto1', 'fbFoto2', 'fbFoto3', 'fbFoto4', 'fbFoto5'];
+            // Edite estas legendas para refletir a história real de vocês — cada
+            // uma aparece em sincronia com a foto correspondente.
+            const legendas = [
+                'onde tudo começou',
+                'as risadas de sempre',
+                'os perrengues que resolvemos juntos',
+                'os dias mais simples',
+                'e hoje, mais um capítulo'
+            ];
 
             // Respeita a preferência do usuário por menos movimento: pula direto.
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -2467,21 +2853,29 @@
             tela.style.display = 'flex';
             fotos.forEach(id => document.getElementById(id).classList.remove('fb-ativa'));
             label.classList.remove('fb-visivel');
+            label.textContent = '';
 
-            const intervaloEntreFotos = 260;
+            const intervaloEntreFotos = 1500; // ritmo bem mais calmo, dá tempo de olhar cada foto
             fotos.forEach((id, i) => {
                 setTimeout(() => {
                     fotos.forEach(outroId => document.getElementById(outroId).classList.remove('fb-ativa'));
                     document.getElementById(id).classList.add('fb-ativa');
-                    // Pequeno flash de luz a cada troca de foto, discreto e rápido.
+                    // Pequeno flash de luz a cada troca de foto, discreto.
                     flash.classList.add('fb-piscar');
                     setTimeout(() => flash.classList.remove('fb-piscar'), 90);
+
+                    // A legenda troca em sincronia com a foto: some suavemente e
+                    // volta já com o novo texto, em vez de um único texto genérico
+                    // aparecendo só no fim.
+                    label.classList.remove('fb-visivel');
+                    setTimeout(() => {
+                        label.textContent = legendas[i] || '';
+                        label.classList.add('fb-visivel');
+                    }, 350);
                 }, i * intervaloEntreFotos);
             });
 
-            setTimeout(() => label.classList.add('fb-visivel'), fotos.length * intervaloEntreFotos - 150);
-
-            const duracaoTotal = fotos.length * intervaloEntreFotos + 550;
+            const duracaoTotal = fotos.length * intervaloEntreFotos + 900;
             setTimeout(() => {
                 tela.style.display = 'none';
                 fotos.forEach(id => document.getElementById(id).classList.remove('fb-ativa'));
@@ -2544,6 +2938,7 @@
             prepararContrato();
             iniciarContadorVivo();
             iniciarQuiz();
+            renderizarLembrancas();
 
             const dataPedidoIso = localStorage.getItem('aurora_data_pedido');
             if (dataPedidoIso) {
@@ -2596,6 +2991,7 @@
             const suspenseOverlay = document.getElementById('suspenseOverlay');
 
             bloquearZoom();
+            obterOuCriarDataPrimeiroAcesso();
             iniciarCarrosselPromocional();
             iniciarThumbsProduto();
             iniciarVinheta();
@@ -2748,12 +3144,35 @@
             document.getElementById('btnFuturoIniciar').addEventListener('click', iniciarGravacaoFuturo);
             document.getElementById('btnFuturoParar').addEventListener('click', pararGravacaoFuturo);
 
+            document.getElementById('btnAdicionarLembranca').addEventListener('click', () => {
+                document.getElementById('inputLembrancas').click();
+            });
+            document.getElementById('inputLembrancas').addEventListener('change', (evt) => {
+                adicionarLembrancas(evt.target.files);
+                evt.target.value = '';
+            });
+            document.getElementById('btnFecharLembranca').addEventListener('click', fecharLembrancaAmpliada);
+
             document.getElementById('btnCompartilhar').addEventListener('click', async () => {
                 try {
                     if (navigator.share) {
                         await navigator.share({ title: 'Nossa Trajetória', text: 'Um momento nosso ❤️', url: window.location.href });
                     }
                 } catch (e) { /* usuário cancelou o compartilhamento, sem problema */ }
+            });
+
+            document.getElementById('btnExportarImagem').addEventListener('click', exportarCartaComoImagem);
+            document.getElementById('btnExportarPDF').addEventListener('click', exportarCartaComoPDF);
+
+            document.getElementById('btnBackup').addEventListener('click', baixarBackupCompleto);
+
+            document.getElementById('btnRestaurarBackup').addEventListener('click', () => {
+                document.getElementById('inputRestaurarBackup').click();
+            });
+            document.getElementById('inputRestaurarBackup').addEventListener('change', (evt) => {
+                const arquivo = evt.target.files && evt.target.files[0];
+                if (arquivo) restaurarBackupDeArquivo(arquivo);
+                evt.target.value = ''; // permite selecionar o mesmo arquivo de novo, se precisar
             });
 
             document.getElementById('btnResetar').addEventListener('click', async () => {
