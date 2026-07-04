@@ -795,7 +795,7 @@
             </div>
 
             <div class="thumb-strip">
-                <div class="thumb-item active" data-img="https://images.tcdn.com.br/img/img_prod/1421625/aliana_esgrifa_branca_solitrio_liblula_2_milimetr_3_20260305132732_fcde6e8436f4.jpg">
+                <div class="thumb-item active" data-img=https://images.tcdn.com.br/img/img_prod/1421625/aliana_esgrifa_branca_solitrio_liblula_2_milimetr_3_20260305132732_fcde6e8436f4.jpg">
                     <img src="https://images.tcdn.com.br/img/img_prod/1421625/aliana_esgrifa_branca_solitrio_liblula_2_milimetr_3_20260305132732_fcde6e8436f4.jpg" alt="Miniatura 1">
                 </div>
                 <div class="thumb-item" data-img="https://images.tcdn.com.br/img/img_prod/1421625/aliana_esgrifa_branca_solitrio_liblula_2_milimetr_2_20260305132732_24dd611dadc2.jpg">
@@ -803,8 +803,7 @@
                 </div>
                 <div class="thumb-item" data-img="https://images.tcdn.com.br/img/img_prod/1421625/aliana_esgrifa_branca_solitrio_liblula_2_milimetr_4_20260305132732_555a5f84be8a.jpg">
                     <img src="https://images.tcdn.com.br/img/img_prod/1421625/aliana_esgrifa_branca_solitrio_liblula_2_milimetr_4_20260305132732_555a5f84be8a.jpg" alt="Miniatura 3">
-                </div>
-                </div>
+            </div>
 
             <div class="px-2 mt-3">
                 <p class="text-muted small mb-1">Ref: AU-31207-PRT</p>
@@ -1645,14 +1644,14 @@
             try {
                 const lista = await obterMensagensFuturo();
                 if (lista.length) {
-                    backup.mensagensFuturo = lista.map((msg) => ({
+                    backup.mensagensFuturo = await Promise.all(lista.map(async (msg) => ({
                         id: msg.id,
                         tipo: msg.tipo,
                         texto: msg.texto || null,
                         criadoEm: msg.criadoEm,
                         mimeType: msg.mimeType || null,
-                        arquivo: msg.arquivo || null
-                    }));
+                        arquivo: msg.blob ? await blobParaDataURL(msg.blob) : null
+                    })));
                 }
             } catch (e) { console.error('Backup: falha ao ler mensagens do futuro', e); }
 
@@ -1738,7 +1737,7 @@
                             tipo: item.tipo,
                             texto: item.texto || null,
                             mimeType: item.mimeType || null,
-                            arquivo: item.arquivo || null,
+                            blob: item.arquivo ? dataURLParaBlob(item.arquivo) : null,
                             criadoEm: item.criadoEm || new Date().toISOString()
                         }));
                         await salvarListaMensagensFuturo(lista);
@@ -1747,12 +1746,13 @@
                     // Compatibilidade com backups gerados por uma versão antiga do site,
                     // que só guardava uma única mensagem (formato singular).
                     try {
+                        const blobFuturo = dataURLParaBlob(backup.mensagemFuturo);
                         const lista = [{
                             id: gerarIdMensagemFuturo(),
                             tipo: backup.mensagemFuturoTipo === 'video' ? 'video' : 'audio',
                             texto: null,
                             mimeType: backup.mensagemFuturoMime || null,
-                            arquivo: backup.mensagemFuturo,
+                            blob: blobFuturo,
                             criadoEm: backup.criadoEm || new Date().toISOString()
                         }];
                         await salvarListaMensagensFuturo(lista);
@@ -2672,24 +2672,14 @@
             statusEl.textContent = 'Salvando mensagem...';
             statusEl.className = 'save-status pending';
 
-        let arquivoDataUrl;
-        try {
-            arquivoDataUrl = await blobParaDataURL(futuroBlobPendente);
-        } catch (err) {
-            console.error('Falha ao converter a gravação para salvar', err);
-            statusEl.textContent = 'Não foi possível preparar a gravação para salvar. Tente novamente.';
-            statusEl.className = 'save-status err';
-            return;
-        }
-        
-        const novaMensagem = {
-            id: gerarIdMensagemFuturo(),
-            tipo: futuroModo,
-            texto: null,
-            arquivo: arquivoDataUrl,
-            mimeType: futuroMimePendente,
-            criadoEm: new Date().toISOString()
-        };
+            const novaMensagem = {
+                id: gerarIdMensagemFuturo(),
+                tipo: futuroModo,
+                texto: null,
+                blob: futuroBlobPendente,
+                mimeType: futuroMimePendente,
+                criadoEm: new Date().toISOString()
+            };
 
             try {
                 const lista = await obterMensagensFuturo();
@@ -2799,18 +2789,18 @@
                     p.className = 'mensagem-futuro-texto';
                     p.textContent = msg.texto || '';
                     item.appendChild(p);
-                } else if (msg.tipo === 'audio' && msg.arquivo) {
+                } else if (msg.tipo === 'audio' && msg.blob) {
                     const audio = document.createElement('audio');
                     audio.className = 'mensagem-futuro-audio';
                     audio.controls = true;
-                    audio.src = msg.arquivo;
+                    audio.src = URL.createObjectURL(msg.blob);
                     item.appendChild(audio);
-                } else if (msg.tipo === 'video' && msg.arquivo) {
+                } else if (msg.tipo === 'video' && msg.blob) {
                     const video = document.createElement('video');
                     video.className = 'mensagem-futuro-video-el';
                     video.controls = true;
                     video.playsInline = true;
-                    video.src = msg.arquivo;
+                    video.src = URL.createObjectURL(msg.blob);
                     item.appendChild(video);
                 }
 
