@@ -1644,14 +1644,14 @@
             try {
                 const lista = await obterMensagensFuturo();
                 if (lista.length) {
-                    backup.mensagensFuturo = await Promise.all(lista.map(async (msg) => ({
+                    backup.mensagensFuturo = lista.map((msg) => ({
                         id: msg.id,
                         tipo: msg.tipo,
                         texto: msg.texto || null,
                         criadoEm: msg.criadoEm,
                         mimeType: msg.mimeType || null,
-                        arquivo: msg.blob ? await blobParaDataURL(msg.blob) : null
-                    })));
+                        arquivo: msg.arquivo || null
+                    }));
                 }
             } catch (e) { console.error('Backup: falha ao ler mensagens do futuro', e); }
 
@@ -1737,7 +1737,7 @@
                             tipo: item.tipo,
                             texto: item.texto || null,
                             mimeType: item.mimeType || null,
-                            blob: item.arquivo ? dataURLParaBlob(item.arquivo) : null,
+                            arquivo: item.arquivo || null,
                             criadoEm: item.criadoEm || new Date().toISOString()
                         }));
                         await salvarListaMensagensFuturo(lista);
@@ -1746,13 +1746,12 @@
                     // Compatibilidade com backups gerados por uma versão antiga do site,
                     // que só guardava uma única mensagem (formato singular).
                     try {
-                        const blobFuturo = dataURLParaBlob(backup.mensagemFuturo);
                         const lista = [{
                             id: gerarIdMensagemFuturo(),
                             tipo: backup.mensagemFuturoTipo === 'video' ? 'video' : 'audio',
                             texto: null,
                             mimeType: backup.mensagemFuturoMime || null,
-                            blob: blobFuturo,
+                            arquivo: backup.mensagemFuturo,
                             criadoEm: backup.criadoEm || new Date().toISOString()
                         }];
                         await salvarListaMensagensFuturo(lista);
@@ -2672,14 +2671,24 @@
             statusEl.textContent = 'Salvando mensagem...';
             statusEl.className = 'save-status pending';
 
-            const novaMensagem = {
-                id: gerarIdMensagemFuturo(),
-                tipo: futuroModo,
-                texto: null,
-                blob: futuroBlobPendente,
-                mimeType: futuroMimePendente,
-                criadoEm: new Date().toISOString()
-            };
+        let arquivoDataUrl;
+        try {
+            arquivoDataUrl = await blobParaDataURL(futuroBlobPendente);
+        } catch (err) {
+            console.error('Falha ao converter a gravação para salvar', err);
+            statusEl.textContent = 'Não foi possível preparar a gravação para salvar. Tente novamente.';
+            statusEl.className = 'save-status err';
+            return;
+        }
+        
+        const novaMensagem = {
+            id: gerarIdMensagemFuturo(),
+            tipo: futuroModo,
+            texto: null,
+            arquivo: arquivoDataUrl,
+            mimeType: futuroMimePendente,
+            criadoEm: new Date().toISOString()
+        };
 
             try {
                 const lista = await obterMensagensFuturo();
@@ -2789,18 +2798,18 @@
                     p.className = 'mensagem-futuro-texto';
                     p.textContent = msg.texto || '';
                     item.appendChild(p);
-                } else if (msg.tipo === 'audio' && msg.blob) {
+                } else if (msg.tipo === 'audio' && msg.arquivo) {
                     const audio = document.createElement('audio');
                     audio.className = 'mensagem-futuro-audio';
                     audio.controls = true;
-                    audio.src = URL.createObjectURL(msg.blob);
+                    audio.src = msg.arquivo;
                     item.appendChild(audio);
-                } else if (msg.tipo === 'video' && msg.blob) {
+                } else if (msg.tipo === 'video' && msg.arquivo) {
                     const video = document.createElement('video');
                     video.className = 'mensagem-futuro-video-el';
                     video.controls = true;
                     video.playsInline = true;
-                    video.src = URL.createObjectURL(msg.blob);
+                    video.src = msg.arquivo;
                     item.appendChild(video);
                 }
 
