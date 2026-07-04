@@ -34,7 +34,7 @@
  */
 
 const SUPABASE_URL = 'https://mdiohswwximmsggmrzue.supabase.co';        // ex: 'https://mdiohswwximmsggmrzue.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_S4jr8HeIkemKqvtzkqNMzw_p3o8a3SX';   // ex: ''
+const SUPABASE_ANON_KEY = 'sb_publishable_S4jr8HeIkemKqvtzkqNMzw_p3o8a3SX';   // ex: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaW9oc3d3eGltbXNnZ21yenVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNTYzNjgsImV4cCI6MjA5ODczMjM2OH0.maRn6Wax6uIEyVo8ETXxOGQ5Mi61B6rafl7CCC1fGcs'
 const SUPABASE_BUCKET = 'aurora-backups';
 
 function syncEstaConfigurado() {
@@ -70,6 +70,27 @@ async function publicarBackupNaNuvem(codigo) {
 
     if (!resposta.ok) throw new Error(`Falha ao publicar na nuvem: ${resposta.status}`);
     return true;
+}
+
+async function testeUpload() {
+    const url = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/teste.json`;
+
+    const resposta = await fetch(url, {
+        method: "POST",
+        headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            "x-upsert": "true"
+        },
+        body: JSON.stringify({
+            teste: true,
+            data: new Date().toISOString()
+        })
+    });
+
+    console.log("Status:", resposta.status);
+    console.log(await resposta.text());
 }
 
 /** Baixa o backup de um código de compartilhamento e aplica no aparelho atual. */
@@ -139,25 +160,4 @@ async function compartilharExperiencia() {
 
 function iniciarModuloSync() {
     document.getElementById('btnCompartilhar').addEventListener('click', compartilharExperiencia);
-}
-
-async function testarConexaoSupabase() {
-    try {
-        const resposta = await fetch(`${SUPABASE_URL}/rest/v1/`, {
-            headers: {
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-            }
-        });
-
-        console.log("Status:", resposta.status);
-
-        if (resposta.ok) {
-            console.log("✅ Conectado ao Supabase!");
-        } else {
-            console.log("❌ Erro de conexão:", await resposta.text());
-        }
-    } catch (erro) {
-        console.error("❌ Não foi possível conectar:", erro);
-    }
 }
