@@ -140,3 +140,24 @@ async function compartilharExperiencia() {
 function iniciarModuloSync() {
     document.getElementById('btnCompartilhar').addEventListener('click', compartilharExperiencia);
 }
+
+async function testarConexaoSupabase() {
+    try {
+        const resposta = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+            headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+            }
+        });
+
+        console.log("Status:", resposta.status);
+
+        if (resposta.ok) {
+            console.log("✅ Conectado ao Supabase!");
+        } else {
+            console.log("❌ Erro de conexão:", await resposta.text());
+        }
+    } catch (erro) {
+        console.error("❌ Não foi possível conectar:", erro);
+    }
+}
