@@ -1,0 +1,454 @@
+/* ============================================================================
+   STYLE.CSS — Estilos do projeto Aurora Joias
+   ============================================================================
+   Organizado em seções: variáveis, base/reset, loja, checkout, suspense,
+   carta final, flashback, romance/nossa-história, exportação, bloqueio de
+   desktop e acessibilidade (prefers-reduced-motion).
+   ============================================================================ */
+
+:root {
+    --rosegold: #B76E79;
+    --rosegold-dark: #8f4d57;
+    --offwhite: #FAF9F6;
+    --text-dark: #333333;
+}
+
+/* ---------------- Base / reset ----------------
+   CORREÇÃO (Prioridade 1, item 4): elimina completamente o scroll/overflow
+   horizontal em qualquer navegador. box-sizing garante que paddings não
+   estourem a largura de nenhum elemento. */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+    background-color: var(--offwhite);
+    height: 100%;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+body {
+    background-color: var(--offwhite);
+    font-family: 'Jost', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-dark);
+    overflow-x: hidden;
+    min-height: 100%;
+    width: 100%;
+    max-width: 100vw;
+    transition: background-color 0.4s ease; /* acompanha a troca de tela (corrige "áreas brancas") */
+}
+
+img { max-width: 100%; }
+
+.text-rosegold { color: var(--rosegold) !important; }
+.bg-rosegold { background-color: var(--rosegold) !important; color: white; }
+.border-rosegold { border-color: #e0b4bc !important; }
+.btn-rosegold { background-color: var(--rosegold); color: white; border: none; }
+.btn-rosegold:hover, .btn-rosegold:active { background-color: #a05d67; color: white; }
+.btn-rosegold:disabled { background-color: #d9b4ba; }
+.tracking-wide { letter-spacing: 2px; }
+.placeholder-link:active { opacity: 0.5; }
+
+/* ---------------- Placeholder de imagem (Prioridade 3) ----------------
+   Exibido automaticamente quando o arquivo real ainda não foi enviado
+   para /assets — evita o ícone de "imagem quebrada". */
+.imagem-placeholder-vazio {
+    width: 100%; height: 100%; min-height: 90px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, #f3e6e8, #f7eef0);
+    border: 1px dashed #e0b4bc; border-radius: 8px; color: var(--rosegold-dark); font-size: 0.7rem; text-align: center; padding: 8px;
+}
+.imagem-placeholder-vazio i { font-size: 1.4rem; }
+
+.product-image-container img { width: 100%; object-fit: cover; max-height: 400px; background-color: #eee; }
+.product-image-container .imagem-placeholder-vazio { min-height: 320px; border-radius: 8px; }
+.related-img { height: 150px; object-fit: cover; background-color: #eee; }
+
+/* ---------------- Home / vitrine da joalheria ---------------- */
+.promo-carousel { position: relative; }
+.promo-slide {
+    min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 26px 20px; color: white; position: relative; overflow: hidden;
+}
+.promo-slide.slide-a { background: linear-gradient(135deg, #8f4d57 0%, #B76E79 60%, #c98d96 100%); }
+.promo-slide.slide-b { background: linear-gradient(135deg, #3a2029 0%, #4a2c34 60%, #6a3f49 100%); }
+.promo-slide.slide-c { background: linear-gradient(135deg, #B76E79 0%, #d9a5ac 70%, #f0d9dd 100%); }
+.promo-slide::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12), transparent 55%);
+    pointer-events: none;
+}
+.promo-eyebrow { font-size: 0.68rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0.85; margin-bottom: 6px; }
+.promo-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.65rem; font-weight: 600; margin-bottom: 6px; }
+.promo-sub { font-size: 0.82rem; opacity: 0.9; max-width: 300px; }
+.carousel-indicators-custom { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; z-index: 5; }
+.carousel-indicators-custom button { width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); padding: 0; }
+.carousel-indicators-custom button.active { background: #fff; width: 16px; border-radius: 3px; }
+
+.thumb-strip { display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+.thumb-item { width: 60px; height: 60px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; opacity: 0.65; transition: opacity 0.2s ease, border-color 0.2s ease; background: #eee; }
+.thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb-item.active, .thumb-item:active { opacity: 1; border-color: var(--rosegold); }
+
+.featured-ribbon { display: inline-flex; align-items: center; gap: 6px; background: rgba(183,110,121,0.1); border: 1px solid rgba(183,110,121,0.35); color: var(--rosegold-dark); font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; padding: 5px 12px; border-radius: 999px; }
+
+.section-divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 18px; }
+.section-divider .line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #e0b4bc, transparent); }
+.section-divider i { color: var(--rosegold); font-size: 0.85rem; }
+
+.about-section { background: linear-gradient(180deg, #FAF9F6 0%, #f3e6e8 100%); border-radius: 14px; padding: 26px 20px; text-align: center; position: relative; border: 1px solid #f0d9dd; }
+.about-section .about-eyebrow { font-size: 0.68rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); font-weight: 600; }
+.about-section h4 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin: 6px 0 12px; }
+.about-section p { font-size: 0.88rem; color: #5a5048; line-height: 1.7; max-width: 420px; margin: 0 auto; }
+.about-badges { display: flex; justify-content: center; gap: 22px; margin-top: 18px; flex-wrap: wrap; }
+.about-badges .about-badge { text-align: center; }
+.about-badges .about-badge i { font-size: 1.4rem; color: var(--rosegold); }
+.about-badges .about-badge span { display: block; font-size: 0.68rem; color: #8a7a5c; margin-top: 4px; max-width: 80px; }
+
+.highlight-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
+.highlight-strip::-webkit-scrollbar { display: none; }
+.highlight-card { flex: 0 0 auto; width: 130px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #f2e6e8; }
+.highlight-card img, .highlight-card .imagem-placeholder-vazio { width: 100%; height: 90px; object-fit: cover; background: #eee; }
+.highlight-card .hc-label { font-size: 0.68rem; font-weight: 600; text-align: center; padding: 6px 4px; color: #5a5048; }
+
+.trust-badges i { font-size: 1.8rem; color: #555; }
+.security-bar { font-size: 0.75rem; background-color: #f1f1f1; }
+
+/* ---------------- Telas de tela cheia (loja/checkout) ---------------- */
+.fullscreen-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--offwhite); z-index: 9999; overflow-y: auto; display: none; }
+
+/* ---------------- Overlay de suspense ----------------
+   Usa dvh (dynamic viewport height) com fallback para vh: em navegadores
+   móveis, a barra de endereço aparece/some e "100vh" tradicional deixa
+   sobras brancas embaixo — dvh acompanha o tamanho real visível. */
+.suspense-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh;
+    background-color: rgba(20, 20, 20, 0.97); z-index: 10000;
+    display: none; align-items: center; justify-content: center; flex-direction: column;
+    backdrop-filter: blur(10px); overflow-y: auto;
+}
+
+.processing-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 20, 20, 0.97); z-index: 10600; display: none; align-items: center; justify-content: center; flex-direction: column; color: white; text-align: center; padding: 20px; }
+.processing-steps { list-style: none; padding: 0; margin: 24px 0 0; text-align: left; max-width: 320px; }
+.processing-steps li { padding: 8px 0; opacity: 0.35; transition: opacity 0.3s ease; font-size: 0.95rem; }
+.processing-steps li.active { opacity: 1; font-weight: 600; }
+.processing-steps li.done { opacity: 0.7; }
+.processing-steps li i { margin-right: 10px; width: 18px; display: inline-block; }
+
+.checkout-box { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.icon-circle { width: 40px; height: 40px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.fade-in { animation: fadeIn 1s ease-in forwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.reveal-up { animation: fadeUp 0.8s ease forwards; opacity: 0; }
+
+/* ---------------- Perguntas do suspense (com botão "Não" fujão) ---------------- */
+.question-card { background: white; padding: 28px 24px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); text-align: center; width: 100%; max-width: 400px; position: relative; overflow: hidden; }
+.question-eyebrow { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold); font-weight: 600; }
+.question-dots { display: flex; justify-content: center; gap: 6px; margin: 10px 0 4px; }
+.question-dots span { width: 6px; height: 6px; border-radius: 50%; background: #e6d3d6; transition: all 0.3s ease; }
+.question-dots span.done { background: var(--rosegold); }
+#btnNoLegenda { font-size: 0.75rem; color: var(--rosegold-dark); min-height: 18px; margin-top: 6px; }
+
+.polaroid { background: white; padding: 16px 16px 44px 16px; box-shadow: 0 18px 40px rgba(0,0,0,0.5); border-radius: 6px; max-width: 95%; width: 320px; opacity: 0; transition: opacity 1.15s cubic-bezier(0.22, 1, 0.36, 1); }
+.polaroid.foto-visivel { opacity: 1; }
+.polaroid img, .polaroid .imagem-placeholder-vazio { width: 100%; height: auto; aspect-ratio: 1/1; border-radius: 3px; display: block; }
+.polaroid-caption { font-family: 'Courier New', Courier, monospace; text-align: center; margin-top: 14px; font-weight: bold; color: #333; font-size: 1.05rem; }
+.polaroid-stack { position: relative; width: 100%; max-width: 96vw; height: 480px; margin: 0 auto; }
+@media (min-width: 400px) { .polaroid-stack { max-width: 440px; height: 520px; } }
+.polaroid-stack .polaroid { position: absolute; top: 0; left: 50%; }
+
+.typing-container { min-height: 150px; padding: 20px; font-size: 1.25rem; font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; color: white; text-align: center; line-height: 1.7; display: none; max-width: 440px; }
+.cursor { display: inline-block; width: 3px; background-color: white; margin-left: 2px; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.text-shadow { text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+.final-photo { max-height: 52vh; width: 100%; max-width: 420px; object-fit: cover; border: 4px solid var(--rosegold); border-radius: 12px; background-color: #eee; }
+
+.maintenance-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 10500; display: flex; align-items: center; justify-content: center; }
+.maintenance-box { background: white; border-radius: 16px; padding: 25px; max-width: 340px; margin: 0 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+.signature-pad-wrap { background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+#signatureCanvas { border: 2px dashed var(--rosegold); border-radius: 8px; touch-action: none; width: 100%; height: 160px; background: #fff; display: block; }
+.signature-hint { font-size: 0.75rem; color: #999; margin-top: 8px; }
+
+.tracking-box { text-align: center; color: white; width: 100%; max-width: 420px; }
+.tracking-distance { font-size: 3rem; font-weight: bold; font-variant-numeric: tabular-nums; }
+.tracking-bar-outer { width: 90%; max-width: 320px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 15px auto; overflow: hidden; }
+.tracking-bar-inner { height: 100%; background: var(--rosegold); width: 0%; transition: width 0.4s linear; }
+
+.verification-box { text-align: center; color: white; width: 100%; max-width: 380px; padding: 10px; }
+.verification-icon { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; background: rgba(240, 173, 78, 0.15); border: 1px solid rgba(240, 173, 78, 0.5); display: flex; align-items: center; justify-content: center; font-size: 1.7rem; color: #f0ad4e; }
+.verification-eyebrow { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: #f0ad4e; font-weight: 600; margin-bottom: 6px; }
+.verification-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
+.verification-text { font-size: 0.92rem; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 18px; }
+
+@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 15px 4px rgba(183, 110, 121, 0.6); } 50% { box-shadow: 0 0 35px 12px rgba(183, 110, 121, 0.95); } }
+.glow-effect { animation: glowPulse 1.6s ease-in-out infinite; }
+
+.rotate-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.rotate-hint .phone-icon { font-size: 3.2rem; display: inline-block; animation: rotatePhone 1.8s ease-in-out infinite; }
+@keyframes rotatePhone { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
+#conteudoGravacao .signature-pad-wrap { max-width: 520px !important; }
+#videoPreview, #videoPlayback { aspect-ratio: 16 / 9 !important; }
+.rec-dot { width: 10px; height: 10px; background: #ff3b3b; border-radius: 50%; display: inline-block; margin-right: 6px; animation: recBlink 1s step-start infinite; }
+@keyframes recBlink { 50% { opacity: 0; } }
+.save-status { font-size: 0.75rem; margin-top: 8px; min-height: 16px; }
+.save-status.ok { color: #7ee787; }
+.save-status.pending { color: #f0d9dd; }
+.save-status.err { color: #ff8a8a; }
+
+.post-record-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: white; text-align: center; padding: 10px; }
+.post-record-screen .check-circle { width: 64px; height: 64px; border-radius: 50%; background: rgba(183,110,121,0.18); border: 1px solid rgba(183,110,121,0.6); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--rosegold); }
+.post-record-screen .phone-icon-portrait { font-size: 3rem; display: inline-block; animation: rotatePhoneBack 1.8s ease-in-out infinite; color: var(--rosegold); }
+@keyframes rotatePhoneBack { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } }
+.btn-link-muted { color: rgba(255,255,255,0.5); font-size: 0.8rem; background: none; border: none; text-decoration: underline; margin-top: 6px; }
+
+/* ---------------- Flashback cinematográfico ---------------- */
+.flashback-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; background: #0a0608; z-index: 10800; display: none; align-items: center; justify-content: center; overflow: hidden; }
+.flashback-photo { position: absolute; width: 62vw; max-width: 300px; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.7); opacity: 0; filter: blur(6px); transform: scale(0.85); transition: opacity 0.28s ease, transform 0.55s ease, filter 0.45s ease; }
+.flashback-photo img, .flashback-photo .imagem-placeholder-vazio { width: 100%; aspect-ratio: 1/1; display: block; border-radius: 8px; }
+.flashback-photo.fb-ativa { opacity: 1; filter: blur(0); transform: scale(1.04); }
+.flashback-flash { position: absolute; inset: 0; background: white; opacity: 0; pointer-events: none; transition: opacity 0.12s ease; }
+.flashback-flash.fb-piscar { opacity: 0.22; }
+.flashback-label { position: absolute; bottom: 12%; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.55); font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1rem; letter-spacing: 1px; opacity: 0; transition: opacity 0.6s ease; }
+.flashback-label.fb-visivel { opacity: 1; }
+
+/* ---------------- Carta final (envelope + carta manuscrita) ---------------- */
+.letter-stage { perspective: 1400px; width: 100%; max-width: 320px; margin: 22px auto 6px; min-height: 300px; position: relative; }
+.envelope { position: relative; width: 100%; padding-top: 68%; cursor: pointer; opacity: 0; transform: translateY(14px) scale(0.96); transition: opacity 0.9s ease, transform 0.9s ease; }
+.envelope.envelope-visivel { opacity: 1; transform: translateY(0) scale(1); }
+.envelope-back { position: absolute; inset: 0; border-radius: 6px; background: linear-gradient(160deg, #f4ead9 0%, #e6d5b8 100%); box-shadow: 0 22px 45px rgba(0,0,0,0.55); }
+.envelope-back::before, .envelope-back::after { content: ''; position: absolute; bottom: 0; width: 52%; height: 78%; background: linear-gradient(135deg, #efe1c9, #ddc79f); z-index: 2; }
+.envelope-back::before { left: 0; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.envelope-back::after { right: 0; clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+.envelope-flap { position: absolute; top: 0; left: 0; width: 100%; height: 58%; background: linear-gradient(150deg, #eaddc4, #d7c39c); clip-path: polygon(0 0, 100% 0, 50% 92%); transform-origin: top center; transform-style: preserve-3d; transition: transform 1.15s cubic-bezier(0.65, 0, 0.35, 1); z-index: 4; border-radius: 6px 6px 0 0; }
+.envelope.aberto .envelope-flap { transform: rotateX(180deg); }
+.envelope-seal { position: absolute; top: 34%; left: 50%; width: 42px; height: 42px; transform: translate(-50%, -50%); border-radius: 50%; background: var(--rosegold); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem; box-shadow: 0 6px 14px rgba(0,0,0,0.45); z-index: 6; transition: opacity 0.35s ease, transform 0.35s ease; }
+.envelope.aberto .envelope-seal { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+.letter-paper { position: absolute; left: 50%; bottom: 4%; width: 86%; min-height: 62%; background: #FBF7F0; border-radius: 3px; box-shadow: 0 14px 34px rgba(0,0,0,0.4); padding: 20px 16px 16px; z-index: 3; transform: translate(-50%, 6%) scale(0.82); opacity: 0; transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s, opacity 0.9s ease 0.55s, z-index 0s 0.55s; }
+.envelope.aberto .letter-paper { transform: translate(-50%, -62%) scale(1.06); opacity: 1; z-index: 7; }
+.letter-paper::before { content: ''; position: absolute; inset: 6px; border: 1px solid #e3d5ba; pointer-events: none; }
+.letter-eyebrow { font-family: 'Jost', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); text-align: center; margin-bottom: 10px; opacity: 0; transition: opacity 0.8s ease; }
+.letter-eyebrow.visivel { opacity: 1; }
+.letter-text { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.02rem; line-height: 1.75; color: #2b2523; text-align: left; min-height: 90px; margin: 0; white-space: pre-wrap; opacity: 0; transition: opacity 1s ease; }
+.letter-text.versiculo-visivel { opacity: 1; }
+.letter-text .amor-swap { display: inline-block; color: var(--rosegold-dark); font-weight: 600; transition: opacity 0.42s ease; }
+.letter-signoff { font-family: 'Alex Brush', cursive; font-size: 1.7rem; color: var(--rosegold-dark); margin-top: 10px; opacity: 0; transition: opacity 0.6s ease; }
+.letter-signoff.visivel { opacity: 1; }
+.envelope-hint { text-align: center; color: rgba(255,255,255,0.45); font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 8px; opacity: 0; transition: opacity 0.6s ease; }
+.envelope-hint.visivel { opacity: 1; }
+#finalContinuarWrap { transition: opacity 0.8s ease; }
+
+/* ---------------- Seleção de regras do contrato ---------------- */
+.rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rule-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 12px; padding: 16px 10px 14px; text-align: center; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, opacity 0.2s ease; position: relative; user-select: none; }
+.rule-card i.rule-icon { font-size: 1.35rem; color: var(--rosegold); display: block; margin-bottom: 8px; }
+.rule-card p { font-size: 0.74rem; color: #f0d9dd; margin: 0; line-height: 1.4; }
+.rule-card:active { transform: scale(0.97); }
+.rule-card.selecionada { background: rgba(183,110,121,0.28); border-color: var(--rosegold); }
+.rule-card.disabled { opacity: 0.35; pointer-events: none; }
+.rule-check { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.35); background: rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: transparent; }
+.rule-card.selecionada .rule-check { background: var(--rosegold); border-color: var(--rosegold); color: #fff; }
+#btnGerarContrato:disabled { opacity: 0.5; }
+
+/* ---------------- Vinheta de abertura ---------------- */
+.vinheta-abertura { position: fixed; inset: 0; z-index: 11000; background: radial-gradient(circle at 50% 40%, #3a2029 0%, #1a0f13 75%); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; transition: opacity 0.7s ease; }
+.vinheta-abertura.vinheta-saida { opacity: 0; pointer-events: none; }
+.vinheta-brilho { position: absolute; width: 340px; height: 340px; border-radius: 50%; background: radial-gradient(circle, rgba(183,110,121,0.55) 0%, transparent 70%); animation: vinhetaBrilhoPulse 2.4s ease-in-out infinite; }
+@keyframes vinhetaBrilhoPulse { 0%, 100% { transform: scale(0.9); opacity: 0.7; } 50% { transform: scale(1.15); opacity: 1; } }
+.vinheta-logo { font-family: 'Cormorant Garamond', Georgia, serif; color: #FAF9F6; font-size: 2.6rem; letter-spacing: 8px; font-weight: 600; z-index: 2; margin: 0; animation: vinhetaLogoEntra 1.4s ease forwards; opacity: 0; }
+.vinheta-sub { font-family: 'Jost', sans-serif; color: var(--rosegold); font-size: 0.75rem; letter-spacing: 6px; z-index: 2; margin-top: 6px; animation: vinhetaLogoEntra 1.4s ease 0.3s forwards; opacity: 0; }
+@keyframes vinhetaLogoEntra { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.vinheta-particula { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--rosegold); opacity: 0; z-index: 1; animation: vinhetaParticulaFlutuar 3.2s ease-in-out infinite; }
+.vinheta-particula.p1 { top: 30%; left: 25%; animation-delay: 0s; }
+.vinheta-particula.p2 { top: 65%; left: 70%; animation-delay: 0.5s; }
+.vinheta-particula.p3 { top: 40%; left: 78%; animation-delay: 1s; }
+.vinheta-particula.p4 { top: 70%; left: 30%; animation-delay: 1.5s; }
+.vinheta-particula.p5 { top: 20%; left: 55%; animation-delay: 2s; }
+@keyframes vinhetaParticulaFlutuar { 0%, 100% { opacity: 0; transform: translateY(0); } 50% { opacity: 0.9; transform: translateY(-18px); } }
+
+/* ---------------- Popup de cupom falso ---------------- */
+.cupom-overlay { position: fixed; inset: 0; z-index: 10400; background: rgba(20,20,20,0.55); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.cupom-box { background: white; border-radius: 18px; padding: 30px 24px 24px; max-width: 340px; width: 100%; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.35); animation: fadeUp 0.5s ease forwards; }
+.cupom-close { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 1.4rem; line-height: 1; color: #999; }
+.cupom-icon { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 12px; background: rgba(183,110,121,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--rosegold); }
+.cupom-eyebrow { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--rosegold-dark); font-weight: 600; margin-bottom: 4px; }
+.cupom-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; }
+.cupom-text { font-size: 0.9rem; color: #5a5048; margin-bottom: 14px; }
+.cupom-code-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 4px; }
+.cupom-code { display: inline-block; border: 2px dashed var(--rosegold); border-radius: 8px; padding: 8px 20px; font-weight: bold; letter-spacing: 3px; color: var(--rosegold-dark); font-size: 1.1rem; background: rgba(183,110,121,0.06); }
+
+/* ---------------- Nossa história: fundo, título, contador vivo ---------------- */
+.romance-page { display: none; min-height: 100vh; min-height: 100dvh; width: 100%; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); color: white; padding: 50px 20px 60px; }
+.romance-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 2.6rem; font-weight: 600; }
+.romance-divider { width: 60px; height: 1px; background: var(--rosegold); margin: 22px auto; position: relative; }
+.romance-divider::before { content: '♥'; position: absolute; top: -9px; left: 50%; transform: translateX(-50%); color: var(--rosegold); font-size: 0.8rem; background: transparent; }
+.romance-date-badge { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.05rem; letter-spacing: 1px; color: #f0d9dd; margin-top: 6px; }
+.easter-egg-sobrenome { font-size: 0.78rem; color: rgba(255,255,255,0.5); font-style: italic; max-width: 380px; margin: 14px auto 0; }
+.timeline-item { background: rgba(255,255,255,0.06); border-left: 3px solid var(--rosegold); border-radius: 8px; padding: 16px 18px; margin-bottom: 15px; }
+.timeline-item strong { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.1rem; color: #f0d9dd; }
+.timeline-item-inner { display: flex; gap: 12px; align-items: flex-start; }
+.timeline-thumb, .timeline-item-inner .imagem-placeholder-vazio { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #3a2a2f; border: 1px solid rgba(183,110,121,0.4); cursor: pointer; }
+.romance-section-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; text-align:center; margin-bottom: 20px; }
+.romance-video-wrap video { width: 100%; border-radius: 12px; border: 3px solid var(--rosegold); background:#000; }
+.contract-box { background: rgba(255,255,255,0.08); border: 1px solid rgba(183,110,121,0.5); border-radius: 14px; padding: 20px; text-align:center; }
+.contract-signature-img { max-width: 260px; width: 100%; border-radius: 8px; padding: 6px; margin-top: 10px; background: transparent; }
+.contract-box p.text-start { text-align: left !important; }
+
+/* ---------------- Contrato de namoro (papel impresso) ---------------- */
+.contract-paper { background: #FBF7F0; color: #2b2523; border-radius: 4px; border: 1px solid #d9c9ab; box-shadow: 0 22px 45px rgba(0,0,0,0.45); padding: clamp(22px, 6vw, 40px) clamp(18px, 5vw, 34px); position: relative; }
+.contract-paper::before { content: ''; position: absolute; inset: 8px; border: 1px solid #e3d5ba; border-radius: 2px; pointer-events: none; }
+.contract-inner { position: relative; font-family: 'Cormorant Garamond', Georgia, serif; }
+.contract-kicker { text-align: center; font-family: 'Jost', sans-serif; font-size: 0.68rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); margin-bottom: 6px; font-weight: 600; }
+.contract-title { text-align: center; font-size: 1.55rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; color: #2b2523; }
+.contract-paper .romance-divider { background: var(--rosegold-dark); }
+.contract-paper .romance-divider::before { color: var(--rosegold-dark); }
+.contract-intro { font-size: 1rem; line-height: 1.75; text-align: justify; margin-bottom: 16px; }
+.contract-parties { font-family: 'Jost', sans-serif; font-size: 0.85rem; line-height: 1.8; margin-bottom: 20px; }
+.contract-articles { list-style: none; padding: 0; margin: 0 0 18px; }
+.contract-articles li { font-size: 0.95rem; line-height: 1.7; text-align: justify; margin-bottom: 13px; }
+.contract-articles li strong { color: var(--rosegold-dark); margin-right: 4px; }
+.contract-closing { font-size: 0.95rem; line-height: 1.75; text-align: justify; font-style: italic; margin-bottom: 22px; }
+.contract-local-data { text-align: center; font-family: 'Jost', sans-serif; font-size: 0.8rem; letter-spacing: 0.5px; color: #5a5048; margin-bottom: 30px; }
+.contract-signatures { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin-bottom: 26px; }
+.signature-block { flex: 1 1 200px; max-width: 240px; text-align: center; }
+.signature-img { max-height: 68px; max-width: 100%; object-fit: contain; display: block; margin: 0 auto; }
+.signature-cursive { font-family: 'Alex Brush', cursive; font-size: 2.5rem; color: #2b2523; line-height: 1; transform: rotate(-2deg); margin: 4px 0 2px; }
+.signature-line { border-top: 1px solid #b3a184; margin-top: 6px; padding-top: 6px; }
+.signature-name { font-family: 'Jost', sans-serif; font-size: 0.85rem; font-weight: 600; margin: 0; color: #2b2523; }
+.signature-role { font-family: 'Jost', sans-serif; font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: #8a7a5c; margin: 2px 0 0; }
+.contract-witness { max-width: 240px; margin: 0 auto; text-align: center; }
+.contract-witness .signature-line { border-top-style: dashed; }
+.counter-badge { display: inline-block; background: rgba(183,110,121,0.15); border: 1px solid rgba(183,110,121,0.5); border-radius: 999px; padding: 8px 18px; font-size: 0.85rem; margin-top: 14px; }
+.btn-share { background: transparent; border: 1px solid var(--rosegold); color: var(--rosegold); border-radius: 999px; padding: 10px 22px; font-weight: bold; }
+.btn-share:hover { background: var(--rosegold); color: white; }
+
+/* ---------------- Mesa de fotos ("Nossos momentos") ---------------- */
+.table-gallery { position: relative; max-width: 480px; margin: 0 auto; padding: 34px 8px 55px; }
+.table-photo { background: #fff; padding: 10px 10px 32px 10px; border-radius: 3px; box-shadow: 0 10px 26px rgba(0,0,0,0.5); width: 47%; display: inline-block; margin: 2.5% 1%; vertical-align: top; transition: transform 0.25s ease, box-shadow 0.25s ease, z-index 0s; }
+.table-photo img, .table-photo .imagem-placeholder-vazio { width: 100%; height: 190px; object-fit: cover; display: block; border-radius: 1px; background:#3a2a2f; }
+.table-photo:active { transform: scale(1.08) rotate(0deg) !important; z-index: 20; box-shadow: 0 14px 30px rgba(0,0,0,0.55); }
+.table-photo:nth-child(1) { transform: rotate(-6deg) translateY(6px); margin-right: -4%; z-index: 4; }
+.table-photo:nth-child(2) { transform: rotate(4deg); z-index: 3; }
+.table-photo:nth-child(3) { transform: rotate(3deg) translateY(10px); margin-top: -6%; z-index: 2; margin-left: -3%; }
+.table-photo:nth-child(4) { transform: rotate(-4deg); z-index: 1; }
+
+#conteudoGravacao .signature-pad-wrap { max-width: 520px !important; }
+.skip-link { color: rgba(255,255,255,0.35); font-size: 0.72rem; text-decoration: underline; background: none; border: none; margin-top: 18px; }
+
+/* ---------------- Contador vivo (relacionamento) ---------------- */
+.live-counter-wrap { margin-top: 18px; }
+.live-counter-label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 10px; }
+.live-counter-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-width: 420px; margin: 0 auto; }
+.lc-unit { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 10px; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; }
+.lc-num { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 600; color: #f0d9dd; font-variant-numeric: tabular-nums; }
+.lc-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+@media (max-width: 360px) { .lc-num { font-size: 1.05rem; } }
+
+/* ---------------- Mini quiz ---------------- */
+.quiz-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 16px; padding: 22px 18px; }
+.quiz-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; }
+.quiz-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: all 0.3s ease; }
+.quiz-dots span.done { background: var(--rosegold); }
+.quiz-question { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; text-align: center; margin-bottom: 16px; color: #fff; }
+.quiz-opcoes { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opcao-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #f0d9dd; border-radius: 10px; padding: 10px 14px; font-size: 0.88rem; text-align: left; transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease; }
+.quiz-opcao-btn:active { transform: scale(0.98); }
+.quiz-opcao-btn.selecionada.certa { background: rgba(126,231,135,0.18); border-color: #7ee787; color: #d9ffe0; }
+.quiz-opcao-btn.selecionada.errada { background: rgba(255,138,138,0.15); border-color: #ff8a8a; color: #ffd9d9; }
+.quiz-opcao-btn:disabled { opacity: 0.6; }
+.quiz-reacao { text-align: center; font-size: 0.85rem; color: #f0d9dd; margin-top: 14px; min-height: 20px; opacity: 0; transition: opacity 0.4s ease; }
+.quiz-reacao.visivel { opacity: 1; }
+
+/* ---------------- Mensagem para o futuro ---------------- */
+.futuro-overlay { position: fixed; inset: 0; z-index: 10450; background: rgba(20,20,20,0.65); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.futuro-box { background: white; border-radius: 18px; padding: 26px 22px; max-width: 380px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.35); max-height: 90vh; overflow-y: auto; }
+.futuro-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 600; text-align: center; margin-bottom: 6px; }
+.futuro-sub { font-size: 0.85rem; color: #5a5048; text-align: center; margin-bottom: 14px; }
+.futuro-textarea { width: 100%; border: 1px solid var(--rosegold); border-radius: 10px; padding: 10px 12px; font-family: 'Jost', sans-serif; font-size: 0.9rem; resize: vertical; min-height: 90px; color: var(--text-dark); }
+.futuro-textarea:focus { outline: none; border-color: var(--rosegold-dark); box-shadow: 0 0 0 3px rgba(183,110,121,0.15); }
+.futuro-timer { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--rosegold-dark); font-size: 0.95rem; }
+
+.mensagens-futuro-lista { max-width: 460px; margin: 20px auto 0; text-align: left; display: flex; flex-direction: column; gap: 12px; }
+.mensagem-futuro-item { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 14px; padding: 14px 16px; }
+.mensagem-futuro-data { font-size: 0.66rem; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; display: flex; align-items: center; }
+.mensagem-futuro-tipo-icon { color: var(--rosegold); margin-right: 6px; }
+.mensagem-futuro-texto { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.05rem; color: #f0d9dd; line-height: 1.6; margin: 0; white-space: pre-wrap; }
+.mensagem-futuro-audio, .mensagem-futuro-video-el { width: 100%; margin-top: 2px; }
+.mensagem-futuro-video-el { border-radius: 8px; border: 2px solid var(--rosegold); background: #000; }
+.mensagens-futuro-vazio { text-align: center; color: rgba(255,255,255,0.45); font-size: 0.85rem; margin-top: 14px; }
+
+/* ---------------- Cápsula do tempo ---------------- */
+.capsula-bloqueada { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 16px; padding: 28px 20px; text-align: center; }
+.capsula-icone { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 14px; background: rgba(183,110,121,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--rosegold); }
+.capsula-texto { font-size: 0.88rem; color: #f0d9dd; line-height: 1.6; margin-bottom: 14px; }
+.capsula-contagem { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.05rem; font-weight: 600; color: var(--rosegold); margin: 0; }
+
+/* ---------------- Playlist ---------------- */
+.playlist-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 16px; padding: 20px 18px; max-width: 440px; margin: 0 auto; }
+.playlist-track-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 2px; }
+.playlist-track-artist { font-size: 0.75rem; color: rgba(255,255,255,0.55); margin-bottom: 8px; }
+.playlist-track-motivo { font-size: 0.82rem; font-style: italic; color: #f0d9dd; margin-bottom: 16px; line-height: 1.5; min-height: 20px; }
+.playlist-progress-outer { width: 100%; height: 5px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; cursor: pointer; margin-bottom: 6px; }
+.playlist-progress-inner { height: 100%; background: var(--rosegold); width: 0%; transition: width 0.15s linear; }
+.playlist-time { display: flex; justify-content: space-between; font-size: 0.65rem; color: rgba(255,255,255,0.45); font-variant-numeric: tabular-nums; margin-bottom: 14px; }
+.playlist-controls { display: flex; align-items: center; justify-content: center; gap: 22px; margin-bottom: 14px; }
+.playlist-btn-play { width: 52px; height: 52px; border-radius: 50%; background: var(--rosegold); border: none; color: #fff; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.playlist-btn-play:active { background: #a05d67; }
+.playlist-btn-nav { background: none; border: none; color: rgba(255,255,255,0.65); font-size: 1.5rem; padding: 6px; }
+.playlist-btn-nav:active { color: #fff; }
+.playlist-tracklist { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.playlist-track-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.04); border: 1px solid transparent; border-radius: 8px; padding: 9px 12px; font-size: 0.8rem; color: #f0d9dd; cursor: pointer; text-align: left; }
+.playlist-track-item .pi-num { color: rgba(255,255,255,0.4); margin-right: 8px; font-variant-numeric: tabular-nums; }
+.playlist-track-item.ativa { border-color: var(--rosegold); background: rgba(183,110,121,0.18); }
+.playlist-track-item i { color: var(--rosegold); font-size: 0.9rem; flex-shrink: 0; margin-left: 8px; }
+
+/* ---------------- Lembranças (prints de conversas antigas) ---------------- */
+.lembrancas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+.lembranca-item { border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); aspect-ratio: 3 / 4; cursor: pointer; padding: 0; }
+.lembranca-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lembranca-lightbox { position: fixed; inset: 0; z-index: 10460; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.lembranca-lightbox img { max-width: 100%; max-height: 88vh; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.lembranca-lightbox-close { position: absolute; top: 18px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; line-height: 1; z-index: 2; }
+.lightbox-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.14); border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; z-index: 2; }
+.lightbox-nav-btn:active { background: rgba(255,255,255,0.28); }
+.lightbox-nav-prev { left: 12px; }
+.lightbox-nav-next { right: 12px; }
+
+/* ---------------- Elementos "fora da tela" usados apenas para exportação ---------------- */
+.exportavel-oculto { position: fixed; left: -9999px; top: 0; }
+.carta-exportavel { width: 380px; background: #FBF7F0; padding: 34px 28px; font-family: 'Cormorant Garamond', Georgia, serif; color: #2b2523; }
+.carta-exportavel .kicker { text-align:center; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8f4d57; margin-bottom:14px; }
+.carta-exportavel .corpo { font-style:italic; font-size:17px; line-height:1.8; text-align:left; white-space:pre-wrap; margin:0; }
+.carta-exportavel .assinatura { font-family:'Alex Brush',cursive; font-size:30px; color:#8f4d57; margin-top:18px; }
+
+.certificado-exportavel { width: 700px; background: #FBF7F0; padding: 50px; text-align: center; font-family: 'Cormorant Garamond', Georgia, serif; color: #2b2523; border: 10px double #B76E79; }
+.certificado-exportavel .kicker { font-family:'Jost',sans-serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #8f4d57; margin-bottom: 20px; }
+.certificado-exportavel h1 { font-size: 2.4rem; margin-bottom: 10px; }
+.certificado-exportavel .corpo { font-size: 1.1rem; line-height: 1.8; max-width: 520px; margin: 20px auto; font-style: italic; }
+.certificado-exportavel .nomes { font-family: 'Alex Brush', cursive; font-size: 2.6rem; color: #8f4d57; margin: 20px 0 10px; }
+.certificado-exportavel .data { font-family:'Jost',sans-serif; font-size: 0.9rem; letter-spacing: 1px; color: #5a5048; }
+
+.polaroid-exportavel { width: 340px; background: #ffffff; padding: 16px 16px 50px; box-shadow: none; }
+.polaroid-exportavel img, .polaroid-exportavel .imagem-placeholder-vazio { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; border-radius: 3px; }
+.polaroid-exportavel .legenda { font-family: 'Courier New', Courier, monospace; text-align: center; margin-top: 16px; font-weight: bold; color: #333; font-size: 1.1rem; }
+
+/* ---------------- Bloqueio de acesso via computador (Prioridade 1, item 9) ---------------- */
+#desktopBlockOverlay { min-height: 100vh; width: 100%; background: linear-gradient(160deg, #241419 0%, #3a2029 60%, #4a2c34 100%); display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.desktop-block-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(183,110,121,0.4); border-radius: 20px; padding: 46px 40px; max-width: 440px; text-align: center; color: #fff; }
+.desktop-block-icon { font-size: 2.4rem; margin-bottom: 10px; display: block; }
+.desktop-block-eyebrow { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold); font-weight: 600; margin-bottom: 10px; }
+.desktop-block-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.7rem; font-weight: 600; margin-bottom: 14px; }
+.desktop-block-texto { font-size: 0.92rem; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 26px; }
+.desktop-block-qr { background: #fff; padding: 14px; border-radius: 12px; display: inline-block; margin-bottom: 16px; }
+.desktop-block-qr svg { width: 180px; height: 180px; display: block; }
+.desktop-block-hint { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+
+/* ---------------- Acessibilidade: respeita "prefers-reduced-motion" ---------------- */
+@media (prefers-reduced-motion: reduce) {
+    .glow-effect, .rotate-hint .phone-icon, .rec-dot, .cursor, .phone-icon-portrait { animation: none !important; }
+    .reveal-up { animation: none !important; opacity: 1 !important; }
+    .flashback-photo { transition: opacity 0.2s ease !important; filter: none !important; transform: none !important; }
+    .envelope, .envelope-flap, .letter-paper, .envelope-seal { transition: none !important; }
+    .vinheta-logo, .vinheta-particula { animation: none !important; }
+}

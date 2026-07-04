@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#FAF9F6">
+    <title>Aurora Joias | Aliança Esgrifa Branca+ Solitário Libélula</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Bibliotecas de terceiros (mantidas via CDN, como no projeto original) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+</head>
+<body>
+
+    <!-- ===================== VINHETA DE ABERTURA ===================== -->
+    <div id="vinhetaAbertura" class="vinheta-abertura">
+        <div class="vinheta-brilho"></div>
+        <div class="vinheta-particula p1"></div>
+        <div class="vinheta-particula p2"></div>
+        <div class="vinheta-particula p3"></div>
+        <div class="vinheta-particula p4"></div>
+        <div class="vinheta-particula p5"></div>
+        <h1 class="vinheta-logo">AURORA</h1>
+        <p class="vinheta-sub">JOIAS</p>
+    </div>
+
+    <!-- ===================== CUPOM FALSO ===================== -->
+    <div id="cupomPopup" class="cupom-overlay d-none">
+        <div class="cupom-box">
+            <button id="btnFecharCupom" class="cupom-close" aria-label="Fechar">&times;</button>
+            <div class="cupom-icon"><i class="bi bi-gift-fill"></i></div>
+            <p class="cupom-eyebrow">Oferta exclusiva para você</p>
+            <h5 class="cupom-title">Parabéns! 🎁</h5>
+            <p class="cupom-text">Você acaba de ganhar <strong>100% de desconto</strong> no Amor Eterno.</p>
+            <p class="cupom-code-label">Utilize o cupom</p>
+            <div class="cupom-code">PARASEMPRE</div>
+            <button id="btnFecharCupomBtn" class="btn btn-rosegold w-100 rounded-pill fw-bold mt-3">Usar cupom</button>
+        </div>
+    </div>
+
+    <!-- ===================== MANUTENÇÃO (detalhe de imersão) ===================== -->
+    <div id="maintenancePopup" class="maintenance-overlay">
+        <div class="maintenance-box">
+            <i class="bi bi-tools text-rosegold" style="font-size: 2.2rem;"></i>
+            <h5 class="fw-bold mt-3 mb-2">Estamos em manutenção</h5>
+            <p class="small text-muted mb-3">Algumas áreas do site estão passando por manutenção programada. Por enquanto, apenas a página de produto e o checkout estão disponíveis.</p>
+            <button id="btnFecharManutencao" class="btn btn-rosegold w-100 rounded-pill fw-bold">Entendi</button>
+        </div>
+    </div>
+
+    <!-- ===================== LOJA (home falsa da joalheria) ===================== -->
+    <div id="lojaScreen">
+        <div class="bg-dark text-white text-center py-1 small fw-light">Frete Grátis para todo o Brasil via Sedex Expresso</div>
+
+        <nav class="navbar navbar-light bg-white shadow-sm px-3 sticky-top d-flex justify-content-between align-items-center">
+            <i class="bi bi-list fs-2 text-rosegold placeholder-link"></i>
+            <span class="navbar-brand mb-0 h1 text-rosegold fw-bold tracking-wide mx-auto">AURORA</span>
+            <div class="d-flex gap-3">
+                <i class="bi bi-search fs-4 text-rosegold placeholder-link"></i>
+                <i class="bi bi-bag fs-4 text-rosegold placeholder-link position-relative">
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                </i>
+            </div>
+        </nav>
+
+        <div id="promoCarousel" class="promo-carousel">
+            <div class="promo-slide slide-a" data-slide="0">
+                <p class="promo-eyebrow">Coleção Esgrifa</p>
+                <h2 class="promo-title">Alianças que contam histórias</h2>
+                <p class="promo-sub">Prata 950 com acabamento artesanal e garantia vitalícia.</p>
+            </div>
+            <div class="promo-slide slide-b d-none" data-slide="1">
+                <p class="promo-eyebrow">Edição Flor Rosa</p>
+                <h2 class="promo-title">Solitário Libélula, brinde exclusivo</h2>
+                <p class="promo-sub">Em toda compra de aliança Esgrifa Branca+ deste mês.</p>
+            </div>
+            <div class="promo-slide slide-c d-none" data-slide="2">
+                <p class="promo-eyebrow">Frete e Pagamento</p>
+                <h2 class="promo-title">Frete grátis para todo o Brasil</h2>
+                <p class="promo-sub">10% de desconto no Pix ou em até 10x sem juros no cartão.</p>
+            </div>
+            <div class="carousel-indicators-custom" id="promoIndicators">
+                <button class="active" data-go="0" aria-label="Slide 1"></button>
+                <button data-go="1" aria-label="Slide 2"></button>
+                <button data-go="2" aria-label="Slide 3"></button>
+            </div>
+        </div>
+
+        <div class="container-fluid pt-3 pb-5 mb-5">
+            <nav aria-label="breadcrumb" class="small mb-2 px-2">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted placeholder-link">Início</a></li>
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted placeholder-link">Alianças</a></li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Prata 950</li>
+                </ol>
+            </nav>
+
+            <div class="px-2 mb-2"><span class="featured-ribbon"><i class="bi bi-award-fill"></i> Mais vendida da coleção</span></div>
+
+            <div class="product-image-container text-center my-2 position-relative">
+                <img id="imagemPrincipalProduto" alt="Par de Alianças Esgrifa Branca+ com Solitário Libélula" class="img-fluid rounded shadow-sm">
+                <div class="badge bg-rosegold position-absolute mt-3 ms-3 top-0 start-0 fs-6 shadow">20% OFF</div>
+                <div class="position-absolute bottom-0 end-0 mb-3 me-3 bg-white rounded-circle p-2 shadow-sm placeholder-link"><i class="bi bi-heart fs-5 text-muted"></i></div>
+            </div>
+
+            <div class="thumb-strip">
+                <div class="thumb-item active"><img alt="Miniatura 1"></div>
+                <div class="thumb-item"><img alt="Miniatura 2"></div>
+                <div class="thumb-item"><img alt="Miniatura 3"></div>
+                <div class="thumb-item"><img alt="Miniatura 4"></div>
+            </div>
+
+            <div class="px-2 mt-3">
+                <p class="text-muted small mb-1">Ref: AU-31207-PRT</p>
+                <h1 class="fs-4 fw-bold text-dark lh-sm">Aliança Esgrifa Branca+ Solitário Libélula - 2 Milímetros Prata 950 (Flor Rosa)</h1>
+                <div class="d-flex align-items-center mb-3 mt-2">
+                    <div class="text-warning small"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></div>
+                    <span class="ms-2 text-muted small text-decoration-underline placeholder-link">(96 avaliações)</span>
+                </div>
+                <h2 class="fs-1 fw-bold text-rosegold mb-0">R$ 749,00</h2>
+                <p class="text-muted mb-0 small"><s>de R$ 939,00</s> <span class="text-success fw-bold ms-1">Economize R$ 190</span></p>
+                <p class="text-dark small fw-bold mt-1">ou 10x de R$ 74,90 sem juros no cartão</p>
+            </div>
+
+            <div class="px-2 mt-4 d-flex justify-content-between align-items-center trust-badges border-top border-bottom py-3">
+                <div class="text-center"><i class="bi bi-credit-card"></i><br><span class="small" style="font-size: 0.65rem;">Até 10x s/ juros</span></div>
+                <div class="text-center text-success"><i class="bi bi-qr-code"></i><br><span class="small" style="font-size: 0.65rem;">10% no Pix</span></div>
+                <div class="text-center"><i class="bi bi-shield-check"></i><br><span class="small" style="font-size: 0.65rem;">Compra Segura</span></div>
+                <div class="text-center"><i class="bi bi-award"></i><br><span class="small" style="font-size: 0.65rem;">Garantia Vitalícia</span></div>
+            </div>
+
+            <div class="px-2 mt-4 bg-white p-3 rounded shadow-sm border">
+                <h5 class="fs-6 fw-bold mb-2"><i class="bi bi-truck text-rosegold me-2"></i>Consultar Frete e Prazo</h5>
+                <div class="input-group input-group-sm mb-2">
+                    <input type="text" class="form-control" placeholder="00000-000" maxlength="9">
+                    <button id="freteBtn" class="btn btn-outline-secondary placeholder-link" type="button">Calcular</button>
+                </div>
+                <div id="freteResult" class="d-none mt-2 text-success small fw-bold bg-light p-2 rounded">Sedex Expresso - Frete Grátis (Chega em 2 a 3 dias úteis)</div>
+            </div>
+
+            <div class="px-2 mt-4">
+                <h4 class="fs-5 fw-bold mb-3 border-bottom pb-2">Personalize seu pedido</h4>
+                <div class="bg-white p-3 rounded shadow-sm border mb-3">
+                    <h6 class="fw-bold text-dark"><i class="bi bi-gender-male text-primary me-2"></i>Aliança Masculina - Esgrifa Branca+</h6>
+                    <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
+                    <select id="tamanhoMasc" class="form-select border-rosegold mb-2">
+                        <option value="" selected>Selecione o aro</option>
+                        <option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option>
+                    </select>
+                    <label class="form-label small text-muted">Gravação (Ex: Nome e Data)</label>
+                    <input id="gravacaoMasc" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?">
+                </div>
+                <div class="bg-white p-3 rounded shadow-sm border mb-3">
+                    <h6 class="fw-bold text-dark"><i class="bi bi-gender-female text-danger me-2"></i>Aliança Feminina - Esgrifa Branca+</h6>
+                    <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
+                    <select id="tamanhoFem" class="form-select border-rosegold mb-2">
+                        <option value="" selected>Selecione o aro</option>
+                        <option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option>
+                    </select>
+                    <label class="form-label small text-muted">Gravação (Ex: Nome e Data)</label>
+                    <input id="gravacaoFem" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?">
+                </div>
+                <div class="bg-white p-3 rounded shadow-sm border mb-3">
+                    <h6 class="fw-bold text-dark"><i class="bi bi-gem text-info me-2"></i>Anel Solitário Libélula (Flor Rosa) - Brinde</h6>
+                    <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
+                    <select id="tamanhoSolitario" class="form-select border-rosegold">
+                        <option value="" selected>Selecione o aro</option>
+                        <option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option>
+                    </select>
+                </div>
+                <div id="selecaoErro" class="text-danger small fw-bold mt-2 d-none"><i class="bi bi-exclamation-circle me-1"></i>Preencha todos os tamanhos e gravações antes de continuar.</div>
+            </div>
+
+            <div class="px-2 mt-4">
+                <h4 class="fs-6 fw-bold mb-2">Detalhes do Produto</h4>
+                <ul class="small text-muted ps-3 lh-lg">
+                    <li><strong>Modelo:</strong> Esgrifa Branca+</li>
+                    <li><strong>Material:</strong> Prata 950</li>
+                    <li><strong>Peso Aproximado:</strong> 4.2g (o par)</li>
+                    <li><strong>Largura:</strong> 2.0 mm</li>
+                    <li><strong>Acabamento:</strong> Polido fosco com detalhe floral em esmalte Flor Rosa</li>
+                    <li><strong>Anel Solitário:</strong> Design Libélula, zircônia central e detalhe em Flor Rosa</li>
+                    <li><strong>Garantia:</strong> Vitalícia contra defeitos de fabricação</li>
+                </ul>
+            </div>
+
+            <div class="px-2 mt-5">
+                <div class="section-divider"><span class="line"></span><i class="bi bi-gem"></i><span class="line"></span></div>
+                <h4 class="fs-6 fw-bold mb-2">Destaques da coleção</h4>
+                <div class="highlight-strip">
+                    <div class="highlight-card"><img id="destaqueFlorRosa" alt="Coleção Flor Rosa"><p class="hc-label mb-0">Flor Rosa</p></div>
+                    <div class="highlight-card"><img id="destaqueLibelula" alt="Coleção Libélula"><p class="hc-label mb-0">Libélula</p></div>
+                    <div class="highlight-card"><img id="destaquePrata" alt="Linha Prata 950"><p class="hc-label mb-0">Prata 950</p></div>
+                    <div class="highlight-card"><img id="destaqueEstojos" alt="Estojos presenteáveis"><p class="hc-label mb-0">Estojos</p></div>
+                </div>
+            </div>
+
+            <div class="px-2 mt-5">
+                <div class="about-section">
+                    <p class="about-eyebrow">Nossa história</p>
+                    <h4>Feita à mão, pensada para durar</h4>
+                    <p>Desde 2009, a Aurora Joias trabalha com prata 950 e design autoral, unindo tradição joalheira e acabamento artesanal em cada peça. Cada aliança carrega um pouco desse cuidado — e a intenção de acompanhar histórias importantes por muitos anos.</p>
+                    <div class="about-badges">
+                        <div class="about-badge"><i class="bi bi-gem"></i><span>Design autoral</span></div>
+                        <div class="about-badge"><i class="bi bi-award"></i><span>Garantia vitalícia</span></div>
+                        <div class="about-badge"><i class="bi bi-box-seam"></i><span>Embalagem premium</span></div>
+                        <div class="about-badge"><i class="bi bi-truck"></i><span>Frete grátis Brasil</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-2 mt-5">
+                <div class="section-divider"><span class="line"></span><i class="bi bi-heart-fill"></i><span class="line"></span></div>
+                <h4 class="fs-6 fw-bold mb-3">Você também pode gostar</h4>
+                <div class="row row-cols-2 g-2">
+                    <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoColar" class="card-img-top related-img" alt="Colar Libélula Prata 950"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Colar Libélula Prata 950</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 259,00</p></div></div></div>
+                    <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoBrinco" class="card-img-top related-img" alt="Brincos Flor Rosa Prata 950"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Brincos Flor Rosa Prata 950</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 189,00</p></div></div></div>
+                    <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoPulseira" class="card-img-top related-img" alt="Pulseira Esgrifa Prata 950"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Pulseira Esgrifa Prata 950</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 219,00</p></div></div></div>
+                    <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoEstojo" class="card-img-top related-img" alt="Estojo Presenteável Aurora"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Estojo Presenteável Aurora</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 59,00</p></div></div></div>
+                </div>
+            </div>
+
+            <div class="px-2 mt-5 mb-4">
+                <div class="section-divider"><span class="line"></span><i class="bi bi-star-fill"></i><span class="line"></span></div>
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <h4 class="fs-6 fw-bold mb-0">Avaliações (96)</h4>
+                    <div class="text-warning small"><i class="bi bi-star-fill"></i> 4.8/5</div>
+                </div>
+                <div class="card border-0 shadow-sm mb-3 bg-white"><div class="card-body p-3">
+                    <div class="d-flex justify-content-between"><h6 class="card-subtitle mb-1 fw-bold text-dark small">Rafael T. <i class="bi bi-patch-check-fill text-success"></i></h6><span class="text-muted" style="font-size: 0.7rem;">Há 2 dias</span></div>
+                    <div class="text-warning mb-2" style="font-size: 0.7rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                    <p class="card-text small text-muted mb-0">O detalhe da libélula no solitário é ainda mais bonito de perto. Acabamento impecável e chegou antes do prazo.</p>
+                </div></div>
+                <div class="card border-0 shadow-sm mb-3 bg-white"><div class="card-body p-3">
+                    <div class="d-flex justify-content-between"><h6 class="card-subtitle mb-1 fw-bold text-dark small">Beatriz S. <i class="bi bi-patch-check-fill text-success"></i></h6><span class="text-muted" style="font-size: 0.7rem;">Há 5 dias</span></div>
+                    <div class="text-warning mb-2" style="font-size: 0.7rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                    <p class="card-text small text-muted mb-0">Prata 950 muito leve e confortável no dia a dia. O tom flor rosa é sutil e super elegante.</p>
+                </div></div>
+                <div class="card border-0 shadow-sm mb-3 bg-white"><div class="card-body p-3">
+                    <div class="d-flex justify-content-between"><h6 class="card-subtitle mb-1 fw-bold text-dark small">Gabriel P. <i class="bi bi-patch-check-fill text-success"></i></h6><span class="text-muted" style="font-size: 0.7rem;">Há 1 dia</span></div>
+                    <div class="text-warning mb-2" style="font-size: 0.7rem;"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                    <p class="card-text small text-muted mb-0">Ainda não recebi minha encomenda, mas já sei que vai ser a única compra da minha vida que eu não vou querer devolver de jeito nenhum.</p>
+                </div></div>
+            </div>
+        </div>
+
+        <footer class="bg-light pt-4 pb-5 border-top text-center" style="margin-bottom: 70px;">
+            <h5 class="text-rosegold fw-bold tracking-wide mb-3">AURORA JOIAS</h5>
+            <div class="d-flex justify-content-center gap-4 mb-3">
+                <i class="bi bi-instagram fs-4 text-muted placeholder-link"></i>
+                <i class="bi bi-whatsapp fs-4 text-muted placeholder-link"></i>
+                <i class="bi bi-envelope fs-4 text-muted placeholder-link"></i>
+            </div>
+            <div class="small text-muted mb-2 placeholder-link">Política de Trocas | Termos de Serviço | Rastreio</div>
+            <p class="small text-muted" style="font-size: 0.7rem;">Aurora Joias Exclusivas S.A. | CNPJ: 45.123.987/0001-09<br>Rua Fictícia, 123 - Centro, São Paulo - SP<br>© 2026 Todos os direitos reservados.</p>
+        </footer>
+
+        <div class="fixed-bottom bg-white p-3 shadow-lg border-top">
+            <button id="btnIrParaCheckout" class="btn btn-rosegold w-100 py-3 fs-5 fw-bold rounded-pill shadow">Comprar Agora</button>
+        </div>
+    </div>
+
+    <!-- ===================== PROCESSAMENTO DE COMPRA ===================== -->
+    <div id="processingOverlay" class="processing-overlay">
+        <div class="spinner-border text-rosegold mb-2" role="status" style="width: 2.6rem; height: 2.6rem; border-width: 0.25em;"></div>
+        <ul class="processing-steps" id="processingSteps">
+            <li data-step="0"><i class="bi bi-circle"></i>Validando pedido</li>
+            <li data-step="1"><i class="bi bi-circle"></i>Verificando disponibilidade</li>
+            <li data-step="2"><i class="bi bi-circle"></i>Reservando produto</li>
+            <li data-step="3"><i class="bi bi-circle"></i>Preparando envio</li>
+        </ul>
+    </div>
+
+    <!-- ===================== CHECKOUT ===================== -->
+    <div id="checkoutScreen" class="fullscreen-overlay">
+        <nav class="navbar navbar-light bg-white shadow-sm px-3 sticky-top">
+            <i class="bi bi-lock-fill text-success me-2"></i>
+            <span class="fw-bold fs-5 text-dark">Pagamento Seguro</span>
+            <i class="bi bi-shield-check text-muted ms-auto fs-4"></i>
+        </nav>
+        <div class="container-fluid py-4 pb-5 mb-5">
+            <h5 class="fw-bold mb-3">Resumo do Pedido</h5>
+            <div class="checkout-box d-flex align-items-start">
+                <div class="icon-circle me-3"><i class="bi bi-gem text-rosegold fs-5"></i></div>
+                <div>
+                    <h6 class="fw-bold mb-1">Aliança Esgrifa Branca+</h6>
+                    <p class="small text-muted mb-0 lh-sm">Solitário Libélula - 2mm Prata 950 (Flor Rosa)</p>
+                    <p class="small text-muted mb-0 lh-sm mt-1" id="resumoTamanhos"></p>
+                    <p class="small text-muted mb-0 lh-sm" id="resumoGravacoes"></p>
+                </div>
+            </div>
+            <div class="checkout-box d-flex align-items-start">
+                <div class="icon-circle me-3"><i class="bi bi-geo-alt-fill text-rosegold fs-5"></i></div>
+                <div><h6 class="fw-bold mb-1">Endereço de Entrega</h6><p class="small text-muted mb-0 lh-sm">Rua São José, 197<br>Centro - Complemento: Casa tijolo a vista<br>Nuporanga, SP<br>CEP 14670-000</p></div>
+            </div>
+            <div class="checkout-box d-flex align-items-start">
+                <div class="icon-circle me-3"><i class="bi bi-credit-card-fill text-primary fs-5"></i></div>
+                <div class="w-100"><h6 class="fw-bold mb-1">Forma de Pagamento</h6><p class="small text-muted mb-0">Cartão de Crédito final 4321</p><p class="small text-muted mb-0">1x de R$ 749,00</p></div>
+            </div>
+            <div class="checkout-box">
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted small">Subtotal</span><span class="fw-bold">R$ 749,00</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted small">Frete (Sedex)</span><span class="text-success fw-bold">Grátis</span></div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between align-items-center"><span class="fw-bold fs-5">Total</span><span class="text-rosegold fw-bold fs-4">R$ 749,00</span></div>
+            </div>
+            <p class="text-center small text-muted mt-3"><i class="bi bi-lock-fill"></i> Seus dados estão criptografados.</p>
+        </div>
+        <div class="fixed-bottom bg-white p-3 shadow-lg border-top">
+            <button id="btnConfirmarPedido" class="btn btn-success w-100 py-3 fs-5 fw-bold rounded-pill shadow">Confirmar Pagamento</button>
+        </div>
+    </div>
+
+    <!-- ===================== OVERLAY DE SUSPENSE (perguntas -> fotos -> assinatura -> rastreio -> verificação -> vídeo -> carta) ===================== -->
+    <div id="suspenseOverlay" class="suspense-overlay">
+
+        <div id="loaderSuspense" class="text-center text-white">
+            <div class="spinner-border text-rosegold mb-3" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;"></div>
+            <p class="fs-6 fw-bold tracking-wide text-uppercase" id="loaderText">Processando Pagamento...</p>
+        </div>
+
+        <div id="questionBox" class="d-none question-card">
+            <p class="question-eyebrow mb-0">Enquanto confirmamos seu pedido</p>
+            <div class="question-dots" id="questionDots"></div>
+            <h5 id="questionText" class="text-dark mt-3 mb-4 lh-base fw-bold"></h5>
+            <div class="d-flex flex-column gap-3">
+                <button id="btnYes" class="btn btn-rosegold py-3 fw-bold rounded-pill shadow-sm"></button>
+                <button id="btnNo" class="btn btn-light border py-3 fw-bold text-muted rounded-pill"></button>
+            </div>
+            <p id="btnNoLegenda"></p>
+        </div>
+
+        <div id="photoGallery" class="d-none w-100 text-center">
+            <p class="text-white-50 small text-uppercase tracking-wide mb-3">Arquivos da Loja</p>
+            <div class="polaroid-stack">
+                <div class="polaroid" id="foto1" style="transform: translateX(-50%) rotate(-8deg);"><img id="foto1img" alt="Nós"><div class="polaroid-caption">Nosso início</div></div>
+                <div class="polaroid" id="foto2" style="transform: translateX(-50%) rotate(5deg) translateY(18px);"><img id="foto2img" alt="Nós"><div class="polaroid-caption">Nossos sorrisos</div></div>
+                <div class="polaroid" id="foto3" style="transform: translateX(-50%) rotate(-3deg) translateY(36px);"><img id="foto3img" alt="Nós"><div class="polaroid-caption">Nosso amor</div></div>
+            </div>
+        </div>
+
+        <div id="typingScreen" class="typing-container"><span id="typedText"></span><span class="cursor">|</span></div>
+
+        <div id="signatureScreen" class="d-none w-100 px-3 text-center">
+            <p class="text-white fw-bold mb-1">Assine para confirmar o recebimento do pedido</p>
+            <p class="text-white-50 small mb-3">Use o dedo para assinar na área abaixo</p>
+            <div class="signature-pad-wrap">
+                <canvas id="signatureCanvas" width="320" height="160"></canvas>
+                <p class="signature-hint" id="signatureHint">Toque e arraste para assinar</p>
+                <div class="d-flex gap-2 mt-2">
+                    <button id="btnLimparAssinatura" class="btn btn-light border flex-fill rounded-pill small fw-bold">Limpar</button>
+                    <button id="btnConfirmarAssinatura" class="btn btn-rosegold flex-fill rounded-pill fw-bold">Confirmar Assinatura</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="trackingScreen" class="d-none tracking-box">
+            <p id="confirmMsg" class="fs-5 fw-bold mb-4">Assinatura confirmada! Suas alianças já saíram para entrega.</p>
+            <i class="bi bi-truck" style="font-size: 2.2rem; color: var(--rosegold);"></i>
+            <p class="text-uppercase small mt-2 mb-1 text-white-50">As alianças estão a</p>
+            <div class="tracking-distance" id="trackingDistance">100km</div>
+            <div class="tracking-bar-outer"><div class="tracking-bar-inner" id="trackingBar"></div></div>
+        </div>
+
+        <div id="verificacaoScreen" class="d-none verification-box">
+            <div class="verification-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <p class="verification-eyebrow">Verificação necessária</p>
+            <h5 class="verification-title">Identidade do casal não confirmada</h5>
+            <p class="verification-text">Para finalizar esta entrega, é necessário confirmar a identidade.</p>
+            <button id="btnConfirmarIdentidade" class="btn btn-rosegold rounded-pill fw-bold px-4 py-2">Confirmar identidade</button>
+        </div>
+
+        <div id="videoScreen" class="d-none w-100 px-3 text-center">
+            <div id="orientacaoMsg" class="text-white rotate-hint">
+                <i class="bi bi-phone-landscape phone-icon"></i>
+                <p class="mt-2 mb-0 fw-bold">Vire o celular para a posição horizontal para continuar.</p>
+            </div>
+            <div id="permissaoNegadaMsg" class="text-white d-none">
+                <i class="bi bi-camera-video-off fs-1 text-danger"></i>
+                <p class="mt-2 mb-2">Precisamos de acesso à câmera e ao microfone para continuar.</p>
+                <button id="btnPedirPermissaoNovamente" class="btn btn-rosegold rounded-pill btn-sm fw-bold">Permitir câmera e microfone</button>
+            </div>
+            <div id="conteudoGravacao" class="d-none">
+                <p class="text-white fw-bold mb-1">Grave para confirmar sua identidade.</p>
+                <div class="signature-pad-wrap" style="max-width: 420px;">
+                    <video id="videoPreview" autoplay playsinline muted style="width:100%;border-radius:8px;background:#000;object-fit:cover;"></video>
+                    <video id="videoPlayback" style="width:100%;border-radius:8px;display:none;object-fit:cover;" controls></video>
+                    <div class="d-flex gap-2 mt-3">
+                        <button id="btnIniciarGravacao" class="btn btn-rosegold flex-fill rounded-pill fw-bold btn-sm"><i class="bi bi-record-circle me-1"></i>Gravar</button>
+                        <button id="btnPararGravacao" class="btn btn-danger flex-fill rounded-pill fw-bold btn-sm d-none"><span class="rec-dot"></span>Parar</button>
+                    </div>
+                    <p id="saveStatus" class="save-status"></p>
+                    <div id="videoActions" class="d-none mt-2 d-flex flex-column gap-2">
+                        <button id="btnRegravar" class="btn btn-light border rounded-pill btn-sm fw-bold">Regravar</button>
+                    </div>
+                </div>
+            </div>
+            <div id="postRecordScreen" class="d-none post-record-screen">
+                <div class="check-circle"><i class="bi bi-check-lg"></i></div>
+                <h5 class="fw-bold mb-0">Gravação concluída</h5>
+                <p class="text-white-50 small mb-0" style="max-width: 300px;">Perfeito. Agora vire o celular de volta para a posição vertical para continuarmos.</p>
+                <i class="bi bi-phone-vibrate phone-icon-portrait"></i>
+                <button id="btnRegravarPos" class="btn-link-muted">Regravar</button>
+            </div>
+        </div>
+
+        <div id="finalScreen" class="d-none text-center w-100 px-3 fade-in">
+            <img id="finalPhoto" class="img-fluid final-photo shadow-lg mb-4" alt="Nós">
+            <h1 class="text-white fw-bold display-5 text-shadow mb-3">Identidade confirmada.</h1>
+            <div class="letter-stage">
+                <div id="envelope" class="envelope">
+                    <div class="envelope-back"></div>
+                    <div class="letter-paper" id="letterPaper">
+                        <p class="letter-eyebrow" id="letterEyebrow">1 Coríntios 13</p>
+                        <p class="letter-text" id="letterTextFinal"></p>
+                        <p class="letter-signoff" id="letterSignoff"></p>
+                    </div>
+                    <div class="envelope-flap" id="envelopeFlap"></div>
+                    <div class="envelope-seal" id="envelopeSeal"><i class="bi bi-heart-fill"></i></div>
+                </div>
+                <p class="envelope-hint" id="envelopeHint">toque para abrir</p>
+            </div>
+            <div id="finalContinuarWrap" class="d-none">
+                <button id="btnVerHistoria" class="btn btn-rosegold rounded-pill fw-bold mt-4 px-4 py-2 glow-effect">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== FLASHBACK CINEMATOGRÁFICO ===================== -->
+    <div id="flashbackScreen" class="flashback-screen">
+        <div class="flashback-flash" id="flashbackFlash"></div>
+        <div class="flashback-photo" id="fbFoto1"><img alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto2"><img alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto3"><img alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto4"><img alt="Momento do casal"></div>
+        <div class="flashback-photo" id="fbFoto5"><img alt="Momento do casal"></div>
+        <p class="flashback-label" id="flashbackLabel">nossa história até aqui...</p>
+    </div>
+
+    <!-- ===================== NOSSA HISTÓRIA ===================== -->
+    <div id="romancePage" class="romance-page">
+        <div class="text-center mb-4 reveal-up">
+            <p class="text-rosegold text-uppercase small tracking-wide mb-1">Para <span class="js-nome"></span></p>
+            <h1 class="romance-title">Nossa Trajetória</h1>
+            <div class="romance-divider"></div>
+            <p class="fs-6 fw-light" style="max-width: 420px; margin: 0 auto;" id="heroSubRomanceTexto"></p>
+            <p class="romance-date-badge" id="dataPedidoTexto"></p>
+            <div id="counterBadge" class="counter-badge"><i class="bi bi-heart-fill text-rosegold me-1"></i> <span id="counterText">calculando...</span></div>
+
+            <div class="live-counter-wrap">
+                <p class="live-counter-label">Juntos há</p>
+                <div class="live-counter-grid" id="liveCounterGrid">
+                    <div class="lc-unit"><span class="lc-num" id="lcAnos">0</span><span class="lc-label">anos</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcMeses">0</span><span class="lc-label">meses</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcDias">0</span><span class="lc-label">dias</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcHoras">00</span><span class="lc-label">h</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcMinutos">00</span><span class="lc-label">min</span></div>
+                    <div class="lc-unit"><span class="lc-num" id="lcSegundos">00</span><span class="lc-label">s</span></div>
+                </div>
+            </div>
+            <p class="easter-egg-sobrenome" id="easterEggSobrenome"></p>
+        </div>
+
+        <div style="max-width: 420px; margin: 0 auto;" class="reveal-up">
+            <p class="romance-section-title">Nossa linha do tempo</p>
+            <div id="timelineLista"></div>
+        </div>
+
+        <div class="mt-5 reveal-up">
+            <p class="romance-section-title">Nossos momentos</p>
+            <div class="table-gallery" id="momentosGallery">
+                <div class="table-photo"><img alt="Foto do casal 1"></div>
+                <div class="table-photo"><img alt="Foto do casal 2"></div>
+                <div class="table-photo"><img alt="Foto do casal 3"></div>
+                <div class="table-photo"><img alt="Foto do casal 4"></div>
+            </div>
+        </div>
+
+        <div class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
+            <p class="romance-section-title">Nossa playlist</p>
+            <div class="playlist-card">
+                <p class="playlist-track-title" id="playlistTitulo"></p>
+                <p class="playlist-track-artist" id="playlistArtista"></p>
+                <p class="playlist-track-motivo" id="playlistMotivo"></p>
+                <div class="playlist-progress-outer" id="playlistProgressoOuter"><div class="playlist-progress-inner" id="playlistProgressoInner"></div></div>
+                <div class="playlist-time"><span id="playlistTempoAtual">0:00</span><span id="playlistTempoTotal">0:00</span></div>
+                <div class="playlist-controls">
+                    <button id="btnPlaylistAnterior" class="playlist-btn-nav" aria-label="Faixa anterior"><i class="bi bi-skip-start-fill"></i></button>
+                    <button id="btnPlaylistPlayPause" class="playlist-btn-play" aria-label="Tocar ou pausar"><i class="bi bi-play-fill"></i></button>
+                    <button id="btnPlaylistProxima" class="playlist-btn-nav" aria-label="Próxima faixa"><i class="bi bi-skip-end-fill"></i></button>
+                </div>
+                <div class="playlist-tracklist" id="playlistTracklist"></div>
+            </div>
+            <audio id="playlistAudio" preload="none"></audio>
+        </div>
+
+        <div class="mt-5 reveal-up" style="max-width: 460px; margin: 0 auto;">
+            <p class="romance-section-title">Nossas lembranças</p>
+            <p class="text-center text-white-50 small mb-3" style="max-width: 360px; margin: 0 auto;">Prints de conversas antigas, guardados aqui pra gente nunca esquecer como tudo começou.</p>
+            <div class="lembrancas-grid" id="lembrancasGrid"></div>
+            <p id="lembrancasVazio" class="text-center text-white-50 small mb-0">Nenhuma lembrança adicionada ainda.</p>
+            <div class="text-center mt-3">
+                <button id="btnAdicionarLembranca" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-plus-lg me-1"></i>Adicionar lembrança</button>
+                <input type="file" id="inputLembrancas" accept="image/*" multiple class="d-none">
+            </div>
+        </div>
+
+        <div id="romanceVideoWrap" class="mt-5 d-none romance-video-wrap reveal-up" style="max-width: 420px; margin: 0 auto;">
+            <p class="romance-section-title">O momento em que você descobriu</p>
+            <video id="romanceVideo" controls playsinline></video>
+        </div>
+
+        <div id="romanceSignatureWrap" class="mt-5 d-none reveal-up" style="max-width: 420px; margin: 0 auto;">
+            <p class="romance-section-title">Sem saber, você já tinha assinado</p>
+            <div class="contract-box">
+                <i class="bi bi-heart-fill text-rosegold" style="font-size: 1.5rem;"></i>
+                <p class="small mt-2 mb-0">Lá atrás, quando você "confirmou o recebimento do pedido", essa foi a assinatura que ficou:</p>
+                <img id="romanceSignatureImg" class="contract-signature-img" alt="Assinatura">
+                <p class="small text-white-50 mt-2 mb-0">Guardo ela como o começo simbólico da nossa história.</p>
+            </div>
+        </div>
+
+        <div id="quizWrap" class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
+            <p class="romance-section-title">O quanto você me conhece?</p>
+            <div class="quiz-card" id="quizCard">
+                <div class="quiz-dots" id="quizDots"></div>
+                <h5 class="quiz-question" id="quizPergunta"></h5>
+                <div class="quiz-opcoes" id="quizOpcoes"></div>
+                <p class="quiz-reacao" id="quizReacao"></p>
+            </div>
+            <div id="quizFinalMsg" class="d-none text-center mt-3">
+                <i class="bi bi-heart-fill text-rosegold" style="font-size: 1.3rem;"></i>
+                <p class="small text-white-50 mt-2 mb-0" id="quizResumoTexto"></p>
+            </div>
+        </div>
+
+        <div id="regrasSelecaoWrap" class="mt-5 reveal-up" style="max-width: 460px; margin: 0 auto;">
+            <p class="romance-section-title">Escolha as regras do nosso contrato</p>
+            <p class="text-center text-white-50 small mb-3" style="max-width: 360px; margin: 0 auto;">Selecione de 2 a 3 combinados pra virarem cláusulas oficiais (e bem afetivas) do nosso contrato de namoro.</p>
+            <div class="rules-grid" id="rulesGrid"></div>
+            <div class="text-center mt-3">
+                <p id="regrasContador" class="small text-white-50 mb-2">0 de 3 selecionadas (mínimo 2)</p>
+                <button id="btnGerarContrato" class="btn btn-rosegold rounded-pill fw-bold px-4" disabled>Gerar nosso contrato</button>
+            </div>
+        </div>
+
+        <div id="contratoWrap" class="mt-5 d-none reveal-up" style="max-width: 460px; margin: 0 auto;">
+            <p class="romance-section-title">Contrato (sem validade jurídica, validade eterna)</p>
+            <div class="contract-paper">
+                <div class="contract-inner">
+                    <p class="contract-kicker">Instrumento Particular</p>
+                    <h2 class="contract-title">Contrato de Adesão ao Namoro</h2>
+                    <div class="romance-divider"></div>
+                    <p class="contract-intro">As partes abaixo identificadas resolvem celebrar o presente Contrato de Namoro, comprometendo-se, de livre e espontânea vontade — e de um bocado de paixão — a cumprir integralmente as cláusulas personalizadas descritas a seguir, escolhidas a dedo por <span class="js-nome"></span>.</p>
+                    <p class="contract-parties"><strong>CONTRATANTE:</strong> <span class="js-nome-dele"></span><br><strong>CONTRATADA:</strong> <span class="js-nome"></span><br>doravante denominados, em conjunto, "as Partes Apaixonadas".</p>
+                    <ol class="contract-articles" id="contractArticlesList"></ol>
+                    <p class="contract-closing">E por estarem justas e apaixonadas, as Partes firmam o presente instrumento, em caráter irrevogável (do coração), para que produza os seus efeitos afetivos.</p>
+                    <p class="contract-local-data" id="contratoLocalData">Nuporanga - SP</p>
+                    <div class="contract-signatures">
+                        <div class="signature-block"><img id="contratoSignatureImg" class="signature-img" alt="Assinatura da namorada"><div class="signature-line"></div><p class="signature-name js-nome"></p><p class="signature-role">Namorada</p></div>
+                        <div class="signature-block"><p class="signature-cursive js-nome-dele"></p><div class="signature-line"></div><p class="signature-name js-nome-dele"></p><p class="signature-role">Namorado</p></div>
+                    </div>
+                    <div class="contract-witness"><div class="signature-line"></div><p class="signature-role">Testemunha do Amor <span style="text-transform:none; letter-spacing:0;">(opcional, mas recomendada)</span></p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="capsulaTempoWrap" class="mt-5 reveal-up d-none" style="max-width: 340px; margin: 0 auto;">
+            <p class="romance-section-title">Uma cápsula do tempo</p>
+            <div id="capsulaBloqueada" class="capsula-bloqueada">
+                <div class="capsula-icone"><i class="bi bi-lock-fill"></i></div>
+                <p class="capsula-texto">Escrevi uma carta pra gente ler daqui a um ano. Ela vai abrir sozinha, exatamente no dia do nosso aniversário de namoro.</p>
+                <p class="capsula-contagem" id="capsulaContagem">calculando...</p>
+            </div>
+            <div id="capsulaDesbloqueada" class="d-none">
+                <div class="letter-stage" style="margin-top: 0;">
+                    <div id="capsulaEnvelope" class="envelope">
+                        <div class="envelope-back"></div>
+                        <div class="letter-paper">
+                            <p class="letter-eyebrow visivel">Um ano depois</p>
+                            <p class="letter-text versiculo-visivel" id="capsulaTexto"></p>
+                            <p class="letter-signoff visivel" id="capsulaAssinatura"></p>
+                        </div>
+                        <div class="envelope-flap"></div>
+                        <div class="envelope-seal"><i class="bi bi-heart-fill"></i></div>
+                    </div>
+                    <p class="envelope-hint" id="capsulaHint">toque para abrir</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 reveal-up">
+            <button id="btnMensagemFuturo" class="btn btn-share"><i class="bi bi-mic-fill me-2"></i>Deixe uma mensagem para nós do futuro</button>
+            <div class="mensagens-futuro-lista" id="mensagensFuturoLista"></div>
+            <p id="mensagensFuturoVazio" class="mensagens-futuro-vazio">Nenhuma mensagem guardada ainda.</p>
+        </div>
+
+        <div class="text-center mt-5 reveal-up">
+            <i class="bi bi-heart-fill text-rosegold" style="font-size: 1.8rem;"></i>
+            <p class="fs-5 fw-light mt-3" style="max-width: 420px; margin: 0 auto;"><span class="js-nome"></span>, <span id="encerramentoRomanceTexto"></span></p>
+
+            <button id="btnCompartilhar" class="btn btn-share mt-4"><i class="bi bi-share-fill me-2"></i>Compartilhar</button>
+            <p id="compartilharStatus" class="save-status"></p>
+
+            <div class="d-flex gap-2 justify-content-center mt-3 flex-wrap">
+                <button id="btnExportarImagem" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-image me-1"></i>Carta em imagem</button>
+                <button id="btnExportarPDF" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-file-earmark-pdf me-1"></i>Carta em PDF</button>
+                <button id="btnExportarCertificado" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-patch-check me-1"></i>Certificado de namoro</button>
+                <button id="btnExportarPolaroid" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-camera me-1"></i>Polaroid do momento</button>
+            </div>
+            <p id="exportarStatus" class="save-status"></p>
+
+            <div class="mt-4 text-center">
+                <button id="btnBackup" class="btn btn-share"><i class="bi bi-cloud-arrow-down-fill me-2"></i>Backup da Nossa História</button>
+                <br>
+                <button id="btnRestaurarBackup" class="btn btn-outline-light btn-sm rounded-pill mt-2"><i class="bi bi-cloud-arrow-up-fill me-1"></i>Restaurar Backup</button>
+                <input type="file" id="inputRestaurarBackup" accept="application/json,.json" class="d-none">
+                <p id="restaurarStatus" class="save-status"></p>
+            </div>
+
+            <div class="mt-3 text-center">
+                <button id="btnResetar" class="btn btn-outline-danger btn-sm rounded-pill mt-2">Resetar site</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ELEMENTOS OCULTOS USADOS SÓ PARA EXPORTAÇÃO ===================== -->
+    <div id="cartaExportavel" class="exportavel-oculto carta-exportavel" aria-hidden="true">
+        <p class="kicker">1 Coríntios 13</p>
+        <p id="cartaExportavelTexto" class="corpo"></p>
+        <p id="cartaExportavelAssinatura" class="assinatura"></p>
+    </div>
+
+    <div id="certificadoExportavel" class="exportavel-oculto certificado-exportavel" aria-hidden="true">
+        <p class="kicker">Certificado Oficial (do coração)</p>
+        <h1>Certificado de Namoro</h1>
+        <p class="corpo">Certificamos, para os devidos fins afetivos, que a partir de hoje as partes abaixo assinadas se comprometem a viver a mais bonita das histórias juntos.</p>
+        <p class="nomes" id="certificadoNomes"></p>
+        <p class="data" id="certificadoData"></p>
+    </div>
+
+    <div id="polaroidExportavel" class="exportavel-oculto polaroid-exportavel" aria-hidden="true">
+        <img id="polaroidExportavelImg" alt="Nosso momento">
+        <p class="legenda" id="polaroidExportavelLegenda"></p>
+    </div>
+
+    <!-- ===================== LIGHTBOX (lembranças / momentos / timeline) ===================== -->
+    <div id="lembrancaLightbox" class="lembranca-lightbox d-none">
+        <button id="btnFecharLembranca" class="lembranca-lightbox-close" aria-label="Fechar">&times;</button>
+        <button id="btnLightboxAnterior" class="lightbox-nav-btn lightbox-nav-prev d-none" aria-label="Foto anterior"><i class="bi bi-chevron-left"></i></button>
+        <img id="lembrancaLightboxImg" src="" alt="Foto ampliada">
+        <button id="btnLightboxProxima" class="lightbox-nav-btn lightbox-nav-next d-none" aria-label="Próxima foto"><i class="bi bi-chevron-right"></i></button>
+    </div>
+
+    <!-- ===================== MENSAGEM PARA O FUTURO (modal) ===================== -->
+    <div id="futuroOverlay" class="futuro-overlay d-none">
+        <div class="futuro-box">
+            <button id="btnFecharFuturo" class="cupom-close" aria-label="Fechar">&times;</button>
+            <h5 class="futuro-title">Mensagem para nós do futuro</h5>
+            <p class="futuro-sub" id="futuroSub">Escolha como quer guardar essa mensagem:</p>
+
+            <div id="futuroEscolha" class="d-flex gap-2 justify-content-center flex-wrap">
+                <button id="btnFuturoTexto" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-pencil-fill me-1"></i>Texto</button>
+                <button id="btnFuturoVoz" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-mic-fill me-1"></i>Voz</button>
+                <button id="btnFuturoVideo" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-camera-video-fill me-1"></i>Vídeo</button>
+            </div>
+
+            <div id="futuroTextoArea" class="d-none mt-3">
+                <textarea id="futuroTextoInput" class="futuro-textarea" placeholder="Escreva o que quiser dizer para nós do futuro..." maxlength="2000"></textarea>
+                <button id="btnFuturoSalvarTexto" class="btn btn-rosegold w-100 rounded-pill fw-bold btn-sm mt-2"><i class="bi bi-heart-fill me-1"></i>Guardar mensagem</button>
+            </div>
+
+            <div id="futuroGravacaoArea" class="d-none mt-3">
+                <video id="futuroPreviewVideo" autoplay playsinline muted class="d-none" style="width:100%;border-radius:8px;background:#000;aspect-ratio:16/9;object-fit:cover;"></video>
+                <video id="futuroPlaybackVideo" class="d-none" style="width:100%;border-radius:8px;background:#000;aspect-ratio:16/9;object-fit:cover;" controls></video>
+                <div id="futuroVozIndicador" class="d-none text-center py-4">
+                    <i class="bi bi-mic-fill" style="font-size: 2rem; color: var(--rosegold);"></i>
+                    <p class="small text-muted mt-2 mb-0">Pronto para gravar áudio...</p>
+                </div>
+                <audio id="futuroPlaybackAudio" class="d-none" style="width:100%;" controls></audio>
+                <p id="futuroTimer" class="futuro-timer text-center d-none mt-2">00:00</p>
+                <div class="d-flex gap-2 mt-3">
+                    <button id="btnFuturoIniciar" class="btn btn-rosegold flex-fill rounded-pill fw-bold btn-sm"><i class="bi bi-record-circle me-1"></i>Gravar</button>
+                    <button id="btnFuturoParar" class="btn btn-danger flex-fill rounded-pill fw-bold btn-sm d-none"><span class="rec-dot"></span>Parar</button>
+                </div>
+                <div id="futuroAcoesGravacao" class="d-none d-flex gap-2 mt-2">
+                    <button id="btnFuturoRegravar" class="btn btn-light border flex-fill rounded-pill btn-sm fw-bold">Regravar</button>
+                    <button id="btnFuturoSalvarGravacao" class="btn btn-rosegold flex-fill rounded-pill fw-bold btn-sm">Salvar mensagem</button>
+                </div>
+            </div>
+
+            <p id="futuroStatus" class="save-status"></p>
+            <div id="futuroSucesso" class="d-none text-center mt-3">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 1.8rem;"></i>
+                <p class="small mt-2 mb-0">Mensagem guardada com carinho. Um dia a gente vê/ouve isso de novo, juntos.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== ÁUDIO DE FUNDO (trilha da carta final) ===================== -->
+    <audio id="musicaFundo" preload="auto" loop>
+        <source src="assets/audio/nossa-musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- ===================== SCRIPTS DO PROJETO (ordem importa) ===================== -->
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/desktop-block.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/futuro.js"></script>
+    <script src="js/romance.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/suspense.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
