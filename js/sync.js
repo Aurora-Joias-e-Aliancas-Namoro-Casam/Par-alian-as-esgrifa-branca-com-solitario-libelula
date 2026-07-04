@@ -33,8 +33,8 @@
  * ============================================================================
  */
 
-const SUPABASE_URL = '';        // ex: 'https://xxxxxxxx.supabase.co'
-const SUPABASE_ANON_KEY = '';   // ex: 'eyJhbGciOि...'
+const SUPABASE_URL = 'https://mdiohswwximmsggmrzue.supabase.co';        // ex: 'https://mdiohswwximmsggmrzue.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaW9oc3d3eGltbXNnZ21yenVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNTYzNjgsImV4cCI6MjA5ODczMjM2OH0.maRn6Wax6uIEyVo8ETXxOGQ5Mi61B6rafl7CCC1fGcs';   // ex: ''
 const SUPABASE_BUCKET = 'aurora-backups';
 
 function syncEstaConfigurado() {
