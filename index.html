@@ -220,11 +220,6 @@
         .romance-date-badge { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.05rem; letter-spacing: 1px; color: #f0d9dd; margin-top: 6px; }
         .timeline-item { background: rgba(255,255,255,0.06); border-left: 3px solid var(--rosegold); border-radius: 8px; padding: 16px 18px; margin-bottom: 15px; }
         .timeline-item strong { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.1rem; color: #f0d9dd; }
-        .timeline-item-inner { display: flex; gap: 12px; align-items: flex-start; }
-        .timeline-thumb {
-            width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
-            background: #3a2a2f; border: 1px solid rgba(183,110,121,0.4); cursor: pointer;
-        }
         .romance-section-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; text-align:center; margin-bottom: 20px; }
         .romance-video-wrap video { width: 100%; border-radius: 12px; border: 3px solid var(--rosegold); background:#000; }
         .contract-box { background: rgba(255,255,255,0.08); border: 1px solid rgba(183,110,121,0.5); border-radius: 14px; padding: 20px; text-align:center; }
@@ -598,76 +593,6 @@
         }
         .futuro-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 600; text-align: center; margin-bottom: 6px; }
         .futuro-sub { font-size: 0.85rem; color: #5a5048; text-align: center; margin-bottom: 14px; }
-        .futuro-textarea {
-            width: 100%; border: 1px solid var(--rosegold); border-radius: 10px; padding: 10px 12px;
-            font-family: 'Jost', sans-serif; font-size: 0.9rem; resize: vertical; min-height: 90px; color: var(--text-dark);
-        }
-        .futuro-textarea:focus { outline: none; border-color: var(--rosegold-dark); box-shadow: 0 0 0 3px rgba(183,110,121,0.15); }
-        .futuro-timer { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--rosegold-dark); font-size: 0.95rem; }
-
-        /* ---- Lista de mensagens salvas (visível na página "Nossa História") ---- */
-        .mensagens-futuro-lista { max-width: 460px; margin: 20px auto 0; text-align: left; display: flex; flex-direction: column; gap: 12px; }
-        .mensagem-futuro-item {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35);
-            border-radius: 14px; padding: 14px 16px;
-        }
-        .mensagem-futuro-data {
-            font-size: 0.66rem; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.5);
-            margin-bottom: 8px; display: flex; align-items: center;
-        }
-        .mensagem-futuro-tipo-icon { color: var(--rosegold); margin-right: 6px; }
-        .mensagem-futuro-texto {
-            font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.05rem;
-            color: #f0d9dd; line-height: 1.6; margin: 0; white-space: pre-wrap;
-        }
-        .mensagem-futuro-audio, .mensagem-futuro-video-el { width: 100%; margin-top: 2px; }
-        .mensagem-futuro-video-el { border-radius: 8px; border: 2px solid var(--rosegold); background: #000; }
-        .mensagens-futuro-vazio { text-align: center; color: rgba(255,255,255,0.45); font-size: 0.85rem; margin-top: 14px; }
-
-        /* ---- Cápsula do tempo (carta que abre sozinha no futuro) ---- */
-        .capsula-bloqueada {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35);
-            border-radius: 16px; padding: 28px 20px; text-align: center;
-        }
-        .capsula-icone {
-            width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 14px;
-            background: rgba(183,110,121,0.15); display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; color: var(--rosegold);
-        }
-        .capsula-texto { font-size: 0.88rem; color: #f0d9dd; line-height: 1.6; margin-bottom: 14px; }
-        .capsula-contagem {
-            font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.05rem; font-weight: 600;
-            color: var(--rosegold); margin: 0;
-        }
-
-        /* ---- Nossa playlist (múltiplas faixas com legenda afetiva) ---- */
-        .playlist-card {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35);
-            border-radius: 16px; padding: 20px 18px; max-width: 440px; margin: 0 auto;
-        }
-        .playlist-track-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 2px; }
-        .playlist-track-artist { font-size: 0.75rem; color: rgba(255,255,255,0.55); margin-bottom: 8px; }
-        .playlist-track-motivo { font-size: 0.82rem; font-style: italic; color: #f0d9dd; margin-bottom: 16px; line-height: 1.5; min-height: 20px; }
-        .playlist-progress-outer { width: 100%; height: 5px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; cursor: pointer; margin-bottom: 6px; }
-        .playlist-progress-inner { height: 100%; background: var(--rosegold); width: 0%; transition: width 0.15s linear; }
-        .playlist-time { display: flex; justify-content: space-between; font-size: 0.65rem; color: rgba(255,255,255,0.45); font-variant-numeric: tabular-nums; margin-bottom: 14px; }
-        .playlist-controls { display: flex; align-items: center; justify-content: center; gap: 22px; margin-bottom: 14px; }
-        .playlist-btn-play {
-            width: 52px; height: 52px; border-radius: 50%; background: var(--rosegold); border: none; color: #fff;
-            font-size: 1.3rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .playlist-btn-play:active { background: #a05d67; }
-        .playlist-btn-nav { background: none; border: none; color: rgba(255,255,255,0.65); font-size: 1.5rem; padding: 6px; }
-        .playlist-btn-nav:active { color: #fff; }
-        .playlist-tracklist { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-        .playlist-track-item {
-            display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.04);
-            border: 1px solid transparent; border-radius: 8px; padding: 9px 12px; font-size: 0.8rem; color: #f0d9dd;
-            cursor: pointer; text-align: left;
-        }
-        .playlist-track-item .pi-num { color: rgba(255,255,255,0.4); margin-right: 8px; font-variant-numeric: tabular-nums; }
-        .playlist-track-item.ativa { border-color: var(--rosegold); background: rgba(183,110,121,0.18); }
-        .playlist-track-item i { color: var(--rosegold); font-size: 0.9rem; flex-shrink: 0; margin-left: 8px; }
 
         /* ---- Área de lembranças (prints de conversas antigas) ---- */
         .lembrancas-grid {
@@ -687,15 +612,6 @@
             position: absolute; top: 18px; right: 20px; background: none; border: none;
             color: #fff; font-size: 2rem; line-height: 1; z-index: 2;
         }
-        .lightbox-nav-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.14); border: none; color: #fff;
-            width: 44px; height: 44px; border-radius: 50%; font-size: 1.3rem;
-            display: flex; align-items: center; justify-content: center; z-index: 2;
-        }
-        .lightbox-nav-btn:active { background: rgba(255,255,255,0.28); }
-        .lightbox-nav-prev { left: 12px; }
-        .lightbox-nav-next { right: 12px; }
     </style>
 </head>
 <body>
@@ -1298,43 +1214,28 @@
 
         <div style="max-width: 420px; margin: 0 auto;" class="reveal-up">
             <p class="romance-section-title">Nossa linha do tempo</p>
-            <div id="timelineLista"></div>
+            <div class="timeline-item">
+                <strong>[Data do primeiro encontro / conversa]</strong>
+                <p class="small mb-0 mt-1">Descreva aqui como foi a primeira vez que vocês se falaram ou se viram — o que você sentiu, o que achou engraçado ou especial.</p>
+            </div>
+            <div class="timeline-item">
+                <strong>[Data de um momento marcante]</strong>
+                <p class="small mb-0 mt-1">Conte uma viagem, um perrengue resolvido junto, uma piada interna — algo que só vocês dois entendem.</p>
+            </div>
+            <div class="timeline-item">
+                <strong id="dataPedidoTimeline">[Hoje]</strong>
+                <p class="small mb-0 mt-1">Fale sobre o presente: por que hoje, por que ela, por que agora.</p>
+            </div>
         </div>
 
         <div class="mt-5 reveal-up">
             <p class="romance-section-title">Nossos momentos</p>
-            <div class="table-gallery" id="momentosGallery">
+            <div class="table-gallery">
                 <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+1" alt="Foto do casal 1"></div>
                 <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+2" alt="Foto do casal 2"></div>
                 <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+3" alt="Foto do casal 3"></div>
                 <div class="table-photo"><img src="https://via.placeholder.com/300x300/4a2c34/fff?text=Foto+4" alt="Foto do casal 4"></div>
             </div>
-        </div>
-
-        <div class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
-            <p class="romance-section-title">Nossa playlist</p>
-            <div class="playlist-card">
-                <p class="playlist-track-title" id="playlistTitulo"></p>
-                <p class="playlist-track-artist" id="playlistArtista"></p>
-                <p class="playlist-track-motivo" id="playlistMotivo"></p>
-
-                <div class="playlist-progress-outer" id="playlistProgressoOuter">
-                    <div class="playlist-progress-inner" id="playlistProgressoInner"></div>
-                </div>
-                <div class="playlist-time">
-                    <span id="playlistTempoAtual">0:00</span>
-                    <span id="playlistTempoTotal">0:00</span>
-                </div>
-
-                <div class="playlist-controls">
-                    <button id="btnPlaylistAnterior" class="playlist-btn-nav" aria-label="Faixa anterior"><i class="bi bi-skip-start-fill"></i></button>
-                    <button id="btnPlaylistPlayPause" class="playlist-btn-play" aria-label="Tocar ou pausar"><i class="bi bi-play-fill"></i></button>
-                    <button id="btnPlaylistProxima" class="playlist-btn-nav" aria-label="Próxima faixa"><i class="bi bi-skip-end-fill"></i></button>
-                </div>
-
-                <div class="playlist-tracklist" id="playlistTracklist"></div>
-            </div>
-            <audio id="playlistAudio" preload="none"></audio>
         </div>
 
         <div class="mt-5 reveal-up" style="max-width: 460px; margin: 0 auto;">
@@ -1438,38 +1339,10 @@
             </div>
         </div>
 
-        <div id="capsulaTempoWrap" class="mt-5 reveal-up d-none" style="max-width: 340px; margin: 0 auto;">
-            <p class="romance-section-title">Uma cápsula do tempo</p>
-
-            <div id="capsulaBloqueada" class="capsula-bloqueada">
-                <div class="capsula-icone"><i class="bi bi-lock-fill"></i></div>
-                <p class="capsula-texto">Escrevi uma carta pra gente ler daqui a um ano. Ela vai abrir sozinha, exatamente no dia do nosso aniversário de namoro.</p>
-                <p class="capsula-contagem" id="capsulaContagem">calculando...</p>
-            </div>
-
-            <div id="capsulaDesbloqueada" class="d-none">
-                <div class="letter-stage" style="margin-top: 0;">
-                    <div id="capsulaEnvelope" class="envelope">
-                        <div class="envelope-back"></div>
-                        <div class="letter-paper">
-                            <p class="letter-eyebrow visivel">Um ano depois</p>
-                            <p class="letter-text versiculo-visivel" id="capsulaTexto"></p>
-                            <p class="letter-signoff visivel" id="capsulaAssinatura"></p>
-                        </div>
-                        <div class="envelope-flap"></div>
-                        <div class="envelope-seal"><i class="bi bi-heart-fill"></i></div>
-                    </div>
-                    <p class="envelope-hint" id="capsulaHint">toque para abrir</p>
-                </div>
-            </div>
-        </div>
-
         <div class="text-center mt-5 reveal-up">
             <button id="btnMensagemFuturo" class="btn btn-share">
                 <i class="bi bi-mic-fill me-2"></i>Deixe uma mensagem para nós do futuro
             </button>
-            <div class="mensagens-futuro-lista" id="mensagensFuturoLista"></div>
-            <p id="mensagensFuturoVazio" class="mensagens-futuro-vazio">Nenhuma mensagem guardada ainda.</p>
         </div>
 
         <div class="text-center mt-5 reveal-up">
@@ -1518,41 +1391,26 @@
 
     <div id="lembrancaLightbox" class="lembranca-lightbox d-none">
         <button id="btnFecharLembranca" class="lembranca-lightbox-close" aria-label="Fechar">&times;</button>
-        <button id="btnLightboxAnterior" class="lightbox-nav-btn lightbox-nav-prev d-none" aria-label="Foto anterior"><i class="bi bi-chevron-left"></i></button>
-        <img id="lembrancaLightboxImg" src="" alt="Foto ampliada">
-        <button id="btnLightboxProxima" class="lightbox-nav-btn lightbox-nav-next d-none" aria-label="Próxima foto"><i class="bi bi-chevron-right"></i></button>
+        <img id="lembrancaLightboxImg" src="" alt="Lembrança ampliada">
     </div>
 
     <div id="futuroOverlay" class="futuro-overlay d-none">
         <div class="futuro-box">
             <button id="btnFecharFuturo" class="cupom-close" aria-label="Fechar">&times;</button>
             <h5 class="futuro-title">Mensagem para nós do futuro</h5>
-            <p class="futuro-sub" id="futuroSub">Escolha como quer guardar essa mensagem:</p>
+            <p class="futuro-sub" id="futuroSub">Escolha como quer gravar:</p>
 
-            <div id="futuroEscolha" class="d-flex gap-2 justify-content-center flex-wrap">
-                <button id="btnFuturoTexto" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-pencil-fill me-1"></i>Texto</button>
+            <div id="futuroEscolha" class="d-flex gap-2 justify-content-center">
                 <button id="btnFuturoVoz" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-mic-fill me-1"></i>Voz</button>
                 <button id="btnFuturoVideo" class="btn btn-rosegold rounded-pill btn-sm fw-bold"><i class="bi bi-camera-video-fill me-1"></i>Vídeo</button>
             </div>
 
-            <div id="futuroTextoArea" class="d-none mt-3">
-                <textarea id="futuroTextoInput" class="futuro-textarea" placeholder="Escreva o que quiser dizer para nós do futuro..." maxlength="2000"></textarea>
-                <button id="btnFuturoSalvarTexto" class="btn btn-rosegold w-100 rounded-pill fw-bold btn-sm mt-2">
-                    <i class="bi bi-heart-fill me-1"></i>Guardar mensagem
-                </button>
-            </div>
-
             <div id="futuroGravacaoArea" class="d-none mt-3">
                 <video id="futuroPreviewVideo" autoplay playsinline muted class="d-none" style="width:100%;border-radius:8px;background:#000;aspect-ratio:16/9;object-fit:cover;"></video>
-                <video id="futuroPlaybackVideo" class="d-none" style="width:100%;border-radius:8px;background:#000;aspect-ratio:16/9;object-fit:cover;" controls></video>
                 <div id="futuroVozIndicador" class="d-none text-center py-4">
                     <i class="bi bi-mic-fill" style="font-size: 2rem; color: var(--rosegold);"></i>
                     <p class="small text-muted mt-2 mb-0">Pronto para gravar áudio...</p>
                 </div>
-                <audio id="futuroPlaybackAudio" class="d-none" style="width:100%;" controls></audio>
-
-                <p id="futuroTimer" class="futuro-timer text-center d-none mt-2">00:00</p>
-
                 <div class="d-flex gap-2 mt-3">
                     <button id="btnFuturoIniciar" class="btn btn-rosegold flex-fill rounded-pill fw-bold btn-sm">
                         <i class="bi bi-record-circle me-1"></i>Gravar
@@ -1561,18 +1419,12 @@
                         <span class="rec-dot"></span>Parar
                     </button>
                 </div>
-
-                <div id="futuroAcoesGravacao" class="d-none d-flex gap-2 mt-2">
-                    <button id="btnFuturoRegravar" class="btn btn-light border flex-fill rounded-pill btn-sm fw-bold">Regravar</button>
-                    <button id="btnFuturoSalvarGravacao" class="btn btn-rosegold flex-fill rounded-pill fw-bold btn-sm">Salvar mensagem</button>
-                </div>
+                <p id="futuroStatus" class="save-status"></p>
             </div>
-
-            <p id="futuroStatus" class="save-status"></p>
 
             <div id="futuroSucesso" class="d-none text-center mt-3">
                 <i class="bi bi-check-circle-fill text-success" style="font-size: 1.8rem;"></i>
-                <p class="small mt-2 mb-0">Mensagem guardada com carinho. Um dia a gente vê/ouve isso de novo, juntos.</p>
+                <p class="small mt-2 mb-0">Mensagem guardada com carinho. Um dia a gente ouve/assiste isso de novo, juntos.</p>
             </div>
         </div>
     </div>
@@ -1611,9 +1463,9 @@
             try { return JSON.parse(localStorage.getItem(chave) || 'null'); } catch (e) { return null; }
         }
 
-        // Reúne tudo o que existe até agora: assinatura, vídeo do pedido, mensagens
-        // para o futuro (texto/áudio/vídeo, em lista), respostas do quiz, contrato e
-        // as demais configurações — sempre incluindo apenas o que estiver disponível.
+        // Reúne tudo o que existe até agora: assinatura, vídeo do pedido, mensagem
+        // para o futuro, respostas do quiz, contrato e as demais configurações —
+        // sempre incluindo apenas o que estiver realmente disponível.
         async function gerarBackupCompleto() {
             const backup = {
                 versao: 1,
@@ -1628,7 +1480,9 @@
                 assinatura: null,
                 video: null,
                 videoMime: null,
-                mensagensFuturo: [],
+                mensagemFuturo: null,
+                mensagemFuturoMime: null,
+                mensagemFuturoTipo: null,
                 lembrancas: null
             };
 
@@ -1646,18 +1500,13 @@
             } catch (e) { console.error('Backup: falha ao ler vídeo', e); }
 
             try {
-                const lista = await obterMensagensFuturo();
-                if (lista.length) {
-                    backup.mensagensFuturo = await Promise.all(lista.map(async (msg) => ({
-                        id: msg.id,
-                        tipo: msg.tipo,
-                        texto: msg.texto || null,
-                        criadoEm: msg.criadoEm,
-                        mimeType: msg.mimeType || null,
-                        arquivo: msg.blob ? await blobParaDataURL(msg.blob) : null
-                    })));
+                const registroFuturo = await db.arquivos.get('mensagem_futuro');
+                if (registroFuturo && registroFuturo.data) {
+                    backup.mensagemFuturo = await blobParaDataURL(registroFuturo.data);
+                    backup.mensagemFuturoMime = registroFuturo.data.type || 'application/octet-stream';
+                    backup.mensagemFuturoTipo = registroFuturo.tipo || null;
                 }
-            } catch (e) { console.error('Backup: falha ao ler mensagens do futuro', e); }
+            } catch (e) { console.error('Backup: falha ao ler mensagem do futuro', e); }
 
             try {
                 const registroLembrancas = await db.arquivos.get('lembrancas');
@@ -1734,33 +1583,11 @@
                     } catch (e) { console.error('Restaurar: falha no vídeo', e); }
                 }
 
-                if (backup.mensagensFuturo && Array.isArray(backup.mensagensFuturo) && backup.mensagensFuturo.length) {
-                    try {
-                        const lista = backup.mensagensFuturo.map(item => ({
-                            id: item.id || gerarIdMensagemFuturo(),
-                            tipo: item.tipo,
-                            texto: item.texto || null,
-                            mimeType: item.mimeType || null,
-                            blob: item.arquivo ? dataURLParaBlob(item.arquivo) : null,
-                            criadoEm: item.criadoEm || new Date().toISOString()
-                        }));
-                        await salvarListaMensagensFuturo(lista);
-                    } catch (e) { console.error('Restaurar: falha nas mensagens do futuro', e); }
-                } else if (backup.mensagemFuturo) {
-                    // Compatibilidade com backups gerados por uma versão antiga do site,
-                    // que só guardava uma única mensagem (formato singular).
+                if (backup.mensagemFuturo) {
                     try {
                         const blobFuturo = dataURLParaBlob(backup.mensagemFuturo);
-                        const lista = [{
-                            id: gerarIdMensagemFuturo(),
-                            tipo: backup.mensagemFuturoTipo === 'video' ? 'video' : 'audio',
-                            texto: null,
-                            mimeType: backup.mensagemFuturoMime || null,
-                            blob: blobFuturo,
-                            criadoEm: backup.criadoEm || new Date().toISOString()
-                        }];
-                        await salvarListaMensagensFuturo(lista);
-                    } catch (e) { console.error('Restaurar: falha na mensagem do futuro (formato antigo)', e); }
+                        await db.arquivos.put({ id: 'mensagem_futuro', data: blobFuturo, tipo: backup.mensagemFuturoTipo, criadoEm: Date.now() });
+                    } catch (e) { console.error('Restaurar: falha na mensagem do futuro', e); }
                 }
 
                 if (backup.lembrancas && Array.isArray(backup.lembrancas)) {
@@ -2108,81 +1935,6 @@
             });
         }
 
-        /* ==================================================================
-           CÁPSULA DO TEMPO — uma carta que fica trancada e se revela sozinha
-           quando chega a data-alvo (por padrão, 1 ano após o pedido de
-           namoro). Edite o texto abaixo e, se quiser, o número de dias em
-           CAPSULA_DIAS_PARA_DESBLOQUEIO.
-           ================================================================== */
-        const CAPSULA_DIAS_PARA_DESBLOQUEIO = 365;
-
-        function textoCapsulaDoTempo() {
-            return "Se você está lendo isso, já faz um ano que eu me ajoelhei (ou não, dependendo de como você decidiu contar essa história) e te pedi em namoro. [Escreva aqui o que você quer dizer para vocês dois daqui a um ano — o que espera que tenha mudado, o que espera que continue igual, uma promessa, uma lembrança do que sentiu nesse dia.]";
-        }
-
-        function calcularDataDesbloqueioCapsula() {
-            const dataPedidoIso = localStorage.getItem('aurora_data_pedido');
-            if (!dataPedidoIso) return null;
-            const alvo = new Date(dataPedidoIso);
-            alvo.setDate(alvo.getDate() + CAPSULA_DIAS_PARA_DESBLOQUEIO);
-            return alvo;
-        }
-
-        // Decide, a cada visita à página, se a cápsula ainda está trancada
-        // (mostra a contagem de dias) ou se já pode ser aberta (mostra o
-        // envelope). Como a checagem é sempre feita contra a data real do
-        // sistema, ela abre sozinha assim que o dia chega — sem depender de
-        // nenhuma ação manual.
-        function prepararCapsulaDoTempo() {
-            const wrap = document.getElementById('capsulaTempoWrap');
-            if (!wrap) return;
-
-            const dataAlvo = calcularDataDesbloqueioCapsula();
-            if (!dataAlvo) { wrap.classList.add('d-none'); return; }
-            wrap.classList.remove('d-none');
-
-            const agora = new Date();
-            const bloqueada = document.getElementById('capsulaBloqueada');
-            const desbloqueada = document.getElementById('capsulaDesbloqueada');
-
-            if (agora < dataAlvo) {
-                bloqueada.classList.remove('d-none');
-                desbloqueada.classList.add('d-none');
-                const diasRestantes = Math.max(1, Math.ceil((dataAlvo - agora) / 86400000));
-                document.getElementById('capsulaContagem').textContent =
-                    diasRestantes === 1 ? 'falta 1 dia' : `faltam ${diasRestantes} dias`;
-            } else {
-                bloqueada.classList.add('d-none');
-                desbloqueada.classList.remove('d-none');
-                iniciarEnvelopeCapsula();
-            }
-        }
-
-        function iniciarEnvelopeCapsula() {
-            const envelope = document.getElementById('capsulaEnvelope');
-            const hint = document.getElementById('capsulaHint');
-            const textoEl = document.getElementById('capsulaTexto');
-            const assinaturaEl = document.getElementById('capsulaAssinatura');
-            if (!envelope || envelope.dataset.iniciado === '1') return;
-            envelope.dataset.iniciado = '1';
-
-            textoEl.textContent = textoCapsulaDoTempo();
-            assinaturaEl.textContent = `Com amor, ${NOME_DELE}.`;
-
-            let jaAbriu = false;
-            envelope.addEventListener('click', () => {
-                if (jaAbriu) return;
-                jaAbriu = true;
-                hint.classList.remove('visivel');
-                envelope.classList.add('aberto');
-            });
-
-            requestAnimationFrame(() => {
-                envelope.classList.add('envelope-visivel');
-                setTimeout(() => hint.classList.add('visivel'), 500);
-            });
-        }
-
         /* ---------------- Exportar a carta (imagem / PDF) ---------------- */
         // Usa uma versão "limpa" (sem os efeitos 3D do envelope) da carta,
         // já com "amor" substituído pelo nome dela, para gerar um arquivo
@@ -2429,150 +2181,41 @@
             return '';
         }
 
-        /* ==================================================================
-           MENSAGEM PARA O FUTURO — texto, voz ou vídeo, com persistência real
-           ==================================================================
-           Cada mensagem é guardada como um item de uma LISTA (não mais uma
-           chave única sobrescrita a cada gravação), no IndexedDB, sob a chave
-           'mensagens_futuro'. Cada item carrega: id, tipo ('texto'|'audio'|
-           'video'), texto (quando aplicável), blob (quando aplicável),
-           mimeType e criadoEm (data/hora ISO). A lista é exibida depois na
-           página "Nossa História", com reprodução de áudio/vídeo e leitura
-           do texto — a "área final" pedida na correção. */
-
+        /* ---------------- Mensagem para o futuro (voz ou vídeo) ---------------- */
         let futuroStream = null;
         let futuroRecorder = null;
         let futuroChunks = [];
-        let futuroModo = null; // 'texto' | 'audio' | 'video'
-        let futuroBlobPendente = null;
-        let futuroMimePendente = null;
-        let futuroTimerIntervalo = null;
-        let futuroTimerSegundos = 0;
+        let futuroModo = null; // 'voz' | 'video'
 
-        function gerarIdMensagemFuturo() {
-            return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        function abrirFuturoOverlay() {
+            document.getElementById('futuroOverlay').classList.remove('d-none');
+            document.getElementById('futuroEscolha').classList.remove('d-none');
+            document.getElementById('futuroGravacaoArea').classList.add('d-none');
+            document.getElementById('futuroSucesso').classList.add('d-none');
+            document.getElementById('futuroStatus').textContent = '';
         }
 
-        function formatarDataHoraMensagem(iso) {
-            const d = new Date(iso);
-            const dataStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            return `${dataStr} às ${horaStr}`;
-        }
-
-        async function obterMensagensFuturo() {
-            try {
-                const registro = await db.arquivos.get('mensagens_futuro');
-                return (registro && Array.isArray(registro.data)) ? registro.data : [];
-            } catch (e) {
-                console.error('Falha ao ler mensagens do futuro', e);
-                return [];
-            }
-        }
-
-        async function salvarListaMensagensFuturo(lista) {
-            await db.arquivos.put({ id: 'mensagens_futuro', data: lista });
-        }
-
-        function pararStreamFuturo() {
+        function fecharFuturoOverlay() {
+            document.getElementById('futuroOverlay').classList.add('d-none');
+            if (futuroRecorder && futuroRecorder.state !== 'inactive') futuroRecorder.stop();
             if (futuroStream) {
                 futuroStream.getTracks().forEach(track => track.stop());
                 futuroStream = null;
             }
         }
 
-        function iniciarTimerFuturo() {
-            futuroTimerSegundos = 0;
-            const timerEl = document.getElementById('futuroTimer');
-            if (timerEl) {
-                timerEl.textContent = '00:00';
-                timerEl.classList.remove('d-none');
-            }
-            futuroTimerIntervalo = setInterval(() => {
-                futuroTimerSegundos++;
-                const min = String(Math.floor(futuroTimerSegundos / 60)).padStart(2, '0');
-                const seg = String(futuroTimerSegundos % 60).padStart(2, '0');
-                if (timerEl) timerEl.textContent = `${min}:${seg}`;
-            }, 1000);
-        }
-
-        function pararTimerFuturo() {
-            if (futuroTimerIntervalo) { clearInterval(futuroTimerIntervalo); futuroTimerIntervalo = null; }
-            const timerEl = document.getElementById('futuroTimer');
-            if (timerEl) timerEl.classList.add('d-none');
-        }
-
-        function resetarFuturoOverlayEstado() {
-            futuroModo = null;
-            futuroBlobPendente = null;
-            futuroMimePendente = null;
-            futuroChunks = [];
-            pararTimerFuturo();
-
-            document.getElementById('futuroEscolha').classList.remove('d-none');
-            document.getElementById('futuroTextoArea').classList.add('d-none');
-            document.getElementById('futuroGravacaoArea').classList.add('d-none');
-            document.getElementById('futuroSucesso').classList.add('d-none');
-
-            const statusEl = document.getElementById('futuroStatus');
-            statusEl.textContent = '';
-            statusEl.className = 'save-status';
-
-            document.getElementById('futuroTextoInput').value = '';
-
-            const previewVideo = document.getElementById('futuroPreviewVideo');
-            const playbackVideo = document.getElementById('futuroPlaybackVideo');
-            const playbackAudio = document.getElementById('futuroPlaybackAudio');
-            previewVideo.classList.add('d-none');
-            previewVideo.srcObject = null;
-            playbackVideo.classList.add('d-none');
-            playbackVideo.removeAttribute('src');
-            playbackAudio.classList.add('d-none');
-            playbackAudio.removeAttribute('src');
-            document.getElementById('futuroVozIndicador').classList.add('d-none');
-
-            document.getElementById('btnFuturoIniciar').classList.remove('d-none');
-            document.getElementById('btnFuturoParar').classList.add('d-none');
-            document.getElementById('futuroAcoesGravacao').classList.add('d-none');
-        }
-
-        function abrirFuturoOverlay() {
-            document.getElementById('futuroOverlay').classList.remove('d-none');
-            resetarFuturoOverlayEstado();
-        }
-
-        function fecharFuturoOverlay() {
-            document.getElementById('futuroOverlay').classList.add('d-none');
-            if (futuroRecorder && futuroRecorder.state !== 'inactive') {
-                try { futuroRecorder.stop(); } catch (e) { /* ignora */ }
-            }
-            pararStreamFuturo();
-            pararTimerFuturo();
-        }
-
         async function escolherModoFuturo(modo) {
             futuroModo = modo;
             document.getElementById('futuroEscolha').classList.add('d-none');
-            const statusEl = document.getElementById('futuroStatus');
-            statusEl.textContent = '';
-            statusEl.className = 'save-status';
-
-            if (modo === 'texto') {
-                document.getElementById('futuroTextoArea').classList.remove('d-none');
-                document.getElementById('futuroTextoInput').focus();
-                return;
-            }
-
             document.getElementById('futuroGravacaoArea').classList.remove('d-none');
+
             const previewVideo = document.getElementById('futuroPreviewVideo');
             const vozIndicador = document.getElementById('futuroVozIndicador');
+            const statusEl = document.getElementById('futuroStatus');
 
             try {
-                const constraints = modo === 'video'
-                    ? { video: { facingMode: 'user' }, audio: true }
-                    : { audio: true };
+                const constraints = modo === 'video' ? { video: true, audio: true } : { audio: true };
                 futuroStream = await navigator.mediaDevices.getUserMedia(constraints);
-
                 if (modo === 'video') {
                     previewVideo.srcObject = futuroStream;
                     previewVideo.classList.remove('d-none');
@@ -2582,7 +2225,7 @@
                     vozIndicador.classList.remove('d-none');
                 }
             } catch (err) {
-                statusEl.textContent = 'Não foi possível acessar o microfone/câmera. Verifique as permissões do navegador e tente novamente.';
+                statusEl.textContent = 'Não foi possível acessar o microfone/câmera. Verifique as permissões.';
                 statusEl.className = 'save-status err';
                 console.error('Permissão negada para mensagem do futuro:', err);
             }
@@ -2591,47 +2234,35 @@
         function iniciarGravacaoFuturo() {
             if (!futuroStream) return;
             futuroChunks = [];
-            futuroBlobPendente = null;
-            const statusEl = document.getElementById('futuroStatus');
-            statusEl.textContent = '';
-            statusEl.className = 'save-status';
-
             const mimeType = getSupportedMimeTypeParaModo(futuroModo);
-            try {
-                futuroRecorder = mimeType ? new MediaRecorder(futuroStream, { mimeType }) : new MediaRecorder(futuroStream);
-            } catch (err) {
-                console.error('Falha ao iniciar o gravador de mídia', err);
-                statusEl.textContent = 'Não foi possível iniciar a gravação neste navegador.';
-                statusEl.className = 'save-status err';
-                return;
-            }
+            futuroRecorder = mimeType ? new MediaRecorder(futuroStream, { mimeType }) : new MediaRecorder(futuroStream);
 
             futuroRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) futuroChunks.push(e.data); };
 
-            futuroRecorder.onstop = () => {
-                pararTimerFuturo();
+            futuroRecorder.onstop = async () => {
                 const tipoFinal = futuroRecorder.mimeType || (futuroModo === 'video' ? 'video/webm' : 'audio/webm');
-                futuroBlobPendente = new Blob(futuroChunks, { type: tipoFinal });
-                futuroMimePendente = tipoFinal;
+                const blob = new Blob(futuroChunks, { type: tipoFinal });
+                const statusEl = document.getElementById('futuroStatus');
+                statusEl.textContent = 'Salvando mensagem...';
+                statusEl.className = 'save-status pending';
 
-                const urlPreview = URL.createObjectURL(futuroBlobPendente);
-                if (futuroModo === 'video') {
-                    document.getElementById('futuroPreviewVideo').classList.add('d-none');
-                    const playbackVideo = document.getElementById('futuroPlaybackVideo');
-                    playbackVideo.src = urlPreview;
-                    playbackVideo.classList.remove('d-none');
-                } else {
-                    document.getElementById('futuroVozIndicador').classList.add('d-none');
-                    const playbackAudio = document.getElementById('futuroPlaybackAudio');
-                    playbackAudio.src = urlPreview;
-                    playbackAudio.classList.remove('d-none');
+                try {
+                    await db.arquivos.put({ id: 'mensagem_futuro', data: blob, tipo: futuroModo, criadoEm: Date.now() });
+                    document.getElementById('futuroGravacaoArea').classList.add('d-none');
+                    document.getElementById('futuroSucesso').classList.remove('d-none');
+                } catch (err) {
+                    statusEl.textContent = 'Não foi possível salvar a mensagem. Tente novamente.';
+                    statusEl.className = 'save-status err';
+                    console.error('Falha ao salvar mensagem do futuro', err);
                 }
 
-                document.getElementById('futuroAcoesGravacao').classList.remove('d-none');
+                if (futuroStream) {
+                    futuroStream.getTracks().forEach(track => track.stop());
+                    futuroStream = null;
+                }
             };
 
             futuroRecorder.start();
-            iniciarTimerFuturo();
             document.getElementById('btnFuturoIniciar').classList.add('d-none');
             document.getElementById('btnFuturoParar').classList.remove('d-none');
         }
@@ -2639,177 +2270,6 @@
         function pararGravacaoFuturo() {
             if (futuroRecorder && futuroRecorder.state !== 'inactive') futuroRecorder.stop();
             document.getElementById('btnFuturoParar').classList.add('d-none');
-        }
-
-        // Permite ouvir/assistir antes de salvar e, se não gostar, gravar de novo
-        // sem precisar fechar o modal (o stream de câmera/microfone continua ativo).
-        function regravarMensagemFuturo() {
-            futuroBlobPendente = null;
-            futuroMimePendente = null;
-            futuroChunks = [];
-            document.getElementById('futuroAcoesGravacao').classList.add('d-none');
-            document.getElementById('btnFuturoIniciar').classList.remove('d-none');
-
-            const playbackVideo = document.getElementById('futuroPlaybackVideo');
-            const playbackAudio = document.getElementById('futuroPlaybackAudio');
-            playbackVideo.classList.add('d-none');
-            playbackVideo.removeAttribute('src');
-            playbackAudio.classList.add('d-none');
-            playbackAudio.removeAttribute('src');
-
-            if (futuroModo === 'video') {
-                const previewVideo = document.getElementById('futuroPreviewVideo');
-                previewVideo.classList.remove('d-none');
-                if (futuroStream) previewVideo.srcObject = futuroStream;
-            } else {
-                document.getElementById('futuroVozIndicador').classList.remove('d-none');
-            }
-
-            const statusEl = document.getElementById('futuroStatus');
-            statusEl.textContent = '';
-            statusEl.className = 'save-status';
-        }
-
-        async function salvarMensagemFuturoGravada() {
-            if (!futuroBlobPendente) return;
-            const statusEl = document.getElementById('futuroStatus');
-            statusEl.textContent = 'Salvando mensagem...';
-            statusEl.className = 'save-status pending';
-
-            const novaMensagem = {
-                id: gerarIdMensagemFuturo(),
-                tipo: futuroModo,
-                texto: null,
-                blob: futuroBlobPendente,
-                mimeType: futuroMimePendente,
-                criadoEm: new Date().toISOString()
-            };
-
-            try {
-                const lista = await obterMensagensFuturo();
-                lista.push(novaMensagem);
-                await salvarListaMensagensFuturo(lista);
-
-                // Confere se realmente foi persistido antes de comemorar.
-                const confereLista = await obterMensagensFuturo();
-                const persistiu = confereLista.some(m => m.id === novaMensagem.id);
-
-                pararStreamFuturo();
-
-                if (persistiu) {
-                    document.getElementById('futuroGravacaoArea').classList.add('d-none');
-                    document.getElementById('futuroSucesso').classList.remove('d-none');
-                    statusEl.textContent = '';
-                    renderizarMensagensFuturo();
-                } else {
-                    statusEl.textContent = 'Não foi possível confirmar o salvamento. Tente novamente.';
-                    statusEl.className = 'save-status err';
-                }
-            } catch (err) {
-                console.error('Falha ao salvar mensagem do futuro', err);
-                statusEl.textContent = 'Não foi possível salvar a mensagem. Tente novamente.';
-                statusEl.className = 'save-status err';
-            }
-        }
-
-        async function salvarMensagemFuturoTexto() {
-            const textarea = document.getElementById('futuroTextoInput');
-            const texto = textarea.value.trim();
-            const statusEl = document.getElementById('futuroStatus');
-
-            if (!texto) {
-                statusEl.textContent = 'Escreva algo antes de guardar :)';
-                statusEl.className = 'save-status err';
-                return;
-            }
-
-            statusEl.textContent = 'Salvando mensagem...';
-            statusEl.className = 'save-status pending';
-
-            const novaMensagem = {
-                id: gerarIdMensagemFuturo(),
-                tipo: 'texto',
-                texto: texto,
-                blob: null,
-                mimeType: null,
-                criadoEm: new Date().toISOString()
-            };
-
-            try {
-                const lista = await obterMensagensFuturo();
-                lista.push(novaMensagem);
-                await salvarListaMensagensFuturo(lista);
-
-                const confereLista = await obterMensagensFuturo();
-                const persistiu = confereLista.some(m => m.id === novaMensagem.id);
-
-                if (persistiu) {
-                    document.getElementById('futuroTextoArea').classList.add('d-none');
-                    document.getElementById('futuroSucesso').classList.remove('d-none');
-                    statusEl.textContent = '';
-                    renderizarMensagensFuturo();
-                } else {
-                    statusEl.textContent = 'Não foi possível confirmar o salvamento. Tente novamente.';
-                    statusEl.className = 'save-status err';
-                }
-            } catch (err) {
-                console.error('Falha ao salvar mensagem de texto do futuro', err);
-                statusEl.textContent = 'Não foi possível salvar a mensagem. Tente novamente.';
-                statusEl.className = 'save-status err';
-            }
-        }
-
-        // Exibe todas as mensagens salvas na área final ("Nossa História"),
-        // mais recentes primeiro, cada uma com data/hora e reprodução (texto
-        // legível, áudio com player, vídeo com player).
-        async function renderizarMensagensFuturo() {
-            const lista = await obterMensagensFuturo();
-            const container = document.getElementById('mensagensFuturoLista');
-            const vazio = document.getElementById('mensagensFuturoVazio');
-            if (!container) return;
-
-            container.innerHTML = '';
-            if (!lista.length) {
-                vazio.classList.remove('d-none');
-                return;
-            }
-            vazio.classList.add('d-none');
-
-            const ordenada = [...lista].sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
-            const iconePorTipo = { texto: 'bi-chat-heart-fill', audio: 'bi-mic-fill', video: 'bi-camera-video-fill' };
-
-            ordenada.forEach(msg => {
-                const item = document.createElement('div');
-                item.className = 'mensagem-futuro-item';
-                const dataFormatada = formatarDataHoraMensagem(msg.criadoEm);
-
-                const cabecalho = document.createElement('p');
-                cabecalho.className = 'mensagem-futuro-data';
-                cabecalho.innerHTML = `<i class="bi ${iconePorTipo[msg.tipo] || 'bi-heart-fill'} mensagem-futuro-tipo-icon"></i>${dataFormatada}`;
-                item.appendChild(cabecalho);
-
-                if (msg.tipo === 'texto') {
-                    const p = document.createElement('p');
-                    p.className = 'mensagem-futuro-texto';
-                    p.textContent = msg.texto || '';
-                    item.appendChild(p);
-                } else if (msg.tipo === 'audio' && msg.blob) {
-                    const audio = document.createElement('audio');
-                    audio.className = 'mensagem-futuro-audio';
-                    audio.controls = true;
-                    audio.src = URL.createObjectURL(msg.blob);
-                    item.appendChild(audio);
-                } else if (msg.tipo === 'video' && msg.blob) {
-                    const video = document.createElement('video');
-                    video.className = 'mensagem-futuro-video-el';
-                    video.controls = true;
-                    video.playsInline = true;
-                    video.src = URL.createObjectURL(msg.blob);
-                    item.appendChild(video);
-                }
-
-                container.appendChild(item);
-            });
         }
 
         /* ---------------- Área de lembranças (prints de conversas antigas) ---------------- */
@@ -2849,138 +2309,25 @@
             }
             vazio.classList.add('d-none');
 
-            lista.forEach((item, i) => {
+            lista.forEach(item => {
                 const url = URL.createObjectURL(item.blob);
                 const botao = document.createElement('button');
                 botao.type = 'button';
                 botao.className = 'lembranca-item';
                 botao.innerHTML = `<img src="${url}" alt="Print de uma conversa antiga">`;
+                botao.addEventListener('click', () => abrirLembrancaAmpliada(url));
                 grid.appendChild(botao);
             });
-
-            // Reconstrói a lista de URLs depois de inserir todas as imagens no grid,
-            // para que cada botão abra a galeria já sabendo a posição de todas as
-            // fotos (permitindo navegar com anterior/próxima dentro do lightbox).
-            const urlsLembrancas = Array.from(grid.querySelectorAll('img')).map(img => img.src);
-            Array.from(grid.children).forEach((botao, i) => {
-                botao.addEventListener('click', () => abrirLightboxGaleria(urlsLembrancas, i));
-            });
         }
 
-        /* ---------------- Lightbox reutilizável (lembranças e "Nossos momentos") ---------------- */
-        let lightboxItensAtuais = [];
-        let lightboxIndiceAtual = 0;
-
-        function abrirLightboxGaleria(itens, indiceInicial) {
-            if (!itens || !itens.length) return;
-            lightboxItensAtuais = itens;
-            lightboxIndiceAtual = indiceInicial || 0;
-            atualizarImagemLightbox();
+        function abrirLembrancaAmpliada(url) {
+            document.getElementById('lembrancaLightboxImg').src = url;
             document.getElementById('lembrancaLightbox').classList.remove('d-none');
-        }
-
-        function atualizarImagemLightbox() {
-            document.getElementById('lembrancaLightboxImg').src = lightboxItensAtuais[lightboxIndiceAtual];
-            const mostrarNav = lightboxItensAtuais.length > 1;
-            document.getElementById('btnLightboxAnterior').classList.toggle('d-none', !mostrarNav);
-            document.getElementById('btnLightboxProxima').classList.toggle('d-none', !mostrarNav);
-        }
-
-        function lightboxFotoAnterior() {
-            if (!lightboxItensAtuais.length) return;
-            lightboxIndiceAtual = (lightboxIndiceAtual - 1 + lightboxItensAtuais.length) % lightboxItensAtuais.length;
-            atualizarImagemLightbox();
-        }
-
-        function lightboxProximaFoto() {
-            if (!lightboxItensAtuais.length) return;
-            lightboxIndiceAtual = (lightboxIndiceAtual + 1) % lightboxItensAtuais.length;
-            atualizarImagemLightbox();
         }
 
         function fecharLembrancaAmpliada() {
             document.getElementById('lembrancaLightbox').classList.add('d-none');
             document.getElementById('lembrancaLightboxImg').src = '';
-            lightboxItensAtuais = [];
-        }
-
-        // "Nossos momentos" usa fotos estáticas do HTML (não vêm do IndexedDB), então
-        // aqui só conectamos cada foto já existente na página ao lightbox comum.
-        function iniciarGaleriaMomentos() {
-            const galeria = document.getElementById('momentosGallery');
-            if (!galeria) return;
-            const fotos = Array.from(galeria.querySelectorAll('.table-photo img'));
-            if (!fotos.length) return;
-            const urls = fotos.map(img => img.src);
-            fotos.forEach((img, i) => {
-                const cartao = img.closest('.table-photo');
-                cartao.style.cursor = 'pointer';
-                cartao.addEventListener('click', () => abrirLightboxGaleria(urls, i));
-            });
-        }
-
-        /* ---------------- Nossa linha do tempo (marcos com foto) ---------------- */
-        // Edite este array com os marcos reais da relação. O último item (ehPedido)
-        // é sempre preenchido automaticamente com a data do pedido de namoro.
-        const timelineMarcos = [
-            {
-                data: '[Data do primeiro encontro / conversa]',
-                texto: 'Descreva aqui como foi a primeira vez que vocês se falaram ou se viram — o que você sentiu, o que achou engraçado ou especial.',
-                foto: 'https://via.placeholder.com/160x160/4a2c34/fff?text=1'
-            },
-            {
-                data: '[Data do primeiro encontro presencial]',
-                texto: 'Conte como foi ver a pessoa pela primeira vez ao vivo — o nervosismo, a primeira impressão, um detalhe engraçado que aconteceu.',
-                foto: 'https://via.placeholder.com/160x160/4a2c34/fff?text=2'
-            },
-            {
-                data: '[Data de uma viagem ou momento marcante]',
-                texto: 'Uma viagem, um perrengue resolvido junto, uma piada interna — algo que só vocês dois entendem.',
-                foto: 'https://via.placeholder.com/160x160/4a2c34/fff?text=3'
-            },
-            {
-                data: '[Data de um momento difícil superado juntos]',
-                texto: 'Um momento difícil que vocês atravessaram juntos e saíram mais fortes um do lado do outro.',
-                foto: 'https://via.placeholder.com/160x160/4a2c34/fff?text=4'
-            },
-            {
-                data: null,
-                texto: 'Fale sobre o presente: por que hoje, por que ela, por que agora.',
-                foto: 'https://via.placeholder.com/160x160/B76E79/fff?text=Hoje',
-                ehPedido: true
-            }
-        ];
-
-        function renderizarTimeline() {
-            const container = document.getElementById('timelineLista');
-            if (!container) return;
-            container.innerHTML = '';
-
-            timelineMarcos.forEach(marco => {
-                const item = document.createElement('div');
-                item.className = 'timeline-item';
-
-                const dataHtml = marco.ehPedido
-                    ? '<strong id="dataPedidoTimeline">[Hoje]</strong>'
-                    : `<strong>${marco.data}</strong>`;
-
-                item.innerHTML = `
-                    <div class="timeline-item-inner">
-                        <img src="${marco.foto}" class="timeline-thumb" alt="Foto do momento">
-                        <div>
-                            ${dataHtml}
-                            <p class="small mb-0 mt-1">${marco.texto}</p>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(item);
-
-                const thumb = item.querySelector('.timeline-thumb');
-                thumb.addEventListener('click', () => {
-                    const todasFotos = timelineMarcos.map(m => m.foto);
-                    abrirLightboxGaleria(todasFotos, timelineMarcos.indexOf(marco));
-                });
-            });
         }
 
         // Baixa o vídeo automaticamente, sem exigir nenhum clique do usuário.
@@ -3059,155 +2406,6 @@
                     document.body.addEventListener('touchstart', liberar, { once: true });
                 });
             }
-        }
-
-        // A trilha única do suspense (musicaFundo) toca do "Confirmar Pagamento" até
-        // a carta final. Ao chegar em "Nossa História", ela dá lugar à playlist com
-        // várias faixas — por isso é pausada aqui, evitando duas músicas ao mesmo tempo.
-        function pausarMusicaFundoImediatamente() {
-            const audio = document.getElementById('musicaFundo');
-            if (audio && !audio.paused) audio.pause();
-        }
-
-        /* ==================================================================
-           NOSSA PLAYLIST — múltiplas faixas com legenda afetiva, na página
-           "Nossa História". Edite o array abaixo com as músicas reais de
-           vocês (título, artista, o motivo/lembrança e o link do arquivo).
-           Os textos entre colchetes são só placeholders de exemplo.
-           ================================================================== */
-        const playlistFaixas = [
-            {
-                titulo: "[Nossa música tema]",
-                artista: "[Artista/Banda]",
-                motivo: "[Por que essa música é especial pra vocês — edite aqui]",
-                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-            },
-            {
-                titulo: "[Música da nossa primeira viagem]",
-                artista: "[Artista/Banda]",
-                motivo: "[O que essa música lembra — edite aqui]",
-                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-            },
-            {
-                titulo: "[Aquela que sempre canta junto]",
-                artista: "[Artista/Banda]",
-                motivo: "[Uma piada interna ou lembrança ligada a ela — edite aqui]",
-                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-            },
-            {
-                titulo: "[Música do dia do pedido]",
-                artista: "[Artista/Banda]",
-                motivo: "[Por que escolheu essa pra hoje — edite aqui]",
-                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
-            }
-        ];
-        let playlistIndiceAtual = 0;
-
-        function formatarTempoPlaylist(segundos) {
-            if (!isFinite(segundos) || segundos < 0) segundos = 0;
-            const min = Math.floor(segundos / 60);
-            const seg = Math.floor(segundos % 60);
-            return `${min}:${String(seg).padStart(2, '0')}`;
-        }
-
-        function renderizarListaFaixasPlaylist() {
-            const lista = document.getElementById('playlistTracklist');
-            if (!lista) return;
-            lista.innerHTML = '';
-            playlistFaixas.forEach((faixa, i) => {
-                const item = document.createElement('div');
-                item.className = 'playlist-track-item' + (i === playlistIndiceAtual ? ' ativa' : '');
-                item.innerHTML = `<span><span class="pi-num">${String(i + 1).padStart(2, '0')}</span>${faixa.titulo}</span><i class="bi ${i === playlistIndiceAtual ? 'bi-soundwave' : 'bi-play-fill'}"></i>`;
-                item.addEventListener('click', () => carregarFaixaPlaylist(i, true));
-                lista.appendChild(item);
-            });
-        }
-
-        function atualizarInfoFaixaAtualPlaylist() {
-            const faixa = playlistFaixas[playlistIndiceAtual];
-            document.getElementById('playlistTitulo').textContent = faixa.titulo;
-            document.getElementById('playlistArtista').textContent = faixa.artista;
-            document.getElementById('playlistMotivo').textContent = faixa.motivo;
-            renderizarListaFaixasPlaylist();
-        }
-
-        function atualizarBotaoPlayPausePlaylist(tocando) {
-            const btn = document.getElementById('btnPlaylistPlayPause');
-            if (!btn) return;
-            btn.innerHTML = tocando ? '<i class="bi bi-pause-fill"></i>' : '<i class="bi bi-play-fill"></i>';
-        }
-
-        function carregarFaixaPlaylist(indice, autoplay) {
-            playlistIndiceAtual = ((indice % playlistFaixas.length) + playlistFaixas.length) % playlistFaixas.length;
-            const audio = document.getElementById('playlistAudio');
-            audio.src = playlistFaixas[playlistIndiceAtual].src;
-            atualizarInfoFaixaAtualPlaylist();
-            document.getElementById('playlistProgressoInner').style.width = '0%';
-            document.getElementById('playlistTempoAtual').textContent = '0:00';
-            document.getElementById('playlistTempoTotal').textContent = '0:00';
-
-            if (autoplay) {
-                const promessa = audio.play();
-                if (promessa !== undefined) {
-                    promessa.then(() => atualizarBotaoPlayPausePlaylist(true)).catch(() => atualizarBotaoPlayPausePlaylist(false));
-                }
-            } else {
-                atualizarBotaoPlayPausePlaylist(false);
-            }
-        }
-
-        function togglePlaylistPlayPause() {
-            const audio = document.getElementById('playlistAudio');
-            if (!audio.src) { carregarFaixaPlaylist(playlistIndiceAtual, true); return; }
-            if (audio.paused) {
-                const promessa = audio.play();
-                if (promessa !== undefined) {
-                    promessa.then(() => atualizarBotaoPlayPausePlaylist(true)).catch(() => atualizarBotaoPlayPausePlaylist(false));
-                }
-            } else {
-                audio.pause();
-                atualizarBotaoPlayPausePlaylist(false);
-            }
-        }
-
-        function playlistProximaFaixa() { carregarFaixaPlaylist(playlistIndiceAtual + 1, true); }
-        function playlistFaixaAnterior() { carregarFaixaPlaylist(playlistIndiceAtual - 1, true); }
-
-        // Inicializa a playlist ao entrar em "Nossa História". Os listeners são
-        // ligados apenas uma vez (dataset.iniciado); em reaberturas da página
-        // (ex: reload retomando direto no estágio final) só atualizamos a UI.
-        function iniciarPlaylistDaGente() {
-            const audio = document.getElementById('playlistAudio');
-            if (!audio) return;
-
-            if (audio.dataset.iniciado === '1') {
-                atualizarInfoFaixaAtualPlaylist();
-                return;
-            }
-            audio.dataset.iniciado = '1';
-
-            audio.addEventListener('timeupdate', () => {
-                if (!isFinite(audio.duration) || audio.duration <= 0) return;
-                const pct = (audio.currentTime / audio.duration) * 100;
-                document.getElementById('playlistProgressoInner').style.width = pct + '%';
-                document.getElementById('playlistTempoAtual').textContent = formatarTempoPlaylist(audio.currentTime);
-                document.getElementById('playlistTempoTotal').textContent = formatarTempoPlaylist(audio.duration);
-            });
-            audio.addEventListener('ended', playlistProximaFaixa);
-
-            const barra = document.getElementById('playlistProgressoOuter');
-            barra.addEventListener('click', (evt) => {
-                if (!isFinite(audio.duration) || audio.duration <= 0) return;
-                const rect = barra.getBoundingClientRect();
-                const pct = Math.min(1, Math.max(0, (evt.clientX - rect.left) / rect.width));
-                audio.currentTime = pct * audio.duration;
-            });
-
-            document.getElementById('btnPlaylistPlayPause').addEventListener('click', togglePlaylistPlayPause);
-            document.getElementById('btnPlaylistProxima').addEventListener('click', playlistProximaFaixa);
-            document.getElementById('btnPlaylistAnterior').addEventListener('click', playlistFaixaAnterior);
-
-            carregarFaixaPlaylist(0, true);
         }
 
         /* ---------------- Vitrine da home: carrossel promocional e miniaturas ---------------- */
@@ -3736,15 +2934,11 @@
             document.getElementById('processingOverlay').style.display = 'none';
             document.getElementById('romancePage').style.display = 'block';
             window.scrollTo(0, 0);
-            pausarMusicaFundoImediatamente();
-            iniciarPlaylistDaGente();
+            tentarTocarMusica();
             prepararContrato();
             iniciarContadorVivo();
             iniciarQuiz();
-            renderizarTimeline();
             renderizarLembrancas();
-            renderizarMensagensFuturo();
-            prepararCapsulaDoTempo();
 
             const dataPedidoIso = localStorage.getItem('aurora_data_pedido');
             if (dataPedidoIso) {
@@ -3800,7 +2994,6 @@
             obterOuCriarDataPrimeiroAcesso();
             iniciarCarrosselPromocional();
             iniciarThumbsProduto();
-            iniciarGaleriaMomentos();
             iniciarVinheta();
             iniciarCupomFalso();
 
@@ -3946,14 +3139,10 @@
 
             document.getElementById('btnMensagemFuturo').addEventListener('click', abrirFuturoOverlay);
             document.getElementById('btnFecharFuturo').addEventListener('click', fecharFuturoOverlay);
-            document.getElementById('btnFuturoTexto').addEventListener('click', () => escolherModoFuturo('texto'));
-            document.getElementById('btnFuturoVoz').addEventListener('click', () => escolherModoFuturo('audio'));
+            document.getElementById('btnFuturoVoz').addEventListener('click', () => escolherModoFuturo('voz'));
             document.getElementById('btnFuturoVideo').addEventListener('click', () => escolherModoFuturo('video'));
             document.getElementById('btnFuturoIniciar').addEventListener('click', iniciarGravacaoFuturo);
             document.getElementById('btnFuturoParar').addEventListener('click', pararGravacaoFuturo);
-            document.getElementById('btnFuturoRegravar').addEventListener('click', regravarMensagemFuturo);
-            document.getElementById('btnFuturoSalvarGravacao').addEventListener('click', salvarMensagemFuturoGravada);
-            document.getElementById('btnFuturoSalvarTexto').addEventListener('click', salvarMensagemFuturoTexto);
 
             document.getElementById('btnAdicionarLembranca').addEventListener('click', () => {
                 document.getElementById('inputLembrancas').click();
@@ -3963,8 +3152,6 @@
                 evt.target.value = '';
             });
             document.getElementById('btnFecharLembranca').addEventListener('click', fecharLembrancaAmpliada);
-            document.getElementById('btnLightboxAnterior').addEventListener('click', lightboxFotoAnterior);
-            document.getElementById('btnLightboxProxima').addEventListener('click', lightboxProximaFoto);
 
             document.getElementById('btnCompartilhar').addEventListener('click', async () => {
                 try {
