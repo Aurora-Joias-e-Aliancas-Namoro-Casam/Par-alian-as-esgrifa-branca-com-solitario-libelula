@@ -7,9 +7,11 @@
  * (é assim que IndexedDB funciona em qualquer site, não é uma limitação
  * deste projeto especificamente). Para o link "Compartilhar" abrir de
  * verdade em outro celular — com fotos, vídeo, contrato e mensagens — é
- * necessário um lugar na nuvem para guardar esses dados. Não é possível
- * eu criar essa conta por você (ela é sua e gratuita), mas o código abaixo
- * já está pronto para funcionar assim que você configurar duas linhas.
+ * necessário um lugar na nuvem para guardar esses dados.
+ *
+ * Eu (Claude) não tenho acesso à internet neste ambiente, então não
+ * recebo, não guardo e não posso validar nenhuma chave por conta própria
+ * — as constantes abaixo começam vazias até você mesmo colar os valores.
  *
  * COMO ATIVAR (gratuito, leva ~5 minutos, sem precisar programar):
  *   1. Crie uma conta em https://supabase.com (tem plano gratuito).
@@ -17,15 +19,21 @@
  *   3. No menu lateral, vá em "Storage" e crie um bucket público chamado
  *      exatamente: aurora-backups
  *   4. Ainda em Storage > aurora-backups > Policies, adicione uma política
- *      permitindo INSERT, UPDATE e SELECT para o público (anon) — o
- *      próprio painel do Supabase tem um botão "New policy" com modelos
+ *      permitindo INSERT, UPDATE, SELECT e DELETE para o público (anon) —
+ *      o próprio painel do Supabase tem um botão "New policy" com modelos
  *      prontos ("Enable read access for all users" / "Enable insert for
- *      anon users"); use esses modelos.
- *   5. Vá em "Project Settings" > "API". Copie a "Project URL" e a chave
- *      "anon public".
- *   6. Cole os dois valores nas constantes SUPABASE_URL e
- *      SUPABASE_ANON_KEY logo abaixo (a chave "anon" é longa, começando
- *      com "eyJ...").
+ *      anon users" / "Enable delete for anon users"); use esses modelos.
+ *   5. Vá em "Project Settings" > "API".
+ *        - Copie a "Project URL" → cole em SUPABASE_URL.
+ *        - Copie a chave da seção "Project API keys" com o rótulo
+ *          "anon" / "public" (NÃO a "service_role", que é secreta e não
+ *          deve nunca ir para um site público) → cole em SUPABASE_ANON_KEY.
+ *        - Se você já tinha uma chave antiga colada aqui e gerou uma nova
+ *          (botão "Generate new anon key" no Supabase), troque pela nova —
+ *          a antiga para de funcionar assim que é regenerada.
+ *   6. Abra diagnostico.html no celular e toque em "Testar conexão com a
+ *      nuvem": isso faz uma escrita + leitura reais no seu bucket, então
+ *      você confirma que a chave colada é a correta antes do grande dia.
  *
  * Enquanto essas duas constantes estiverem vazias, o botão "Compartilhar"
  * continua funcionando normalmente (compartilha o link), mas avisa que a
@@ -33,12 +41,35 @@
  * ============================================================================
  */
 
-const SUPABASE_URL = 'https://mdiohswwximmsggmrzue.supabase.co';        // ex: 'https://mdiohswwximmsggmrzue.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaW9oc3d3eGltbXNnZ21yenVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNTYzNjgsImV4cCI6MjA5ODczMjM2OH0.maRn6Wax6uIEyVo8ETXxOGQ5Mi61B6rafl7CCC1fGcs';   // ex: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaW9oc3d3eGltbXNnZ21yenVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNTYzNjgsImV4cCI6MjA5ODczMjM2OH0.maRn6Wax6uIEyVo8ETXxOGQ5Mi61B6rafl7CCC1fGcs'
+const SUPABASE_URL = 'https://mdiohswwximmsggmrzue.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaW9oc3d3eGltbXNnZ21yenVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNTYzNjgsImV4cCI6MjA5ODczMjM2OH0.maRn6Wax6uIEyVo8ETXxOGQ5Mi61B6rafl7CCC1fGcs';
 const SUPABASE_BUCKET = 'aurora-backups';
 
 function syncEstaConfigurado() {
     return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+}
+
+/**
+ * Validação básica de formato (não garante que a chave é válida no
+ * servidor — só confere se "parece" uma chave anon do Supabase, que é
+ * sempre um JWT com 3 partes separadas por ponto, começando com "eyJ").
+ * Ajuda a pegar erros bobos de copiar/colar (chave cortada, com espaço,
+ * ou colada a "service_role" por engano, que também é um JWT mas nunca
+ * deve ser usada aqui).
+ */
+function validarFormatoAnonKey(chave) {
+    if (!chave) return { ok: false, motivo: 'Chave vazia.' };
+    const partes = chave.trim().split('.');
+    if (partes.length !== 3) return { ok: false, motivo: 'Não parece um JWT válido (deveria ter 3 partes separadas por ponto).' };
+    if (!chave.startsWith('eyJ')) return { ok: false, motivo: 'Chaves do Supabase começam com "eyJ". Confira se copiou a chave inteira.' };
+    try {
+        const payload = JSON.parse(atob(partes[1].replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload.role === 'service_role') return { ok: false, motivo: 'Esta é a chave "service_role" (secreta) — use a chave "anon public".' };
+        if (payload.role && payload.role !== 'anon') return { ok: false, motivo: `Papel inesperado na chave: "${payload.role}".` };
+        return { ok: true, motivo: `Formato ok (papel: ${payload.role || 'desconhecido'}).` };
+    } catch (e) {
+        return { ok: false, motivo: 'Não foi possível decodificar a chave — confira se ela foi colada por inteiro.' };
+    }
 }
 
 /** Gera (ou reaproveita) um código curto que identifica esta experiência na nuvem. */
@@ -70,27 +101,6 @@ async function publicarBackupNaNuvem(codigo) {
 
     if (!resposta.ok) throw new Error(`Falha ao publicar na nuvem: ${resposta.status}`);
     return true;
-}
-
-async function testeUpload() {
-    const url = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/teste.json`;
-
-    const resposta = await fetch(url, {
-        method: "POST",
-        headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            "Content-Type": "application/json",
-            "x-upsert": "true"
-        },
-        body: JSON.stringify({
-            teste: true,
-            data: new Date().toISOString()
-        })
-    });
-
-    console.log("Status:", resposta.status);
-    console.log(await resposta.text());
 }
 
 /** Baixa o backup de um código de compartilhamento e aplica no aparelho atual. */
@@ -156,6 +166,68 @@ async function compartilharExperiencia() {
             setStatus('Link copiado para a área de transferência!', 'ok');
         }
     } catch (e) { /* usuário cancelou o compartilhamento nativo, sem problema */ }
+}
+
+/**
+ * Teste real de conexão com a nuvem (usado em diagnostico.html): sobe um
+ * arquivo pequeno de teste, baixa de volta, confere que o conteúdo bate, e
+ * apaga o arquivo de teste em seguida. Diferente de validarFormatoAnonKey
+ * (que só confere o formato), esta função realmente conversa com o
+ * Supabase — é a prova definitiva de que URL + chave estão certos e que
+ * as políticas do bucket permitem inserir/ler/apagar.
+ */
+async function testarConexaoNuvem() {
+    if (!syncEstaConfigurado()) {
+        return { ok: false, etapa: 'configuracao', motivo: 'SUPABASE_URL e/ou SUPABASE_ANON_KEY ainda estão vazios em js/sync.js.' };
+    }
+
+    const formato = validarFormatoAnonKey(SUPABASE_ANON_KEY);
+    if (!formato.ok) {
+        return { ok: false, etapa: 'formato_da_chave', motivo: formato.motivo };
+    }
+
+    const codigoTeste = `diagnostico_${Date.now()}`;
+    const conteudoTeste = { teste: true, ts: new Date().toISOString() };
+    const caminho = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${codigoTeste}.json`;
+    const caminhoPublico = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigoTeste}.json`;
+
+    // 1) Upload
+    let respostaUpload;
+    try {
+        respostaUpload = await fetch(caminho, {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'x-upsert': 'true' },
+            body: JSON.stringify(conteudoTeste)
+        });
+    } catch (err) {
+        return { ok: false, etapa: 'upload', motivo: `Não foi possível conectar ao Supabase (rede ou URL incorreta): ${err.message}` };
+    }
+    if (!respostaUpload.ok) {
+        const corpo = await respostaUpload.text().catch(() => '');
+        return { ok: false, etapa: 'upload', motivo: `Upload falhou (HTTP ${respostaUpload.status}). Confira a policy de INSERT do bucket. Detalhe: ${corpo.slice(0, 200)}` };
+    }
+
+    // 2) Download público
+    let respostaDownload;
+    try {
+        respostaDownload = await fetch(caminhoPublico, { cache: 'no-store' });
+    } catch (err) {
+        return { ok: false, etapa: 'download', motivo: `Upload funcionou, mas o download falhou: ${err.message}` };
+    }
+    if (!respostaDownload.ok) {
+        return { ok: false, etapa: 'download', motivo: `Upload funcionou, mas o download falhou (HTTP ${respostaDownload.status}). Confira se o bucket está marcado como público e se a policy de SELECT existe.` };
+    }
+    const baixado = await respostaDownload.json().catch(() => null);
+    if (!baixado || baixado.ts !== conteudoTeste.ts) {
+        return { ok: false, etapa: 'integridade', motivo: 'O conteúdo baixado não confere com o que foi enviado.' };
+    }
+
+    // 3) Limpeza (apaga o arquivo de teste) — falha aqui não invalida o teste principal.
+    try {
+        await fetch(caminho, { method: 'DELETE', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
+    } catch (e) { /* não crítico */ }
+
+    return { ok: true, etapa: 'completo', motivo: 'Upload, download e integridade confirmados com sucesso.' };
 }
 
 function iniciarModuloSync() {

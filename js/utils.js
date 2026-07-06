@@ -142,6 +142,18 @@ function formatarDataPedido(iso) {
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+/**
+ * Igual a formatarDataPedido, mas incluindo a hora exata (usada no
+ * certificado de namoro — "às 20h47", por exemplo — para registrar o
+ * momento exato do pedido, não só o dia).
+ */
+function formatarDataPedidoComHora(iso) {
+    const d = new Date(iso);
+    const dataStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `${dataStr}, às ${horaStr}`;
+}
+
 function formatarDataHoraMensagem(iso) {
     const d = new Date(iso);
     const dataStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });

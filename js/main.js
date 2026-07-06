@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     bloquearZoom();
     iniciarFallbackImagensGlobais();
     await obterOuCriarDataPrimeiroAcesso();
+    solicitarArmazenamentoPersistente(); // não bloqueia a inicialização, só pede em segundo plano
 
     iniciarLoja();
     iniciarSuspense();

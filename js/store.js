@@ -31,13 +31,27 @@ function iniciarVinheta() {
 }
 
 /* ---------------- Cupom falso (detalhe de imersão) ---------------- */
+let cupomFalsoTimeoutId = null;
+
 function iniciarCupomFalso() {
     if (localStorage.getItem('aurora_stage') === 'final') return;
-    setTimeout(() => {
+    cupomFalsoTimeoutId = setTimeout(() => {
         const loja = document.getElementById('lojaScreen');
         if (!loja || loja.style.display === 'none') return;
         document.getElementById('cupomPopup').classList.remove('d-none');
     }, 7000);
+}
+
+/**
+ * Cancela o popup do cupom assim que o usuário avança para o checkout.
+ * CORREÇÃO: antes, o timer de 7s do cupom não sabia que a pessoa já tinha
+ * saído da "loja" (o checkout é um overlay fixo por cima, então
+ * `lojaScreen` nunca era formalmente escondido) — isso podia fazer o
+ * cupom aparecer por cima do checkout e travar o botão "Confirmar
+ * Pagamento" até ser fechado manualmente.
+ */
+function cancelarCupomFalsoPendente() {
+    if (cupomFalsoTimeoutId) { clearTimeout(cupomFalsoTimeoutId); cupomFalsoTimeoutId = null; }
 }
 
 function fecharCupomFalso() {
@@ -180,6 +194,9 @@ function iniciarLoja() {
 
         iniciarProcessamentoCompra(() => {
             atualizarResumoCheckout();
+            cancelarCupomFalsoPendente();
+            document.getElementById('cupomPopup').classList.add('d-none');
+            document.getElementById('lojaScreen').style.display = 'none';
             document.getElementById('checkoutScreen').style.display = 'block';
             window.scrollTo(0, 0);
         });

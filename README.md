@@ -70,20 +70,46 @@ Tudo em **`js/config.js`**:
   ajuste como quiser)
 - `OPCOES_REGRAS_CONTRATO` (as cláusulas do "contrato de namoro")
 
+## Verificação do sistema (diagnostico.html)
+
+Abra `diagnostico.html` (separado do site principal — a Poloni nunca vai
+ver essa página) para rodar verificações reais:
+- Escreve e lê de verdade no IndexedDB (arquivo pequeno ~50KB e arquivo
+  grande ~8MB, simulando foto e vídeo).
+- Mostra o espaço de armazenamento disponível no aparelho.
+- Solicita armazenamento persistente (reduz o risco do Safari apagar os
+  dados sozinho depois de dias sem uso).
+- Confere se o navegador suporta gravação de câmera/microfone.
+- Se você já configurou a nuvem (ver seção abaixo), testa uma conexão
+  real: sobe um arquivo de teste, baixa de volta, confere e apaga.
+
+Rode esse diagnóstico no MESMO aparelho e navegador que vai ser usado no
+dia do pedido — os resultados podem variar entre Safari, Chrome, iPhone
+e Android.
+
 ## Sincronização entre aparelhos (botão "Compartilhar")
 
-Por padrão, tudo fica salvo só no aparelho onde foi aberto (assim como
-qualquer site funciona). Para o link "Compartilhar" abrir de verdade em
-outro celular — com fotos, vídeo, contrato e mensagens — é necessário um
-lugar gratuito na nuvem para guardar esses dados. As instruções completas
-(gratuitas, ~5 minutos, sem programar) estão no topo do arquivo
-`js/sync.js`. Resumindo: crie um projeto grátis no supabase.com, crie um
-bucket de Storage público chamado `aurora-backups`, e cole a URL do
-projeto + a chave "anon" nas duas constantes no topo do arquivo.
+Por padrão, tudo fica salvo só no aparelho onde foi criado (é assim que
+IndexedDB funciona em qualquer site). Para o link "Compartilhar" abrir de
+verdade em outro celular — com fotos, vídeo, contrato e mensagens — é
+necessário um lugar gratuito na nuvem para guardar esses dados. As
+instruções completas estão no topo do arquivo `js/sync.js`. Resumindo:
+
+1. Crie um projeto grátis em supabase.com.
+2. Crie um bucket de Storage público chamado `aurora-backups`, com
+   políticas de INSERT/SELECT/UPDATE/DELETE liberadas para "anon".
+3. Em Project Settings → API, copie a Project URL e a chave rotulada
+   **"anon" / "public"** (nunca a "service_role") — se você gerar uma
+   chave nova depois, a antiga para de funcionar e você precisa colar a
+   nova.
+4. Cole os dois valores em `SUPABASE_URL` e `SUPABASE_ANON_KEY`, no topo
+   de `js/sync.js`.
+5. Abra `diagnostico.html` e toque em "Testar conexão com a nuvem" para
+   confirmar, com um teste real, que ficou tudo certo antes do grande dia.
 
 Enquanto isso não for configurado, o botão "Compartilhar" continua
-funcionando (compartilha o link normalmente), só não sincroniza os dados
-para outro aparelho.
+funcionando (compartilha o link), só não sincroniza os dados para outro
+aparelho.
 
 ## Correções desta versão (resumo técnico)
 

@@ -60,11 +60,10 @@ async function exportarCertificadoNamoro() {
     mostrarStatusExportar('Gerando certificado...', 'pending');
 
     const dataPedidoIso = await obterConfiguracao('aurora_data_pedido');
-    const dataTexto = dataPedidoIso ? formatarDataPedido(dataPedidoIso) : formatarDataPedido(new Date().toISOString());
-
-    const el = document.getElementById('certificadoExportavel');
+    const dataTexto = dataPedidoIso ? formatarDataPedidoComHora(dataPedidoIso) : formatarDataPedidoComHora(new Date().toISOString());
     document.getElementById('certificadoData').textContent = dataTexto;
     document.getElementById('certificadoNomes').textContent = `${NOME_DELE_COMPLETO} & ${NOME_DELA_APELIDO}`;
+    const el = document.getElementById('certificadoExportavel');
 
     try {
         const canvas = await html2canvas(el, { backgroundColor: '#FBF7F0', scale: 2 });

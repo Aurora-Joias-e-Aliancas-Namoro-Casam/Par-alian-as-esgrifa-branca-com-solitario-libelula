@@ -140,3 +140,38 @@ async function obterConfiguracao(chave) {
         return null;
     }
 }
+
+/* ---------------- Armazenamento persistente e estimativa de espaço ----------------
+   Pede ao navegador para NÃO apagar automaticamente os dados deste site
+   sob pressão de espaço (o que o Safari, em especial, faz com dados "não
+   persistentes" após dias de inatividade). Nem todo navegador concede,
+   mas pedir não tem efeito colateral negativo. Usado por main.js na
+   inicialização e exibido em diagnostico.html. */
+async function solicitarArmazenamentoPersistente() {
+    if (!(navigator.storage && navigator.storage.persist)) {
+        return { suportado: false, concedido: false };
+    }
+    try {
+        const jaPersistente = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+        if (jaPersistente) return { suportado: true, concedido: true, jaEstava: true };
+        const concedido = await navigator.storage.persist();
+        return { suportado: true, concedido };
+    } catch (e) {
+        console.error('Falha ao solicitar armazenamento persistente:', e);
+        return { suportado: true, concedido: false, erro: String(e) };
+    }
+}
+
+async function obterEstimativaArmazenamento() {
+    if (!(navigator.storage && navigator.storage.estimate)) return null;
+    try {
+        const estimativa = await navigator.storage.estimate();
+        return {
+            usadoMB: estimativa.usage ? +(estimativa.usage / (1024 * 1024)).toFixed(1) : null,
+            totalMB: estimativa.quota ? +(estimativa.quota / (1024 * 1024)).toFixed(1) : null
+        };
+    } catch (e) {
+        console.error('Falha ao obter estimativa de armazenamento:', e);
+        return null;
+    }
+}
