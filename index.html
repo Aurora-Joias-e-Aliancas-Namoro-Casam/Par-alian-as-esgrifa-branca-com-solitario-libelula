@@ -446,6 +446,29 @@
 
     <!-- ===================== NOSSA HISTÓRIA ===================== -->
     <div id="romancePage" class="romance-page">
+        <!-- Girassóis decorativos (item 6 do prompt): discretos, atrás do conteúdo,
+             não capturam toque (pointer-events:none) e não afetam a leitura. -->
+        <div class="girassois-decoracao" aria-hidden="true">
+            <svg class="girassol girassol-1" viewBox="0 0 100 100"><g><circle cx="50" cy="50" r="14" fill="#7a5b1e"/><g fill="#F4C430">
+                <ellipse cx="50" cy="18" rx="9" ry="16"/><ellipse cx="50" cy="82" rx="9" ry="16"/>
+                <ellipse cx="18" cy="50" rx="16" ry="9"/><ellipse cx="82" cy="50" rx="16" ry="9"/>
+                <ellipse cx="27" cy="27" rx="9" ry="16" transform="rotate(45 27 27)"/><ellipse cx="73" cy="73" rx="9" ry="16" transform="rotate(45 73 73)"/>
+                <ellipse cx="73" cy="27" rx="9" ry="16" transform="rotate(-45 73 27)"/><ellipse cx="27" cy="73" rx="9" ry="16" transform="rotate(-45 27 73)"/>
+            </g></g></svg>
+            <svg class="girassol girassol-2" viewBox="0 0 100 100"><g><circle cx="50" cy="50" r="14" fill="#7a5b1e"/><g fill="#F4C430">
+                <ellipse cx="50" cy="18" rx="9" ry="16"/><ellipse cx="50" cy="82" rx="9" ry="16"/>
+                <ellipse cx="18" cy="50" rx="16" ry="9"/><ellipse cx="82" cy="50" rx="16" ry="9"/>
+                <ellipse cx="27" cy="27" rx="9" ry="16" transform="rotate(45 27 27)"/><ellipse cx="73" cy="73" rx="9" ry="16" transform="rotate(45 73 73)"/>
+                <ellipse cx="73" cy="27" rx="9" ry="16" transform="rotate(-45 73 27)"/><ellipse cx="27" cy="73" rx="9" ry="16" transform="rotate(-45 27 73)"/>
+            </g></g></svg>
+            <svg class="girassol girassol-3" viewBox="0 0 100 100"><g><circle cx="50" cy="50" r="14" fill="#7a5b1e"/><g fill="#F4C430">
+                <ellipse cx="50" cy="18" rx="9" ry="16"/><ellipse cx="50" cy="82" rx="9" ry="16"/>
+                <ellipse cx="18" cy="50" rx="16" ry="9"/><ellipse cx="82" cy="50" rx="16" ry="9"/>
+                <ellipse cx="27" cy="27" rx="9" ry="16" transform="rotate(45 27 27)"/><ellipse cx="73" cy="73" rx="9" ry="16" transform="rotate(45 73 73)"/>
+                <ellipse cx="73" cy="27" rx="9" ry="16" transform="rotate(-45 73 27)"/><ellipse cx="27" cy="73" rx="9" ry="16" transform="rotate(-45 27 73)"/>
+            </g></g></svg>
+        </div>
+
         <div class="text-center mb-4 reveal-up">
             <p class="text-rosegold text-uppercase small tracking-wide mb-1">Para <span class="js-nome"></span></p>
             <h1 class="romance-title">Nossa Trajetória</h1>
@@ -617,6 +640,11 @@
             </div>
             <p id="exportarStatus" class="save-status"></p>
 
+            <div id="polaroidSalvaWrap" class="polaroid-salva-wrap d-none">
+                <img src="" alt="Nossa polaroid">
+                <p class="polaroid-salva-legenda">Sua polaroid — salva e sincronizada</p>
+            </div>
+
             <div class="mt-4 text-center">
                 <button id="btnBackup" class="btn btn-share"><i class="bi bi-cloud-arrow-down-fill me-2"></i>Backup da Nossa História</button>
                 <br>
@@ -648,7 +676,31 @@
 
     <div id="polaroidExportavel" class="exportavel-oculto polaroid-exportavel" aria-hidden="true">
         <img id="polaroidExportavelImg" alt="Nosso momento">
+        <p class="legenda-data" id="polaroidExportavelData"></p>
         <p class="legenda" id="polaroidExportavelLegenda"></p>
+    </div>
+
+    <!-- ===================== MODAL: câmera para a Polaroid (Prioridade item 5) ===================== -->
+    <div id="polaroidCameraModal" class="polaroid-camera-modal d-none">
+        <div class="polaroid-camera-card">
+            <button id="btnFecharCameraPolaroid" class="polaroid-camera-close" aria-label="Fechar">&times;</button>
+            <p class="polaroid-camera-titulo">Tire a foto para a sua Polaroid</p>
+
+            <div id="polaroidCameraPreviewWrap">
+                <video id="polaroidCameraVideo" autoplay playsinline muted></video>
+                <p id="polaroidCameraErro" class="save-status err d-none">Não foi possível acessar a câmera. Verifique as permissões do navegador.</p>
+                <button id="btnCapturarFotoPolaroid" class="btn btn-share mt-3"><i class="bi bi-camera-fill me-2"></i>Tirar foto</button>
+            </div>
+
+            <div id="polaroidCameraConfirmWrap" class="d-none">
+                <img id="polaroidCameraFotoCapturada" alt="Foto capturada">
+                <input type="text" id="polaroidLegendaInput" class="polaroid-legenda-input mt-3" maxlength="60" placeholder="Frase para a legenda (opcional)">
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                    <button id="btnRepetirFotoPolaroid" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-arrow-counterclockwise me-1"></i>Tirar novamente</button>
+                    <button id="btnConfirmarFotoPolaroid" class="btn btn-share btn-sm rounded-pill"><i class="bi bi-check2 me-1"></i>Confirmar e gerar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ===================== LIGHTBOX (lembranças / momentos / timeline) ===================== -->

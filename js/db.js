@@ -78,6 +78,20 @@ db.version(2).stores({
 });
 
 /**
+ * Marca "agora" como o momento da última alteração local (usado pela
+ * sincronização — ver js/sync.js — para decidir se este aparelho tem
+ * dados mais novos que a nuvem, ou vice-versa) e avisa o módulo de
+ * sincronização para agendar um envio. Escreve direto nas tabelas (sem
+ * passar por salvarConfiguracao) para não entrar em recursão.
+ */
+async function marcarAtualizacaoLocal() {
+    const agora = String(Date.now());
+    try { localStorage.setItem('aurora_atualizado_em', agora); } catch (e) { /* ignora */ }
+    try { await db.configuracoes.put({ chave: 'aurora_atualizado_em', valor: agora }); } catch (e) { /* ignora */ }
+    if (typeof agendarEnvioNuvem === 'function') agendarEnvioNuvem();
+}
+
+/**
  * Salva um item de mídia com verificação de integridade: escreve, depois
  * relê do banco para confirmar que os bytes realmente foram persistidos.
  * Retorna true/false.
@@ -97,6 +111,7 @@ async function salvarMedia(registro) {
         const confere = await db.media.get(registro.id);
         if (!confere) return false;
         if (registro.blob && (!confere.blob || confere.blob.size !== registro.blob.size)) return false;
+        await marcarAtualizacaoLocal(); // toda mídia salva com sucesso conta como uma etapa concluída
         return true;
     } catch (err) {
         console.error(`Falha ao confirmar mídia "${registro.id}":`, err);
@@ -113,7 +128,11 @@ async function obterMediaPorTipo(tipo) {
 }
 
 async function excluirMedia(id) {
-    try { await db.media.delete(id); return true; } catch (e) { console.error(`Falha ao excluir mídia "${id}":`, e); return false; }
+    try {
+        await db.media.delete(id);
+        await marcarAtualizacaoLocal();
+        return true;
+    } catch (e) { console.error(`Falha ao excluir mídia "${id}":`, e); return false; }
 }
 
 /* ---------------- Configurações simples (chave/valor) ---------------- */
@@ -125,6 +144,9 @@ async function excluirMedia(id) {
 async function salvarConfiguracao(chave, valor) {
     try { localStorage.setItem(chave, typeof valor === 'string' ? valor : JSON.stringify(valor)); } catch (e) { console.error('localStorage indisponível para', chave, e); }
     try { await db.configuracoes.put({ chave, valor }); } catch (e) { console.error('Falha ao salvar configuração no IndexedDB:', chave, e); }
+    // 'aurora_atualizado_em' é escrita diretamente por marcarAtualizacaoLocal/sincronizarNaAbertura;
+    // evita chamar a si mesma em loop.
+    if (chave !== 'aurora_atualizado_em') await marcarAtualizacaoLocal();
 }
 
 async function obterConfiguracao(chave) {

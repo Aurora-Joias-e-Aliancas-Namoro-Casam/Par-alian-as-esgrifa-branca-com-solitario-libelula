@@ -16,7 +16,8 @@ function iniciarVinheta() {
 
     const jaExibida = sessionStorage.getItem('aurora_vinheta_exibida');
     const retomandoNoFinal = localStorage.getItem('aurora_stage') === 'final';
-    if (jaExibida || retomandoNoFinal) { tela.style.display = 'none'; return; }
+    const retomandoEmAndamento = Boolean(localStorage.getItem('aurora_data_pedido'));
+    if (jaExibida || retomandoNoFinal || retomandoEmAndamento) { tela.style.display = 'none'; return; }
     sessionStorage.setItem('aurora_vinheta_exibida', '1');
 
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -35,6 +36,7 @@ let cupomFalsoTimeoutId = null;
 
 function iniciarCupomFalso() {
     if (localStorage.getItem('aurora_stage') === 'final') return;
+    if (localStorage.getItem('aurora_data_pedido')) return;
     cupomFalsoTimeoutId = setTimeout(() => {
         const loja = document.getElementById('lojaScreen');
         if (!loja || loja.style.display === 'none') return;

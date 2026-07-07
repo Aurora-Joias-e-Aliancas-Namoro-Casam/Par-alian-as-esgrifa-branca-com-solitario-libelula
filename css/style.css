@@ -279,7 +279,7 @@ img { max-width: 100%; }
 .cupom-code { display: inline-block; border: 2px dashed var(--rosegold); border-radius: 8px; padding: 8px 20px; font-weight: bold; letter-spacing: 3px; color: var(--rosegold-dark); font-size: 1.1rem; background: rgba(183,110,121,0.06); }
 
 /* ---------------- Nossa história: fundo, título, contador vivo ---------------- */
-.romance-page { display: none; min-height: 100vh; min-height: 100dvh; width: 100%; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); color: white; padding: 50px 20px 60px; }
+.romance-page { display: none; position: relative; overflow: hidden; min-height: 100vh; min-height: 100dvh; width: 100%; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); color: white; padding: 50px 20px 60px; }
 .romance-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 2.6rem; font-weight: 600; }
 .romance-divider { width: 60px; height: 1px; background: var(--rosegold); margin: 22px auto; position: relative; }
 .romance-divider::before { content: '♥'; position: absolute; top: -9px; left: 50%; transform: translateX(-50%); color: var(--rosegold); font-size: 0.8rem; background: transparent; }
@@ -452,3 +452,39 @@ img { max-width: 100%; }
     .envelope, .envelope-flap, .letter-paper, .envelope-seal { transition: none !important; }
     .vinheta-logo, .vinheta-particula { animation: none !important; }
 }
+
+/* ============================================================================
+   GIRASSÓIS DECORATIVOS (item 6 do prompt de correções)
+   Discretos, atrás do conteúdo (z-index baixo) e sem capturar toque.
+   ============================================================================ */
+.girassois-decoracao { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.girassol { position: absolute; opacity: 0.16; filter: blur(0.3px); animation: girassolBalanco 9s ease-in-out infinite; }
+.girassol-1 { width: 140px; height: 140px; top: -30px; left: -30px; animation-delay: 0s; }
+.girassol-2 { width: 110px; height: 110px; bottom: 40px; right: -25px; animation-delay: 2.4s; }
+.girassol-3 { width: 90px; height: 90px; bottom: -20px; left: 20px; opacity: 0.1; animation-delay: 4.8s; }
+@keyframes girassolBalanco { 0%, 100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-6px); } }
+.romance-page > *:not(.girassois-decoracao) { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .girassol { animation: none !important; }
+}
+
+/* ============================================================================
+   POLAROID — legenda de data + polaroid já salva (sincronizada entre aparelhos)
+   ============================================================================ */
+.polaroid-exportavel .legenda-data { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 0.85rem; color: #999; text-align: center; margin: 10px 0 0; }
+.polaroid-exportavel .legenda { margin-top: 2px; }
+.polaroid-salva-wrap { max-width: 220px; margin: 18px auto 0; text-align: center; }
+.polaroid-salva-wrap img { width: 100%; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,0.35); border: 8px solid #fff; border-bottom-width: 34px; }
+.polaroid-salva-legenda { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 8px; }
+
+/* ============================================================================
+   MODAL DA CÂMERA — nova etapa antes de gerar a Polaroid (item 5 do prompt)
+   ============================================================================ */
+.polaroid-camera-modal { position: fixed; inset: 0; z-index: 3000; background: rgba(10,6,8,0.92); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.polaroid-camera-card { position: relative; width: 100%; max-width: 380px; background: #1c1216; border-radius: 16px; padding: 22px 18px 26px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.polaroid-camera-titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; color: #f0d9dd; margin-bottom: 14px; }
+.polaroid-camera-close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+#polaroidCameraVideo, #polaroidCameraFotoCapturada { width: 100%; border-radius: 10px; background: #000; max-height: 60vh; object-fit: cover; }
+.polaroid-legenda-input { width: 100%; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: #fff; font-size: 0.9rem; text-align: center; }
+.polaroid-legenda-input::placeholder { color: rgba(255,255,255,0.4); }

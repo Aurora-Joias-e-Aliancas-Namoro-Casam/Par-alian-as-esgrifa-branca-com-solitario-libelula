@@ -23,6 +23,20 @@ const NOME_DELE = "Gabriel";
 const NOME_DELE_COMPLETO = "Gabriel Schmeisk";
 
 /* ----------------------------------------------------------------------
+   IDENTIDADE FIXA DA EXPERIÊNCIA (sincronização entre aparelhos)
+   ----------------------------------------------------------------------
+   Diferente de um "código de compartilhamento" aleatório, este projeto é
+   feito para UMA única pessoa e UMA única experiência. Por isso usamos um
+   identificador FIXO: não importa em qual aparelho o link for aberto, ele
+   sempre lê/escreve o mesmo registro na nuvem (ver js/sync.js). É isso que
+   permite abrir o link puro (sem parâmetros na URL) em qualquer celular e
+   ver exatamente o mesmo estado.
+   Troque esta string se um dia for reaproveitar o projeto para outro
+   casal, para não misturar dados de experiências diferentes.
+   ---------------------------------------------------------------------- */
+const EXPERIENCE_ID = 'aurora-ana-gabriel-namoro';
+
+/* ----------------------------------------------------------------------
    REGISTRO DE PLACEHOLDERS (PRIORIDADE 3)
    ----------------------------------------------------------------------
    Cada entrada representa um arquivo que você vai enviar para o GitHub.
@@ -293,5 +307,6 @@ const TEXTOS = {
     heroSubRomance: `tudo que você acabou de passar era só uma desculpa boba pra chegar até aqui. Não tinha aliança nenhuma no correio — a única coisa que eu queria entregar era isso: tudo o que a gente construiu até hoje, contado do meu jeito.`,
     encerramentoRomance: `obrigado por topar essa vida comigo, dia após dia. Isso aqui é só um jeito diferente de dizer o que eu já sinto todos os dias: eu escolho você.`,
     digitacaoSuspense: `Cada uma dessas fotos guarda um pedaço da gente. E o pedido que você acabou de "fazer" também guarda um segredo...`,
-    assinaturaCartaFinal: `Assim eu quero te amar, ${NOME_DELA}.`
+    assinaturaCartaFinal: `Assim eu quero te amar, ${NOME_DELA}.`,
+    polaroidFrasePadrao: `O dia em que tudo começou, ${NOME_DELA}.`
 };
