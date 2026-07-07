@@ -169,7 +169,7 @@ function iniciarQuiz() {
 
 /* ---------------- Regras do contrato ---------------- */
 let regrasSelecionadas = [];
-const MAX_REGRAS = 3;
+const MAX_REGRAS = 5; // até 5 regras personalizadas (item 5 do prompt de melhorias)
 const MIN_REGRAS = 2;
 
 function renderRulesGrid() {
@@ -464,6 +464,7 @@ async function goToRomancePage() {
     renderizarMensagensFuturo();
     await prepararCapsulaDoTempo();
     exibirEasterEggSobrenome();
+    renderizarCoisasQueElaAma();
 
     const dataPedidoIso = await obterConfiguracao('aurora_data_pedido');
     if (dataPedidoIso) {
@@ -490,6 +491,74 @@ async function goToRomancePage() {
         document.getElementById('contratoSignatureImg').src = assinatura.texto;
         document.getElementById('romanceSignatureWrap').classList.remove('d-none');
     }
+}
+
+/* ----------------------------------------------------------------------
+   PROTEÇÃO POR SENHA DA ÁREA DE MEMÓRIAS (item 8 do prompt)
+   ----------------------------------------------------------------------
+   Implementada por último, depois de todas as outras correções e
+   melhorias terem sido concluídas e testadas (ver README.md).
+   Fluxo: no primeiro acesso (pedido ainda não concluído) a experiência
+   acontece normalmente, sem nenhuma senha. A partir do momento em que o
+   pedido é concluído ('aurora_stage' === 'final'), toda vez que o link
+   for aberto de novo, pedimos a senha antes de exibir "Nossa História"
+   (ver o gate em js/main.js). Uma vez digitada corretamente, a sessão
+   (esta aba) fica desbloqueada — reabrir o navegador pede de novo.
+   ---------------------------------------------------------------------- */
+function memoriasJaDesbloqueadasNestaSessao() {
+    try { return sessionStorage.getItem('aurora_memorias_desbloqueadas') === '1'; } catch (e) { return false; }
+}
+
+/**
+ * Exibe o gate de senha e só resolve a Promise quando a senha certa for
+ * digitada (ou já tiver sido desbloqueada nesta sessão/aba).
+ */
+function solicitarSenhaMemorias() {
+    return new Promise((resolve) => {
+        if (memoriasJaDesbloqueadasNestaSessao()) { resolve(); return; }
+
+        const overlay = document.getElementById('senhaMemoriasOverlay');
+        const input = document.getElementById('senhaMemoriasInput');
+        const erro = document.getElementById('senhaMemoriasErro');
+        if (!overlay || !input) { resolve(); return; } // defensivo: se o HTML não existir, não bloqueia a experiência
+
+        overlay.classList.remove('d-none');
+        erro.classList.add('d-none');
+        input.value = '';
+        setTimeout(() => input.focus(), 300);
+
+        function tentarDesbloquear() {
+            const senhaDigitada = (input.value || '').trim();
+            if (senhaDigitada === SENHA_AREA_MEMORIAS) {
+                try { sessionStorage.setItem('aurora_memorias_desbloqueadas', '1'); } catch (e) { /* ignora */ }
+                overlay.classList.add('d-none');
+                resolve();
+            } else {
+                erro.classList.remove('d-none');
+                input.value = '';
+                input.focus();
+                overlay.querySelector('.senha-memorias-box').classList.remove('senha-shake');
+                void overlay.offsetWidth; // força reflow para reiniciar a animação de "errado"
+                overlay.querySelector('.senha-memorias-box').classList.add('senha-shake');
+            }
+        }
+
+        document.getElementById('btnSenhaMemoriasEntrar').onclick = tentarDesbloquear;
+        input.onkeydown = (evt) => { if (evt.key === 'Enter') tentarDesbloquear(); };
+    });
+}
+
+/* ---------------- "Coisas que a Poloni ama" ---------------- */
+function renderizarCoisasQueElaAma() {
+    const grid = document.getElementById('coisasQueElaAmaGrid');
+    if (!grid || !Array.isArray(COISAS_QUE_ELA_AMA)) return;
+    grid.innerHTML = '';
+    COISAS_QUE_ELA_AMA.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'ama-card';
+        card.innerHTML = `<i class="bi ${item.icon}"></i><p>${item.texto}</p>`;
+        grid.appendChild(card);
+    });
 }
 
 /* ---------------- Easter egg do sobrenome ---------------- */

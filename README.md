@@ -14,6 +14,7 @@ apontando para a branch/pasta raiz, e o link do Pages já funciona.
 
 ```
 index.html          → toda a marcação (HTML) do site
+galeria.html          → página própria da Galeria de lembranças
 css/style.css        → todo o visual
 js/config.js         → NOMES, HISTÓRIA, PERGUNTAS, QUIZ, TIMELINE, PLAYLIST — edite aqui
 js/db.js              → armazenamento (IndexedDB) — não precisa mexer
@@ -22,11 +23,13 @@ js/desktop-block.js   → bloqueio de acesso via computador
 js/store.js           → lógica da "loja" (home falsa)
 js/suspense.js        → perguntas → assinatura → rastreio → vídeo → carta final
 js/futuro.js           → "mensagem para nós do futuro"
-js/romance.js          → página "Nossa História" (timeline, quiz, contrato, playlist...)
-js/export.js           → exportar carta/certificado/polaroid + backup
+js/romance.js          → página "Nossa História" (timeline, quiz, contrato, playlist, senha...)
+js/galeria.js          → monta a Galeria de lembranças (galeria.html)
+js/export.js           → exportar carta/certificado/polaroid + backup (.zip)
 js/sync.js             → sincronização entre aparelhos (opcional, ver abaixo)
 js/main.js             → inicialização geral
 assets/img/            → coloque aqui as fotos (ver lista de placeholders)
+assets/img/galeria/    → fotos da Galeria (padrão galeria_1.jpg, galeria_2.jpg, ...)
 assets/audio/          → coloque aqui as músicas
 assets/video/          → (opcional) vídeos
 ```
@@ -68,7 +71,18 @@ Tudo em **`js/config.js`**:
 - `PLAYLIST_FAIXAS`, `QUIZ_PERGUNTAS` (edite as opções entre colchetes)
 - `TIMELINE_MARCOS` (datas/textos já preenchidos com a história de vocês —
   ajuste como quiser)
-- `OPCOES_REGRAS_CONTRATO` (as cláusulas do "contrato de namoro")
+- `OPCOES_REGRAS_CONTRATO` (as cláusulas do "contrato de namoro", até 5 selecionáveis)
+- `PEDIDO_PADRAO` (valores padrão de aro/gravação da home da joalheria)
+- `TOTAL_FOTOS_GALERIA` / `GALERIA_LEGENDAS` (Galeria de lembranças)
+- `COISAS_QUE_ELA_AMA` (pequena seção com coisas que ela ama, na página de memórias)
+- `CARTA_USAR_TEXTO_TESTE` (liga/desliga o texto de teste da carta final)
+- `SENHA_AREA_MEMORIAS` (senha que protege a área de memórias após o pedido)
+
+Pequenos easter eggs da história de vocês foram espalhados discretamente
+pela home da joalheria (um CNPJ fictício, o código de referência do
+produto, um detalhe de resistência à praia, um girassol quase invisível
+no fundo da seção "Nossa história") — nada gritante, para descobrir aos
+poucos.
 
 ## Verificação do sistema (diagnostico.html)
 
@@ -110,6 +124,78 @@ instruções completas estão no topo do arquivo `js/sync.js`. Resumindo:
 Enquanto isso não for configurado, o botão "Compartilhar" continua
 funcionando (compartilha o link), só não sincroniza os dados para outro
 aparelho.
+
+## Galeria de lembranças (página própria)
+
+Álbum permanente, feito para crescer com o tempo — sem limite de fotos.
+Página própria em `galeria.html`, aberta pelo botão "Ver nossa galeria"
+logo abaixo de "Nossos Momentos" na página de memórias.
+
+**Padrão de nomenclatura** (documentado também dentro da própria pasta,
+em `assets/img/galeria/LEIA-ME.md`): salve as fotos em
+`assets/img/galeria/` sempre como `galeria_1.jpg`, `galeria_2.jpg`,
+`galeria_3.jpg`... Depois, atualize apenas o número em
+`TOTAL_FOTOS_GALERIA`, no topo de `js/config.js`, para o total de fotos
+que existem agora. Nenhum outro arquivo precisa ser tocado. Legendas por
+foto são opcionais (`GALERIA_LEGENDAS`, também em `js/config.js`).
+
+## Contrato de namoro — até 5 regras
+
+O contrato agora aceita de 2 a 5 regras personalizadas (era 2 a 3). Ver
+`MAX_REGRAS` em `js/romance.js` e `OPCOES_REGRAS_CONTRATO` em
+`js/config.js` para editar as opções disponíveis.
+
+## Testar a carta final antes da versão definitiva
+
+Em `js/config.js`, a constante `CARTA_USAR_TEXTO_TESTE` (e o texto
+`TEXTO_CARTA_TESTE`, com o marcador `[CARTA_TESTE]`) permite testar toda
+a animação da carta final (envelope, troca de "{AMOR}" pelo nome dela,
+música, etc.) sem usar o texto definitivo ainda. Deixe `false` para usar
+o texto de verdade; troque para `true` só durante os testes.
+
+## Proteção por senha da área de memórias
+
+Implementada por último nesta rodada, depois de todas as demais correções
+e melhorias terem sido concluídas e testadas — como pedido. Assim que o
+pedido acontece e é salvo (`aurora_stage` vira `'final'`), qualquer novo
+acesso ao link passa a pedir a senha (`1406`, em `SENHA_AREA_MEMORIAS` no
+`js/config.js`) antes de mostrar "Nossa História". O primeiro acesso (a
+experiência do pedido em si) nunca pede senha. Ver `solicitarSenhaMemorias()`
+em `js/romance.js` e o gate em `js/main.js`.
+
+## Personalização padrão da home (joalheria)
+
+Os campos de tamanho/gravação das alianças já abrem preenchidos com os
+valores padrão (aro 19 / "Poloni ♡ 14/06" na masculina, aro 13 /
+"Schmeisk ♡ 14/06" na feminina, aro 13 no solitário) — mas continuam
+editáveis a qualquer momento. Para trocar os padrões, edite o objeto
+`PEDIDO_PADRAO` em `js/config.js`.
+
+## Backup — correção completa (formato .zip)
+
+**O problema:** o backup antigo guardava vídeo, áudios e fotos como texto
+base64 dentro de um único `.json` gigantesco. Isso inflava o arquivo em
+~33% e podia falhar silenciosamente ao tentar restaurar — especialmente
+no Safari/iPhone, onde `JSON.parse()` em strings muito grandes é uma
+falha conhecida do WebKit.
+
+**A correção:** o backup agora é um arquivo `.zip`. Cada mídia (vídeo,
+assinatura, fotos enviadas, Polaroids, mensagens para o futuro em
+texto/áudio/vídeo, lembranças) vira um arquivo binário dentro do zip —
+sem base64, sem string gigante para travar o navegador — descrito por um
+`manifest.json` pequeno. A lista de mídias é montada automaticamente a
+partir de tudo que existir no armazenamento local, então qualquer arquivo
+enviado por qualquer funcionalidade do site entra no backup, sem precisar
+listar tipo por tipo. Backups antigos (`.json`) ainda podem ser
+restaurados, por compatibilidade, mas todo backup novo já sai em `.zip`.
+Isso também acelera a sincronização automática entre aparelhos: um
+arquivo pequeno separado (`-meta.json`) guarda só a data da última
+alteração, então o site só baixa o `.zip` completo quando realmente
+existir algo mais novo. Ver `js/export.js` e `js/sync.js`.
+
+Testado o ciclo completo: gerar backup → apagar dados locais → restaurar
+→ conferir que vídeo, áudios, fotos, Polaroids, mensagens para o futuro,
+contrato, assinatura e progresso voltam exatamente como estavam.
 
 ## Correções desta versão (resumo técnico)
 

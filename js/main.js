@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const estagio = await obterConfiguracao('aurora_stage');
     if (estagio === 'final') {
         document.getElementById('maintenancePopup').style.display = 'none';
+        await solicitarSenhaMemorias(); // só libera "Nossa História" com a senha certa (item 8 do prompt de melhorias)
         goToRomancePage();
     } else {
         const dataPedidoExistente = await obterConfiguracao('aurora_data_pedido');

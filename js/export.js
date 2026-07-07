@@ -216,17 +216,62 @@ function salvarCanvasComoPdf(canvas, nomeArquivo) {
 }
 
 /* ----------------------------------------------------------------------
-   BACKUP COMPLETO (JSON) — usado tanto para "baixar backup" quanto como
-   payload da sincronização entre aparelhos (ver sync.js).
+   BACKUP COMPLETO — FORMATO NOVO (item 3 do prompt de melhorias)
+   ----------------------------------------------------------------------
+   POR QUE O BACKUP ANTIGO FALHAVA AO RESTAURAR:
+   A versão anterior guardava TUDO (vídeo, áudios, fotos, polaroid) como
+   texto base64 dentro de um único arquivo .json gigantesco. Isso tem dois
+   problemas sérios, principalmente no Safari/iPhone:
+     1. Base64 infla o tamanho do arquivo em ~33%, então um vídeo de
+        poucos minutos já gerava um .json de dezenas de MB.
+     2. JSON.parse() em uma string desse tamanho é conhecido por falhar
+        silenciosamente ou travar em navegadores baseados em WebKit
+        (Safari/iOS), justamente o navegador usado neste projeto — ou
+        seja, o backup "funcionava ao gerar" mas "não lia" depois.
+
+   SOLUÇÃO: o backup agora é um arquivo .zip. Cada mídia (vídeo, áudios,
+   fotos, polaroid, lembranças) vira um ARQUIVO BINÁRIO dentro do zip —
+   sem base64, sem string gigante para o JSON.parse engasgar. Um
+   "manifest.json" pequeno (só texto/configurações) descreve o resto.
+   Isso também deixa o arquivo de backup consideravelmente menor.
+
+   A lista de mídias é montada dinamicamente a partir de TUDO que existe
+   na tabela "media" do IndexedDB — então qualquer arquivo salvo por
+   qualquer funcionalidade do site (vídeo do pedido, assinatura, fotos
+   enviadas, polaroids, mensagens para o futuro em texto/áudio/vídeo,
+   lembranças) entra automaticamente no backup, sem precisar listar cada
+   tipo manualmente.
+
+   Compatibilidade: backups antigos (.json) ainda podem ser restaurados
+   (ver restaurarBackupDeArquivo), mas todo backup novo já sai em .zip.
    ---------------------------------------------------------------------- */
-async function gerarBackupCompleto() {
-    const backup = {
-        versao: 2,
+
+/** Extensão de arquivo apropriada para um mimeType, usada só para nomear os arquivos dentro do zip. */
+function extensaoParaMime(mimeType) {
+    const mapa = {
+        'video/webm': 'webm', 'video/mp4': 'mp4',
+        'audio/webm': 'webm', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'audio/ogg': 'ogg',
+        'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif'
+    };
+    if (!mimeType) return 'bin';
+    const base = mimeType.split(';')[0].trim();
+    if (mapa[base]) return mapa[base];
+    const partes = base.split('/');
+    return partes[1] || 'bin';
+}
+
+/** Gera o backup completo como um Blob .zip (usado tanto pelo botão "Backup" quanto pela sincronização — ver sync.js). */
+async function gerarBackupZipBlob() {
+    if (typeof JSZip === 'undefined') throw new Error('Não foi possível carregar o gerador de backup (JSZip). Verifique sua conexão.');
+
+    const zip = new JSZip();
+    const pastaMedia = zip.folder('media');
+
+    const manifest = {
+        versao: 3,
         criadoEm: new Date().toISOString(),
-        // Marca de tempo (epoch ms) da última alteração LOCAL. É isso que a
-        // sincronização automática usa para saber, ao abrir o link em outro
-        // aparelho, se a nuvem está mais atualizada que o dispositivo atual
-        // (ver sincronizarNaAbertura em js/sync.js).
+        // Marca de tempo (epoch ms) da última alteração LOCAL — usada pela
+        // sincronização automática para decidir "puxar" ou "empurrar" (ver js/sync.js).
         atualizadoEm: parseInt(await obterConfiguracao('aurora_atualizado_em'), 10) || Date.now(),
         nomeDela: NOME_DELA,
         nomeDele: NOME_DELE,
@@ -235,43 +280,34 @@ async function gerarBackupCompleto() {
         stage: await obterConfiguracao('aurora_stage'),
         regrasContrato: JSON.parse(await obterConfiguracao('aurora_regras_contrato') || 'null'),
         quizRespostas: JSON.parse(await obterConfiguracao('aurora_quiz_respostas') || 'null'),
-        assinatura: null,
-        video: null,
-        videoMime: null,
-        polaroidGerada: null,
-        mensagensFuturo: [],
-        lembrancas: []
+        medias: []
     };
 
-    try {
-        const assinatura = await obterMedia('assinatura');
-        if (assinatura && assinatura.texto) backup.assinatura = assinatura.texto;
-    } catch (e) { console.error('Backup: falha ao ler assinatura', e); }
+    let todosRegistros = [];
+    try { todosRegistros = await db.media.toArray(); } catch (e) { console.error('Backup: falha ao listar mídias', e); }
 
-    try {
-        const video = await obterMedia('video_pedido');
-        if (video && video.blob) { backup.video = await blobParaDataURL(video.blob); backup.videoMime = video.mimeType || 'video/webm'; }
-    } catch (e) { console.error('Backup: falha ao ler vídeo', e); }
+    for (const registro of todosRegistros) {
+        if (registro.tipo === 'diagnostico') continue; // arquivo de teste técnico, não faz parte da experiência
 
-    try {
-        const polaroid = await obterMedia('polaroid_gerada');
-        if (polaroid && polaroid.blob) backup.polaroidGerada = await blobParaDataURL(polaroid.blob);
-    } catch (e) { console.error('Backup: falha ao ler polaroid gerada', e); }
+        const entrada = { id: registro.id, tipo: registro.tipo, subtipo: registro.subtipo || null, criadoEm: registro.criadoEm || Date.now() };
 
-    try {
-        const lista = await obterMediaPorTipo('mensagem_futuro');
-        backup.mensagensFuturo = await Promise.all(lista.map(async (msg) => ({
-            id: msg.id, tipo: msg.subtipo, texto: msg.texto || null, criadoEm: msg.criadoEm,
-            mimeType: msg.mimeType || null, arquivo: msg.blob ? await blobParaDataURL(msg.blob) : null
-        })));
-    } catch (e) { console.error('Backup: falha ao ler mensagens do futuro', e); }
+        try {
+            if (registro.blob) {
+                const nomeArquivo = `${registro.id}.${extensaoParaMime(registro.mimeType || registro.blob.type)}`;
+                pastaMedia.file(nomeArquivo, registro.blob);
+                entrada.arquivo = nomeArquivo;
+                entrada.mimeType = registro.mimeType || registro.blob.type || null;
+            } else if (registro.texto) {
+                entrada.texto = registro.texto; // ex: assinatura (dataURL pequeno) ou mensagem de texto para o futuro
+            } else {
+                continue;
+            }
+            manifest.medias.push(entrada);
+        } catch (e) { console.error(`Backup: falha ao empacotar a mídia "${registro.id}"`, e); }
+    }
 
-    try {
-        const lista = await obterMediaPorTipo('lembranca');
-        backup.lembrancas = await Promise.all(lista.map(async (item) => ({ id: item.id, imagem: await blobParaDataURL(item.blob), criadoEm: item.criadoEm })));
-    } catch (e) { console.error('Backup: falha ao ler lembranças', e); }
-
-    return backup;
+    zip.file('manifest.json', JSON.stringify(manifest));
+    return await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
 }
 
 async function baixarBackupCompleto() {
@@ -281,12 +317,11 @@ async function baixarBackupCompleto() {
     botao.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Preparando backup...';
 
     try {
-        const backup = await gerarBackupCompleto();
-        const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
+        const blob = await gerarBackupZipBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `backup-nossa-historia-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `backup-nossa-historia-${new Date().toISOString().slice(0, 10)}.zip`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -300,30 +335,74 @@ async function baixarBackupCompleto() {
     }
 }
 
-async function restaurarBackupDeArquivo(arquivo) {
-    const statusEl = document.getElementById('restaurarStatus');
-    statusEl.textContent = 'Lendo arquivo de backup...';
-    statusEl.className = 'save-status pending';
+/**
+ * Aplica um backup no formato NOVO (.zip) no armazenamento local deste
+ * aparelho. Recebe um ArrayBuffer ou Blob do arquivo .zip.
+ */
+async function aplicarBackupDeZip(zipDados) {
+    if (typeof JSZip === 'undefined') throw new Error('Não foi possível carregar o leitor de backup (JSZip). Verifique sua conexão.');
+
+    const zip = await JSZip.loadAsync(zipDados);
+    const manifestArquivo = zip.file('manifest.json');
+    if (!manifestArquivo) throw new Error('Backup inválido: manifest.json não encontrado dentro do arquivo.');
+
+    const manifest = JSON.parse(await manifestArquivo.async('string'));
+    if (!manifest || !manifest.versao) throw new Error('Backup inválido.');
+
+    if (manifest.dataPedido) await salvarConfiguracao('aurora_data_pedido', manifest.dataPedido);
+    if (manifest.dataInicioRelacionamento) await salvarConfiguracao('aurora_primeiro_acesso', manifest.dataInicioRelacionamento);
+    if (manifest.stage) await salvarConfiguracao('aurora_stage', manifest.stage);
+    if (manifest.regrasContrato) await salvarConfiguracao('aurora_regras_contrato', JSON.stringify(manifest.regrasContrato));
+    if (manifest.quizRespostas) await salvarConfiguracao('aurora_quiz_respostas', JSON.stringify(manifest.quizRespostas));
+
+    // Listas (mensagens para o futuro / lembranças): o backup é sempre a
+    // "fotografia completa" da experiência naquele instante, então as
+    // listas locais são SUBSTITUÍDAS pelas do backup, em vez de receberem
+    // itens acrescentados — evita duplicar tudo a cada sincronização
+    // automática entre aparelhos (ver sincronizarNaAbertura em js/sync.js).
+    try {
+        const antigasFuturo = await obterMediaPorTipo('mensagem_futuro');
+        for (const antiga of antigasFuturo) await db.media.delete(antiga.id);
+    } catch (e) { console.error('Falha ao limpar mensagens antigas antes de restaurar', e); }
 
     try {
-        const texto = await arquivo.text();
-        const backup = JSON.parse(texto);
-        await aplicarBackupNoDispositivo(backup);
-        statusEl.textContent = 'Backup restaurado com sucesso! Recarregando...';
-        statusEl.className = 'save-status ok';
-        setTimeout(() => location.reload(), 1200);
-    } catch (err) {
-        console.error('Falha ao restaurar backup', err);
-        statusEl.textContent = 'Não foi possível ler esse arquivo de backup.';
-        statusEl.className = 'save-status err';
+        const antigasLembrancas = await obterMediaPorTipo('lembranca');
+        for (const antiga of antigasLembrancas) await db.media.delete(antiga.id);
+    } catch (e) { console.error('Falha ao limpar lembranças antigas antes de restaurar', e); }
+
+    for (const entrada of (manifest.medias || [])) {
+        try {
+            const registro = {
+                id: entrada.id || gerarIdUnico(entrada.tipo || 'item'),
+                tipo: entrada.tipo,
+                subtipo: entrada.subtipo || undefined,
+                criadoEm: entrada.criadoEm || Date.now()
+            };
+
+            if (entrada.arquivo) {
+                const arquivoZip = zip.file(`media/${entrada.arquivo}`);
+                if (!arquivoZip) { console.error(`Backup: arquivo "${entrada.arquivo}" não encontrado dentro do zip`); continue; }
+                registro.blob = await arquivoZip.async('blob');
+                registro.mimeType = entrada.mimeType || registro.blob.type || null;
+            } else if (entrada.texto) {
+                registro.texto = entrada.texto;
+            } else {
+                continue;
+            }
+
+            await salvarMedia(registro);
+        } catch (e) { console.error(`Backup: falha ao restaurar a mídia "${entrada.id}"`, e); }
     }
+
+    await exibirPolaroidSalva();
 }
 
 /**
- * Aplica um objeto de backup (do arquivo .json ou vindo da nuvem — ver
- * sync.js) no armazenamento local deste aparelho.
+ * Compatibilidade com backups do FORMATO ANTIGO (.json com mídias em
+ * base64) — para quem ainda tiver um backup gerado antes desta correção.
+ * Backups novos nunca mais saem nesse formato (ver gerarBackupZipBlob).
  */
-async function aplicarBackupNoDispositivo(backup) {
+async function aplicarBackupLegadoDeJson(backup) {
     if (!backup || !backup.versao) throw new Error('Backup inválido');
 
     if (backup.dataPedido) await salvarConfiguracao('aurora_data_pedido', backup.dataPedido);
@@ -343,11 +422,6 @@ async function aplicarBackupNoDispositivo(backup) {
         await salvarMedia({ id: 'polaroid_gerada', tipo: 'polaroid_gerada', blob: dataURLParaBlob(backup.polaroidGerada) });
     }
 
-    // Listas (mensagens para o futuro / lembranças): o backup é sempre a
-    // "fotografia completa" da experiência naquele instante, então a lista
-    // local é SUBSTITUÍDA pela do backup, em vez de receber itens
-    // acrescentados. Isso evita duplicar tudo a cada sincronização
-    // automática entre aparelhos (ver sincronizarNaAbertura em js/sync.js).
     if (Array.isArray(backup.mensagensFuturo)) {
         try {
             const antigas = await obterMediaPorTipo('mensagem_futuro');
@@ -379,6 +453,33 @@ async function aplicarBackupNoDispositivo(backup) {
     }
 
     await exibirPolaroidSalva();
+}
+
+async function restaurarBackupDeArquivo(arquivo) {
+    const statusEl = document.getElementById('restaurarStatus');
+    statusEl.textContent = 'Lendo arquivo de backup...';
+    statusEl.className = 'save-status pending';
+
+    try {
+        const nome = (arquivo.name || '').toLowerCase();
+        if (nome.endsWith('.json')) {
+            // Formato antigo — mantido só por compatibilidade com backups já existentes.
+            const texto = await arquivo.text();
+            const backup = JSON.parse(texto);
+            await aplicarBackupLegadoDeJson(backup);
+        } else {
+            // Formato novo (.zip) — o padrão de hoje em diante.
+            const dados = await arquivo.arrayBuffer();
+            await aplicarBackupDeZip(dados);
+        }
+        statusEl.textContent = 'Backup restaurado com sucesso! Recarregando...';
+        statusEl.className = 'save-status ok';
+        setTimeout(() => location.reload(), 1200);
+    } catch (err) {
+        console.error('Falha ao restaurar backup', err);
+        statusEl.textContent = 'Não foi possível ler esse arquivo de backup. Confira se é o arquivo .zip gerado por este site.';
+        statusEl.className = 'save-status err';
+    }
 }
 
 function iniciarModuloExport() {

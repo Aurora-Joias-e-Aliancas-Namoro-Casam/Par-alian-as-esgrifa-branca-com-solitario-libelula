@@ -82,13 +82,32 @@ async function obterOuCriarCodigoCompartilhamento() {
     return codigo;
 }
 
-/** Envia o backup completo (JSON) para o bucket público do Supabase Storage. */
+/**
+ * Envia o backup completo para o bucket público do Supabase Storage.
+ * Formato NOVO (ver js/export.js): um .zip binário com todas as mídias
+ * (sem base64), mais um arquivo ".meta.json" pequeno contendo só o
+ * timestamp — para que sincronizarNaAbertura() consiga checar "existe
+ * algo mais novo?" sem precisar baixar o zip inteiro toda vez.
+ */
 async function publicarBackupNaNuvem(codigo) {
-    const backup = await gerarBackupCompleto();
-    const corpo = JSON.stringify(backup);
-    const url = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${codigo}.json`;
+    const zipBlob = await gerarBackupZipBlob();
+    const atualizadoEm = parseInt(await obterConfiguracao('aurora_atualizado_em'), 10) || Date.now();
 
-    const resposta = await fetch(url, {
+    const urlZip = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${codigo}.zip`;
+    const respostaZip = await fetch(urlZip, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/zip',
+            'x-upsert': 'true'
+        },
+        body: zipBlob
+    });
+    if (!respostaZip.ok) throw new Error(`Falha ao publicar na nuvem: ${respostaZip.status}`);
+
+    const urlMeta = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${codigo}-meta.json`;
+    const respostaMeta = await fetch(urlMeta, {
         method: 'POST',
         headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -96,39 +115,52 @@ async function publicarBackupNaNuvem(codigo) {
             'Content-Type': 'application/json',
             'x-upsert': 'true'
         },
-        body: corpo
+        body: JSON.stringify({ atualizadoEm })
     });
+    if (!respostaMeta.ok) throw new Error(`Falha ao publicar metadados na nuvem: ${respostaMeta.status}`);
 
-    if (!resposta.ok) throw new Error(`Falha ao publicar na nuvem: ${resposta.status}`);
     return true;
 }
 
-/** Baixa o backup de um código de compartilhamento e aplica no aparelho atual. */
+/** Baixa o backup (.zip) de um código de compartilhamento e aplica no aparelho atual. */
 async function importarBackupDaNuvem(codigo) {
-    const backup = await buscarBackupDaNuvem(codigo);
-    if (!backup) throw new Error('Não foi possível localizar essa experiência.');
-    await aplicarBackupNoDispositivo(backup);
+    const zipDados = await buscarBackupZipDaNuvem(codigo);
+    if (!zipDados) throw new Error('Não foi possível localizar essa experiência.');
+    await aplicarBackupDeZip(zipDados);
 }
 
-/** Baixa o backup de um código, sem aplicar. Retorna `null` se ainda não existir na nuvem (404). */
-async function buscarBackupDaNuvem(codigo) {
-    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}.json`;
+/** Baixa só o arquivo pequeno de metadados (timestamp) de um código. Retorna `null` se não existir (404). */
+async function buscarMetaDaNuvem(codigo) {
+    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}-meta.json`;
     const resposta = await fetch(url, { cache: 'no-store' });
     if (resposta.status === 404) return null;
     if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
     return await resposta.json();
 }
 
+/** Baixa o .zip completo (ArrayBuffer) de um código. Retorna `null` se não existir (404). */
+async function buscarBackupZipDaNuvem(codigo) {
+    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}.zip`;
+    const resposta = await fetch(url, { cache: 'no-store' });
+    if (resposta.status === 404) return null;
+    if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
+    return await resposta.arrayBuffer();
+}
+
 /** Apaga o backup desta experiência na nuvem (usado pelo botão "Resetar Site"). */
 async function apagarBackupDaNuvem() {
     if (!syncEstaConfigurado()) return;
-    try {
-        await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${EXPERIENCE_ID}.json`, {
-            method: 'DELETE',
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-    } catch (err) {
-        console.error('Falha ao apagar backup na nuvem:', err);
+    // Inclui o nome antigo (.json) por compatibilidade com experiências criadas antes desta correção.
+    const arquivos = [`${EXPERIENCE_ID}.zip`, `${EXPERIENCE_ID}-meta.json`, `${EXPERIENCE_ID}.json`];
+    for (const nomeArquivo of arquivos) {
+        try {
+            await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${nomeArquivo}`, {
+                method: 'DELETE',
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+            });
+        } catch (err) {
+            console.error(`Falha ao apagar "${nomeArquivo}" na nuvem:`, err);
+        }
     }
 }
 
@@ -169,23 +201,28 @@ async function sincronizarNaAbertura() {
 
     const timestampLocal = parseInt(await obterConfiguracao('aurora_atualizado_em'), 10) || 0;
 
-    let backupNuvem = null;
+    let meta = null;
     try {
-        backupNuvem = await buscarBackupDaNuvem(EXPERIENCE_ID);
+        meta = await buscarMetaDaNuvem(EXPERIENCE_ID);
     } catch (err) {
         console.error('Não foi possível consultar a nuvem ao abrir o site (seguindo com os dados locais):', err);
         return;
     }
 
-    const timestampNuvem = (backupNuvem && backupNuvem.atualizadoEm) ? backupNuvem.atualizadoEm : 0;
+    const timestampNuvem = (meta && meta.atualizadoEm) ? meta.atualizadoEm : 0;
 
-    if (backupNuvem && timestampNuvem > timestampLocal) {
-        // A nuvem tem uma versão mais nova (ex.: foi concluída em outro aparelho) — aplica aqui.
+    if (meta && timestampNuvem > timestampLocal) {
+        // A nuvem tem uma versão mais nova (ex.: foi concluída em outro aparelho) — baixa o zip completo e aplica aqui.
         __auroraAplicandoBackupRemoto = true;
         try {
-            await aplicarBackupNoDispositivo(backupNuvem);
-            await db.configuracoes.put({ chave: 'aurora_atualizado_em', valor: String(timestampNuvem) });
-            try { localStorage.setItem('aurora_atualizado_em', String(timestampNuvem)); } catch (e) { /* ignora */ }
+            const zipDados = await buscarBackupZipDaNuvem(EXPERIENCE_ID);
+            if (zipDados) {
+                await aplicarBackupDeZip(zipDados);
+                await db.configuracoes.put({ chave: 'aurora_atualizado_em', valor: String(timestampNuvem) });
+                try { localStorage.setItem('aurora_atualizado_em', String(timestampNuvem)); } catch (e) { /* ignora */ }
+            }
+        } catch (err) {
+            console.error('Falha ao baixar/aplicar o backup da nuvem:', err);
         } finally {
             __auroraAplicandoBackupRemoto = false;
         }

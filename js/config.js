@@ -37,6 +37,21 @@ const NOME_DELE_COMPLETO = "Gabriel Schmeisk";
 const EXPERIENCE_ID = 'aurora-ana-gabriel-namoro';
 
 /* ----------------------------------------------------------------------
+   VALORES PADRÃO DA HOME DA JOALHERIA
+   ----------------------------------------------------------------------
+   Preenchidos automaticamente nos campos de "Personalize seu pedido"
+   assim que o site abre (podem ainda ser alterados manualmente na tela,
+   caso necessário). Edite aqui para trocar os valores padrão de uma vez.
+   ---------------------------------------------------------------------- */
+const PEDIDO_PADRAO = {
+    aroMasc: '19',
+    aroFem: '13',
+    aroSolitario: '13',
+    gravacaoMasc: 'Poloni ♡ 14/06',
+    gravacaoFem: 'Schmeisk ♡ 14/06'
+};
+
+/* ----------------------------------------------------------------------
    REGISTRO DE PLACEHOLDERS (PRIORIDADE 3)
    ----------------------------------------------------------------------
    Cada entrada representa um arquivo que você vai enviar para o GitHub.
@@ -110,6 +125,50 @@ function getAsset(id) {
     const pasta = item.tipo === 'imagem' ? 'assets/img' : (item.tipo === 'video' ? 'assets/video' : 'assets/audio');
     return `${pasta}/${item.arquivo}`;
 }
+
+/* ----------------------------------------------------------------------
+   GALERIA DE LEMBRANÇAS (página própria — galeria.html)
+   ----------------------------------------------------------------------
+   Padrão de nomenclatura (documentado aqui desde o início do projeto,
+   como pedido): salve as fotos dentro de assets/img/galeria/ sempre com
+   o nome:
+
+       galeria_1.jpg
+       galeria_2.jpg
+       galeria_3.jpg
+       galeria_4.jpg
+       ...
+
+   Sem limite de quantidade — a galeria foi feita para crescer com o
+   passar dos anos. Para adicionar novas fotos:
+     1. Salve o arquivo em assets/img/galeria/ com o próximo número da
+        sequência (ex.: se a última foi galeria_37.jpg, a próxima é
+        galeria_38.jpg). Aceita .jpg, .jpeg, .png e .webp.
+     2. Atualize apenas o número abaixo, em TOTAL_FOTOS_GALERIA, para o
+        total de fotos que agora existem.
+     3. Pronto — nenhum outro arquivo do projeto precisa ser tocado.
+
+   Legendas são opcionais: para dar uma frase a uma foto específica,
+   adicione uma entrada em GALERIA_LEGENDAS usando o mesmo número.
+   ---------------------------------------------------------------------- */
+const TOTAL_FOTOS_GALERIA = 12; // <- atualize este número sempre que adicionar fotos novas
+
+const GALERIA_LEGENDAS = {
+    // 1: 'O dia do atoleiro — rimos até doer a barriga.',
+    // 2: 'Colina, 30/05. O começo de tudo.',
+};
+
+const PASTA_GALERIA = 'assets/img/galeria';
+
+/** Caminho do arquivo de uma foto da galeria pelo número (ver padrão acima). */
+function getAssetGaleria(numero) {
+    return `${PASTA_GALERIA}/galeria_${numero}.${EXTENSAO_GALERIA[numero] || 'jpg'}`;
+}
+
+const EXTENSAO_GALERIA = {
+    // Se alguma foto específica não for .jpg, informe a extensão real aqui.
+    // Exemplo: 5: 'png',
+};
 
 /* ----------------------------------------------------------------------
    NOSSA HISTÓRIA — LINHA DO TEMPO
@@ -283,8 +342,25 @@ const OPCOES_REGRAS_CONTRATO = [
    Cada ocorrência de {AMOR} vira, com uma transição suave, o nome dela.
    ---------------------------------------------------------------------- */
 function textoVersiculoBase() {
+    if (CARTA_USAR_TEXTO_TESTE) return TEXTO_CARTA_TESTE;
     return "O {AMOR} é paciente, o {AMOR} é benigno; não é invejoso, não se vangloria, não se ensoberbece. Não se conduz com indecência, não busca os seus próprios interesses, não se irrita, não guarda mágoa. Não se alegra com a injustiça, mas se alegra com a verdade. Tudo sofre, tudo crê, tudo espera, tudo suporta.";
 }
+
+/* ----------------------------------------------------------------------
+   TESTE DA CARTA FINAL (item 6 do prompt)
+   ----------------------------------------------------------------------
+   Enquanto CARTA_USAR_TEXTO_TESTE estiver "true", a carta que abre depois
+   da assinatura/vídeo mostra o texto abaixo (com o placeholder
+   [CARTA_TESTE]) em vez do texto definitivo — útil para testar a
+   animação do envelope, a troca de "{AMOR}" pelo nome dela, etc., sem
+   comprometer o texto final ainda.
+
+   Antes do grande dia:
+     1. Troque CARTA_USAR_TEXTO_TESTE para "false".
+     2. (Opcional) edite o texto definitivo em textoVersiculoBase(), acima.
+   ---------------------------------------------------------------------- */
+const CARTA_USAR_TEXTO_TESTE = false;
+const TEXTO_CARTA_TESTE = `[CARTA_TESTE] Este é um texto provisório só para testar a abertura do envelope e a troca de "{AMOR}" pelo nome dela. Substitua este texto (ou desligue CARTA_USAR_TEXTO_TESTE, em js/config.js) antes da versão definitiva.`;
 
 /* ----------------------------------------------------------------------
    CÁPSULA DO TEMPO — carta que se abre sozinha 1 ano após o pedido
@@ -302,6 +378,31 @@ const TEXTO_EASTER_EGG_SOBRENOME = `Aviso nada oficial: a partir de hoje você d
 /* ----------------------------------------------------------------------
    TEXTOS-CHAVE (fáceis de localizar e editar)
    ---------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------
+   "COISAS QUE A POLONI AMA" — pequena seção da página de memórias
+   ----------------------------------------------------------------------
+   Lista enxuta (o pedido foi para não virar uma lista de curiosidades).
+   Edite livremente; cada item vira um pequeno cartão na seção.
+   ---------------------------------------------------------------------- */
+const COISAS_QUE_ELA_AMA = [
+    { icon: 'bi-flower1', texto: 'Girassóis, sempre.' },
+    { icon: 'bi-cup-straw', texto: 'Hambúrguer do Grill, com picles — sem discussão.' },
+    { icon: 'bi-egg-fried', texto: 'Arroz, feijão preto, batata frita e rúcula: o prato perfeito.' },
+    { icon: 'bi-heart-fill', texto: 'KitKat, Kinder Ovo e Ovomaltine em qualquer forma possível.' },
+    { icon: 'bi-tree-fill', texto: 'Lugares calmos, campo aberto e um bom silêncio.' },
+    { icon: 'bi-paw', texto: 'Koda, Xixico, Kovu, Yuk, Ahadi, Shury, Sol e Lua — e, no coração, Negão, Slinky, Tommy e Anne.' }
+];
+
+/* ----------------------------------------------------------------------
+   PROTEÇÃO POR SENHA DA ÁREA DE MEMÓRIAS (item 8 do prompt — IMPLEMENTADO
+   POR ÚLTIMO, depois de todas as demais correções e melhorias)
+   ----------------------------------------------------------------------
+   Depois que o pedido acontece e tudo é salvo, qualquer novo acesso à
+   área de memórias passa a exigir esta senha (ver verificarSenhaMemorias()
+   em js/romance.js e o fluxo em js/main.js).
+   ---------------------------------------------------------------------- */
+const SENHA_AREA_MEMORIAS = '1406';
+
 const TEXTOS = {
     heroTituloRomance: 'Nossa Trajetória',
     heroSubRomance: `tudo que você acabou de passar era só uma desculpa boba pra chegar até aqui. Não tinha aliança nenhuma no correio — a única coisa que eu queria entregar era isso: tudo o que a gente construiu até hoje, contado do meu jeito.`,

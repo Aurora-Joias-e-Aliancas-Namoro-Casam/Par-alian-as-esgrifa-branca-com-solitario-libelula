@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
 
@@ -119,7 +120,7 @@
             </div>
 
             <div class="px-2 mt-3">
-                <p class="text-muted small mb-1">Ref: AU-31207-PRT</p>
+                <p class="text-muted small mb-1">Ref: AU-1406-PRT</p>
                 <h1 class="fs-4 fw-bold text-dark lh-sm">Aliança Esgrifa Branca+ Solitário Libélula - 2 Milímetros Prata 950 (Flor Rosa)</h1>
                 <div class="d-flex align-items-center mb-3 mt-2">
                     <div class="text-warning small"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></div>
@@ -152,28 +153,28 @@
                     <h6 class="fw-bold text-dark"><i class="bi bi-gender-male text-primary me-2"></i>Aliança Masculina - Esgrifa Branca+</h6>
                     <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
                     <select id="tamanhoMasc" class="form-select border-rosegold mb-2">
-                        <option value="" selected>Selecione o aro</option>
-                        <option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option>
+                        <option value="">Selecione o aro</option>
+                        <option value="18">18</option><option value="19" selected>19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option>
                     </select>
                     <label class="form-label small text-muted">Gravação (Ex: Nome e Data)</label>
-                    <input id="gravacaoMasc" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?">
+                    <input id="gravacaoMasc" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?" value="Poloni ♡ 14/06">
                 </div>
                 <div class="bg-white p-3 rounded shadow-sm border mb-3">
                     <h6 class="fw-bold text-dark"><i class="bi bi-gender-female text-danger me-2"></i>Aliança Feminina - Esgrifa Branca+</h6>
                     <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
                     <select id="tamanhoFem" class="form-select border-rosegold mb-2">
-                        <option value="" selected>Selecione o aro</option>
-                        <option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option>
+                        <option value="">Selecione o aro</option>
+                        <option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13" selected>13</option><option value="14">14</option>
                     </select>
                     <label class="form-label small text-muted">Gravação (Ex: Nome e Data)</label>
-                    <input id="gravacaoFem" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?">
+                    <input id="gravacaoFem" type="text" class="form-control border-rosegold" placeholder="O que deseja gravar?" value="Schmeisk ♡ 14/06">
                 </div>
                 <div class="bg-white p-3 rounded shadow-sm border mb-3">
                     <h6 class="fw-bold text-dark"><i class="bi bi-gem text-info me-2"></i>Anel Solitário Libélula (Flor Rosa) - Brinde</h6>
                     <label class="form-label small text-muted mt-2">Tamanho (Aro)</label>
                     <select id="tamanhoSolitario" class="form-select border-rosegold">
-                        <option value="" selected>Selecione o aro</option>
-                        <option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option>
+                        <option value="">Selecione o aro</option>
+                        <option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13" selected>13</option><option value="14">14</option>
                     </select>
                 </div>
                 <div id="selecaoErro" class="text-danger small fw-bold mt-2 d-none"><i class="bi bi-exclamation-circle me-1"></i>Preencha todos os tamanhos e gravações antes de continuar.</div>
@@ -188,6 +189,7 @@
                     <li><strong>Largura:</strong> 2.0 mm</li>
                     <li><strong>Acabamento:</strong> Polido fosco com detalhe floral em esmalte Flor Rosa</li>
                     <li><strong>Anel Solitário:</strong> Design Libélula, zircônia central e detalhe em Flor Rosa</li>
+                    <li><strong>Resistência:</strong> Preparada para dias de praia, piscina e chuva sem perder o brilho</li>
                     <li><strong>Garantia:</strong> Vitalícia contra defeitos de fabricação</li>
                 </ul>
             </div>
@@ -204,7 +206,13 @@
             </div>
 
             <div class="px-2 mt-5">
-                <div class="about-section">
+                <div class="about-section position-relative">
+                    <svg class="loja-girassol-discreto" viewBox="0 0 100 100" aria-hidden="true"><g><circle cx="50" cy="50" r="14" fill="#7a5b1e"/><g fill="#F4C430">
+                        <ellipse cx="50" cy="18" rx="9" ry="16"/><ellipse cx="50" cy="82" rx="9" ry="16"/>
+                        <ellipse cx="18" cy="50" rx="16" ry="9"/><ellipse cx="82" cy="50" rx="16" ry="9"/>
+                        <ellipse cx="27" cy="27" rx="9" ry="16" transform="rotate(45 27 27)"/><ellipse cx="73" cy="73" rx="9" ry="16" transform="rotate(45 73 73)"/>
+                        <ellipse cx="73" cy="27" rx="9" ry="16" transform="rotate(-45 73 27)"/><ellipse cx="27" cy="73" rx="9" ry="16" transform="rotate(-45 27 73)"/>
+                    </g></g></svg>
                     <p class="about-eyebrow">Nossa história</p>
                     <h4>Feita à mão, pensada para durar</h4>
                     <p>Desde 2009, a Aurora Joias trabalha com prata 950 e design autoral, unindo tradição joalheira e acabamento artesanal em cada peça. Cada aliança carrega um pouco desse cuidado — e a intenção de acompanhar histórias importantes por muitos anos.</p>
@@ -260,7 +268,7 @@
                 <i class="bi bi-envelope fs-4 text-muted placeholder-link"></i>
             </div>
             <div class="small text-muted mb-2 placeholder-link">Política de Trocas | Termos de Serviço | Rastreio</div>
-            <p class="small text-muted" style="font-size: 0.7rem;">Aurora Joias Exclusivas S.A. | CNPJ: 45.123.987/0001-09<br>Rua Fictícia, 123 - Centro, São Paulo - SP<br>© 2026 Todos os direitos reservados.</p>
+            <p class="small text-muted" style="font-size: 0.7rem;">Aurora Joias Exclusivas S.A. | CNPJ: 14.063.005/0001-40<br>Rua Fictícia, 123 - Centro, São Paulo - SP<br>© 2026 Todos os direitos reservados.</p>
         </footer>
 
         <div class="fixed-bottom bg-white p-3 shadow-lg border-top">
@@ -444,6 +452,18 @@
         <p class="flashback-label" id="flashbackLabel">nossa história até aqui...</p>
     </div>
 
+    <!-- ===================== PROTEÇÃO POR SENHA DA ÁREA DE MEMÓRIAS (item 8 do prompt) ===================== -->
+    <div id="senhaMemoriasOverlay" class="senha-memorias-overlay d-none">
+        <div class="senha-memorias-box">
+            <i class="bi bi-heart-fill" style="font-size: 1.8rem; color: var(--rosegold);"></i>
+            <h5 class="senha-memorias-titulo">Nossas memórias</h5>
+            <p class="senha-memorias-sub">Esse espaço é só nosso. Digite a senha para entrar.</p>
+            <input type="password" inputmode="numeric" id="senhaMemoriasInput" class="senha-memorias-input" placeholder="••••" maxlength="12" autocomplete="off">
+            <p id="senhaMemoriasErro" class="save-status err d-none">Senha incorreta. Tente novamente.</p>
+            <button id="btnSenhaMemoriasEntrar" class="btn btn-rosegold w-100 rounded-pill fw-bold mt-3">Entrar</button>
+        </div>
+    </div>
+
     <!-- ===================== NOSSA HISTÓRIA ===================== -->
     <div id="romancePage" class="romance-page">
         <!-- Girassóis decorativos (item 6 do prompt): discretos, atrás do conteúdo,
@@ -504,6 +524,14 @@
                 <div class="table-photo"><img alt="Foto do casal 3"></div>
                 <div class="table-photo"><img alt="Foto do casal 4"></div>
             </div>
+            <div class="text-center mt-2">
+                <a href="galeria.html" class="btn btn-share"><i class="bi bi-images me-2"></i>Ver nossa galeria</a>
+            </div>
+        </div>
+
+        <div class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
+            <p class="romance-section-title">Coisas que a Poloni ama</p>
+            <div class="ama-grid" id="coisasQueElaAmaGrid"></div>
         </div>
 
         <div class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
@@ -566,7 +594,7 @@
 
         <div id="regrasSelecaoWrap" class="mt-5 reveal-up" style="max-width: 460px; margin: 0 auto;">
             <p class="romance-section-title">Escolha as regras do nosso contrato</p>
-            <p class="text-center text-white-50 small mb-3" style="max-width: 360px; margin: 0 auto;">Selecione de 2 a 3 combinados pra virarem cláusulas oficiais (e bem afetivas) do nosso contrato de namoro.</p>
+            <p class="text-center text-white-50 small mb-3" style="max-width: 360px; margin: 0 auto;">Selecione de 2 a 5 combinados pra virarem cláusulas oficiais (e bem afetivas) do nosso contrato de namoro.</p>
             <div class="rules-grid" id="rulesGrid"></div>
             <div class="text-center mt-3">
                 <p id="regrasContador" class="small text-white-50 mb-2">0 de 3 selecionadas (mínimo 2)</p>
@@ -649,7 +677,7 @@
                 <button id="btnBackup" class="btn btn-share"><i class="bi bi-cloud-arrow-down-fill me-2"></i>Backup da Nossa História</button>
                 <br>
                 <button id="btnRestaurarBackup" class="btn btn-outline-light btn-sm rounded-pill mt-2"><i class="bi bi-cloud-arrow-up-fill me-1"></i>Restaurar Backup</button>
-                <input type="file" id="inputRestaurarBackup" accept="application/json,.json" class="d-none">
+                <input type="file" id="inputRestaurarBackup" accept="application/zip,.zip,application/json,.json" class="d-none">
                 <p id="restaurarStatus" class="save-status"></p>
             </div>
 

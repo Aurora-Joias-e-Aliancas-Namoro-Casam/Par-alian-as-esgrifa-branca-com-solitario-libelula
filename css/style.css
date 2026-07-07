@@ -103,6 +103,10 @@ img { max-width: 100%; }
 .about-badges .about-badge i { font-size: 1.4rem; color: var(--rosegold); }
 .about-badges .about-badge span { display: block; font-size: 0.68rem; color: #8a7a5c; margin-top: 4px; max-width: 80px; }
 
+/* Easter egg discreto (item 2 do prompt): girassol quase invisível, decorativo,
+   não captura toque e não atrapalha a leitura. */
+.loja-girassol-discreto { position: absolute; top: 10px; right: 12px; width: 26px; height: 26px; opacity: 0.14; pointer-events: none; }
+
 .highlight-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
 .highlight-strip::-webkit-scrollbar { display: none; }
 .highlight-card { flex: 0 0 auto; width: 130px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #f2e6e8; }
@@ -336,6 +340,23 @@ img { max-width: 100%; }
 #conteudoGravacao .signature-pad-wrap { max-width: 520px !important; }
 .skip-link { color: rgba(255,255,255,0.35); font-size: 0.72rem; text-decoration: underline; background: none; border: none; margin-top: 18px; }
 
+/* ---------------- "Coisas que a Poloni ama" ---------------- */
+.ama-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ama-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); border-radius: 12px; padding: 16px 12px; text-align: center; }
+.ama-card i { font-size: 1.3rem; color: var(--rosegold); display: block; margin-bottom: 8px; }
+.ama-card p { font-size: 0.78rem; color: #f0d9dd; margin: 0; line-height: 1.45; }
+
+/* ---------------- Proteção por senha da área de memórias (item 8 do prompt) ---------------- */
+.senha-memorias-overlay { position: fixed; inset: 0; z-index: 12000; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.senha-memorias-box { max-width: 320px; width: 100%; text-align: center; color: white; animation: fadeUp 0.5s ease forwards; }
+.senha-memorias-titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.6rem; font-weight: 600; margin: 12px 0 4px; }
+.senha-memorias-sub { font-size: 0.85rem; color: rgba(255,255,255,0.65); margin-bottom: 18px; }
+.senha-memorias-input { width: 100%; text-align: center; letter-spacing: 8px; font-size: 1.4rem; padding: 12px; border-radius: 12px; border: 1px solid rgba(183,110,121,0.5); background: rgba(255,255,255,0.08); color: white; }
+.senha-memorias-input:focus { outline: none; border-color: var(--rosegold); background: rgba(255,255,255,0.12); }
+.senha-memorias-input::placeholder { color: rgba(255,255,255,0.3); }
+.senha-shake { animation: senhaShake 0.4s ease; }
+@keyframes senhaShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
 /* ---------------- Contador vivo (relacionamento) ---------------- */
 .live-counter-wrap { margin-top: 18px; }
 .live-counter-label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 10px; }
@@ -488,3 +509,45 @@ img { max-width: 100%; }
 #polaroidCameraVideo, #polaroidCameraFotoCapturada { width: 100%; border-radius: 10px; background: #000; max-height: 60vh; object-fit: cover; }
 .polaroid-legenda-input { width: 100%; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: #fff; font-size: 0.9rem; text-align: center; }
 .polaroid-legenda-input::placeholder { color: rgba(255,255,255,0.4); }
+
+/* ============================================================================
+   GALERIA DE LEMBRANÇAS — página própria (galeria.html), item 4 do prompt
+   ============================================================================
+   Álbum/scrapbook: fundo noturno igual ao de "Nossa História", masonry via
+   CSS columns, cada foto como uma Polaroid levemente torta (efeito "coladas
+   à mão"), zoom elegante no toque/clique e um girassol discreto no cabeçalho.
+   ============================================================================ */
+.galeria-body { background: linear-gradient(180deg, #1c1014 0%, #241419 30%, #2f1a20 100%); min-height: 100vh; color: #f0d9dd; }
+
+.galeria-header { text-align: center; padding: 56px 20px 28px; position: relative; }
+.galeria-header .voltar-link { position: absolute; top: 20px; left: 16px; color: rgba(255,255,255,0.55); font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.galeria-header .voltar-link:hover { color: var(--rosegold); }
+.galeria-eyebrow { font-family: 'Jost', sans-serif; font-size: 0.68rem; letter-spacing: 4px; text-transform: uppercase; color: var(--rosegold); margin-bottom: 10px; }
+.galeria-titulo { font-family: 'Alex Brush', cursive; font-size: 3rem; color: #f8e9ec; margin: 0; line-height: 1; }
+.galeria-sub { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.05rem; color: rgba(240,217,221,0.65); max-width: 380px; margin: 12px auto 0; }
+.galeria-girassol { width: 34px; height: 34px; margin: 0 auto 6px; opacity: 0.85; }
+
+.galeria-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 70px; }
+.galeria-masonry { column-count: 2; column-gap: 16px; }
+@media (min-width: 640px) { .galeria-masonry { column-count: 3; column-gap: 20px; } }
+@media (min-width: 980px) { .galeria-masonry { column-count: 4; column-gap: 24px; } }
+
+.galeria-item { break-inside: avoid; margin-bottom: 16px; background: #fdfcfa; padding: 10px 10px 30px; border-radius: 4px; box-shadow: 0 12px 28px rgba(0,0,0,0.45); opacity: 0; transform: translateY(18px) rotate(var(--tilt, 0deg)); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22,1,0.36,1); cursor: zoom-in; }
+.galeria-item.visivel { opacity: 1; transform: translateY(0) rotate(var(--tilt, 0deg)); }
+.galeria-item:hover { transform: translateY(-4px) rotate(0deg) scale(1.03); z-index: 2; }
+.galeria-item img { width: 100%; display: block; border-radius: 2px; }
+.galeria-item .galeria-legenda { font-family: 'Courier New', Courier, monospace; font-size: 0.75rem; color: #444; text-align: center; margin-top: 8px; }
+.galeria-item:nth-child(3n) { --tilt: -2.2deg; }
+.galeria-item:nth-child(3n+1) { --tilt: 1.6deg; }
+.galeria-item:nth-child(3n+2) { --tilt: -1deg; }
+.galeria-item:nth-child(4n) { --tilt: 2.4deg; }
+
+.galeria-vazio { text-align: center; color: rgba(240,217,221,0.5); font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.1rem; padding: 60px 20px; }
+
+.galeria-lightbox { position: fixed; inset: 0; z-index: 5000; background: rgba(10,6,8,0.94); display: none; align-items: center; justify-content: center; padding: 24px; }
+.galeria-lightbox.aberto { display: flex; animation: fadeUp 0.25s ease; }
+.galeria-lightbox img { max-width: 100%; max-height: 82vh; border-radius: 6px; box-shadow: 0 24px 60px rgba(0,0,0,0.6); background: #fff; padding: 10px 10px 26px; }
+.galeria-lightbox .galeria-legenda { font-family: 'Courier New', Courier, monospace; font-size: 0.8rem; color: #444; text-align: center; margin-top: -20px; }
+.galeria-lightbox-close { position: absolute; top: 18px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 2rem; line-height: 1; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) { .galeria-item, .galeria-lightbox { transition: none !important; animation: none !important; } }

@@ -160,6 +160,22 @@ function iniciarProcessamentoCompra(onFinish) {
     proximoPasso();
 }
 
+/* ---------------- Preenche os valores padrão de tamanho/gravação ---------------- */
+function preencherValoresPadraoPedido() {
+    if (typeof PEDIDO_PADRAO === 'undefined') return;
+    const campos = [
+        ['tamanhoMasc', PEDIDO_PADRAO.aroMasc],
+        ['tamanhoFem', PEDIDO_PADRAO.aroFem],
+        ['tamanhoSolitario', PEDIDO_PADRAO.aroSolitario],
+        ['gravacaoMasc', PEDIDO_PADRAO.gravacaoMasc],
+        ['gravacaoFem', PEDIDO_PADRAO.gravacaoFem]
+    ];
+    campos.forEach(([id, valor]) => {
+        const el = document.getElementById(id);
+        if (el && valor && !el.value) el.value = valor;
+    });
+}
+
 /* ---------------- Inicialização da tela de loja ---------------- */
 function iniciarLoja() {
     carregarImagensLoja();
@@ -167,6 +183,7 @@ function iniciarLoja() {
     iniciarThumbsProduto();
     iniciarVinheta();
     iniciarCupomFalso();
+    preencherValoresPadraoPedido();
 
     document.getElementById('btnFecharCupom').addEventListener('click', fecharCupomFalso);
     document.getElementById('btnFecharCupomBtn').addEventListener('click', fecharCupomFalso);
