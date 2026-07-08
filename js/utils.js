@@ -119,6 +119,26 @@ function getSupportedMimeTypeParaModo(modo) {
     return '';
 }
 
+/* ----------------------------------------------------------------------
+   BITRATES DE GRAVAÇÃO (evita estourar o limite de 50MB do Supabase)
+   ----------------------------------------------------------------------
+   Sem esses limites, o MediaRecorder usa o bitrate padrão do navegador,
+   que costuma ser bem mais alto do que o necessário para uma tela de
+   celular (em alguns navegadores, 8Mbps+ para 720p) — um vídeo de 1-2
+   minutos nesse bitrate facilmente passa de 50-100MB. Com os valores
+   abaixo, um vídeo de 720p em ~2 minutos fica em torno de 20-30MB,
+   mantendo qualidade boa para visualização no celular.
+   ---------------------------------------------------------------------- */
+const OPCOES_GRAVACAO_VIDEO = { videoBitsPerSecond: 2_000_000, audioBitsPerSecond: 96_000 }; // ~2Mbps vídeo + 96kbps áudio
+const OPCOES_GRAVACAO_AUDIO = { audioBitsPerSecond: 96_000 };
+
+/** Monta as opções do MediaRecorder já com mimeType + bitrate adequado ao modo ('video' ou 'audio'). */
+function montarOpcoesMediaRecorder(modo) {
+    const mimeType = getSupportedMimeTypeParaModo(modo);
+    const bitrate = modo === 'video' ? OPCOES_GRAVACAO_VIDEO : OPCOES_GRAVACAO_AUDIO;
+    return mimeType ? { mimeType, ...bitrate } : { ...bitrate };
+}
+
 /* ---------------- Fundo dinâmico do <body> (corrige "áreas brancas") ----------------
    Durante o bounce-scroll do iOS (ou quando o conteúdo é mais curto que a
    tela), o navegador revela a cor de fundo do <body>. Se o body estivesse
@@ -172,16 +192,7 @@ function gerarIdUnico(prefixo) {
     return `${prefixo}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/* ---------------- Conversões Blob <-> DataURL (usadas no backup) ---------------- */
-function blobParaDataURL(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
-
+/* ---------------- Conversão DataURL -> Blob (usada ao restaurar backups antigos, ver js/export.js) ---------------- */
 function dataURLParaBlob(dataUrl) {
     const partes = dataUrl.split(',');
     const mimeMatch = partes[0].match(/:(.*?);/);
@@ -190,4 +201,65 @@ function dataURLParaBlob(dataUrl) {
     const array = new Uint8Array(binario.length);
     for (let i = 0; i < binario.length; i++) array[i] = binario.charCodeAt(i);
     return new Blob([array], { type: mime });
+}
+
+/* ----------------------------------------------------------------------
+   COMPRESSÃO DE IMAGENS NO NAVEGADOR (evita estourar o limite de 50MB do
+   Supabase e deixa a sincronização entre aparelhos mais rápida)
+   ----------------------------------------------------------------------
+   Fotos de celular hoje em dia costumam ter vários MB mesmo sendo
+   exibidas em uma tela pequena. Antes de salvar, redimensionamos (lado
+   maior limitado) e reexportamos como JPEG — sem precisar de nenhuma
+   biblioteca externa, só <canvas>, que já existe em qualquer navegador.
+   Isso normalmente reduz o arquivo em 60-85% sem perda visível no
+   celular. Em qualquer falha, devolve o arquivo original sem alterações
+   — comprimir nunca deve impedir a pessoa de salvar a foto.
+   ---------------------------------------------------------------------- */
+async function comprimirImagem(arquivo, { larguraMaxima = 1600, alturaMaxima = 1600, qualidade = 0.82 } = {}) {
+    if (!arquivo || !arquivo.type || !arquivo.type.startsWith('image/')) return { blob: arquivo, mimeType: arquivo ? arquivo.type : '' };
+    if (arquivo.type === 'image/gif') return { blob: arquivo, mimeType: arquivo.type }; // GIF animado perderia a animação passando pelo canvas
+
+    try {
+        const fonte = await carregarFonteDeImagem(arquivo);
+        if (!fonte) return { blob: arquivo, mimeType: arquivo.type };
+
+        const largura = fonte.width, altura = fonte.height;
+        const escala = Math.min(1, larguraMaxima / largura, alturaMaxima / altura);
+        const larguraFinal = Math.max(1, Math.round(largura * escala));
+        const alturaFinal = Math.max(1, Math.round(altura * escala));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = larguraFinal;
+        canvas.height = alturaFinal;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(fonte, 0, 0, larguraFinal, alturaFinal);
+        if (fonte.close) fonte.close(); // libera memória se for um ImageBitmap
+
+        const blobComprimido = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', qualidade));
+        if (!blobComprimido) return { blob: arquivo, mimeType: arquivo.type };
+
+        // Só usa o resultado comprimido se ele realmente ficou menor — fotos já
+        // pequenas/comprimidas às vezes ficam maiores ao reexportar como JPEG.
+        if (blobComprimido.size >= arquivo.size) return { blob: arquivo, mimeType: arquivo.type };
+
+        return { blob: blobComprimido, mimeType: 'image/jpeg' };
+    } catch (e) {
+        console.error('Falha ao comprimir imagem, salvando o arquivo original:', e);
+        return { blob: arquivo, mimeType: arquivo.type };
+    }
+}
+
+/** Decodifica um File/Blob de imagem em algo que dá pra desenhar num canvas (createImageBitmap, com fallback via <img>). */
+async function carregarFonteDeImagem(arquivo) {
+    try {
+        if (window.createImageBitmap) return await createImageBitmap(arquivo);
+    } catch (e) { /* alguns formatos (ex: HEIC sem suporte no navegador) falham aqui — cai no fallback abaixo */ }
+
+    return await new Promise((resolve) => {
+        const url = URL.createObjectURL(arquivo);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+        img.src = url;
+    });
 }

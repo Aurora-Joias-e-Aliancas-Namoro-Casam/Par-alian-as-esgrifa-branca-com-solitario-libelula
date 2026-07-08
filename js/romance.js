@@ -384,7 +384,11 @@ async function adicionarLembrancas(fileList) {
 
     for (const file of arquivos) {
         const id = gerarIdUnico('lembranca');
-        await salvarMedia({ id, tipo: 'lembranca', blob: file, mimeType: file.type });
+        // Comprime antes de salvar: fotos de celular hoje em dia costumam vir
+        // com vários MB, e isso soma rápido quando são várias lembranças —
+        // corta bastante o tamanho sem perda visível na tela do celular.
+        const { blob, mimeType } = await comprimirImagem(file);
+        await salvarMedia({ id, tipo: 'lembranca', blob, mimeType });
     }
     renderizarLembrancas();
 }

@@ -151,7 +151,7 @@ function getAsset(id) {
    Legendas são opcionais: para dar uma frase a uma foto específica,
    adicione uma entrada em GALERIA_LEGENDAS usando o mesmo número.
    ---------------------------------------------------------------------- */
-const TOTAL_FOTOS_GALERIA = 12; // <- atualize este número sempre que adicionar fotos novas
+const TOTAL_FOTOS_GALERIA = 0; // <- comece em 0; suba este número só depois de colocar as fotos reais na pasta (ver acima)
 
 const GALERIA_LEGENDAS = {
     // 1: 'O dia do atoleiro — rimos até doer a barriga.',
@@ -376,9 +376,6 @@ function textoCapsulaDoTempo() {
 const TEXTO_EASTER_EGG_SOBRENOME = `Aviso nada oficial: a partir de hoje você deixa de ser "do Vale" — e não, isso não tem nada a ver com "não vale a pena". Muito pelo contrário: agora você vale um "Schmeisk" inteiro. 💍`;
 
 /* ----------------------------------------------------------------------
-   TEXTOS-CHAVE (fáceis de localizar e editar)
-   ---------------------------------------------------------------------- */
-/* ----------------------------------------------------------------------
    "COISAS QUE A POLONI AMA" — pequena seção da página de memórias
    ----------------------------------------------------------------------
    Lista enxuta (o pedido foi para não virar uma lista de curiosidades).
@@ -398,11 +395,14 @@ const COISAS_QUE_ELA_AMA = [
    POR ÚLTIMO, depois de todas as demais correções e melhorias)
    ----------------------------------------------------------------------
    Depois que o pedido acontece e tudo é salvo, qualquer novo acesso à
-   área de memórias passa a exigir esta senha (ver verificarSenhaMemorias()
+   área de memórias passa a exigir esta senha (ver solicitarSenhaMemorias()
    em js/romance.js e o fluxo em js/main.js).
    ---------------------------------------------------------------------- */
 const SENHA_AREA_MEMORIAS = '1406';
 
+/* ----------------------------------------------------------------------
+   TEXTOS-CHAVE (fáceis de localizar e editar)
+   ---------------------------------------------------------------------- */
 const TEXTOS = {
     heroTituloRomance: 'Nossa Trajetória',
     heroSubRomance: `tudo que você acabou de passar era só uma desculpa boba pra chegar até aqui. Não tinha aliança nenhuma no correio — a única coisa que eu queria entregar era isso: tudo o que a gente construiu até hoje, contado do meu jeito.`,

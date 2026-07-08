@@ -94,7 +94,9 @@ async function escolherModoFuturo(modo) {
     const vozIndicador = document.getElementById('futuroVozIndicador');
 
     try {
-        const constraints = modo === 'video' ? { video: { facingMode: 'user' }, audio: true } : { audio: true };
+        const constraints = modo === 'video'
+            ? { video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 960 } }, audio: true }
+            : { audio: true };
         futuroStream = await navigator.mediaDevices.getUserMedia(constraints);
         if (modo === 'video') { previewVideo.srcObject = futuroStream; previewVideo.classList.remove('d-none'); vozIndicador.classList.add('d-none'); }
         else { previewVideo.classList.add('d-none'); vozIndicador.classList.remove('d-none'); }
@@ -111,14 +113,20 @@ function iniciarGravacaoFuturo() {
     const statusEl = document.getElementById('futuroStatus');
     statusEl.textContent = ''; statusEl.className = 'save-status';
 
-    const mimeType = getSupportedMimeTypeParaModo(futuroModo);
+    const opcoesGravacao = montarOpcoesMediaRecorder(futuroModo); // limita o bitrate (ver utils.js) para não estourar 50MB
     try {
-        futuroRecorder = mimeType ? new MediaRecorder(futuroStream, { mimeType }) : new MediaRecorder(futuroStream);
+        futuroRecorder = new MediaRecorder(futuroStream, opcoesGravacao);
     } catch (err) {
-        console.error('Falha ao iniciar o gravador de mídia', err);
-        statusEl.textContent = 'Não foi possível iniciar a gravação neste navegador.';
-        statusEl.className = 'save-status err';
-        return;
+        // Navegador antigo que não aceita videoBitsPerSecond/audioBitsPerSecond — tenta o padrão dele antes de desistir.
+        try {
+            const mimeType = getSupportedMimeTypeParaModo(futuroModo);
+            futuroRecorder = mimeType ? new MediaRecorder(futuroStream, { mimeType }) : new MediaRecorder(futuroStream);
+        } catch (err2) {
+            console.error('Falha ao iniciar o gravador de mídia', err2);
+            statusEl.textContent = 'Não foi possível iniciar a gravação neste navegador.';
+            statusEl.className = 'save-status err';
+            return;
+        }
     }
 
     futuroRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) futuroChunks.push(e.data); };

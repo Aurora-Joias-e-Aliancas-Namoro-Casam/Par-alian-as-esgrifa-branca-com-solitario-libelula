@@ -10,8 +10,9 @@
  * necessário um lugar na nuvem para guardar esses dados.
  *
  * Eu (Claude) não tenho acesso à internet neste ambiente, então não
- * recebo, não guardo e não posso validar nenhuma chave por conta própria
- * — as constantes abaixo começam vazias até você mesmo colar os valores.
+ * recebo, não guardo e não posso validar nenhuma chave por conta própria.
+ * As constantes abaixo já foram preenchidas em uma etapa anterior deste
+ * projeto (ver nota "Já configurado", abaixo).
  *
  * COMO ATIVAR (gratuito, leva ~5 minutos, sem precisar programar):
  *   1. Crie uma conta em https://supabase.com (tem plano gratuito).
@@ -35,9 +36,24 @@
  *      nuvem": isso faz uma escrita + leitura reais no seu bucket, então
  *      você confirma que a chave colada é a correta antes do grande dia.
  *
- * Enquanto essas duas constantes estiverem vazias, o botão "Compartilhar"
- * continua funcionando normalmente (compartilha o link), mas avisa que a
- * sincronização entre aparelhos ainda não está ativada.
+ * Já configurado: as constantes abaixo já estão com URL/chave preenchidas
+ * (feito em uma etapa anterior). Se um dia precisar trocar de projeto
+ * Supabase, é só repetir os passos acima e colar os novos valores aqui.
+ *
+ * LIMITE DE SEGURANÇA HONESTO (vale a pena entender):
+ * a chave "anon" É PARA SER PÚBLICA — é assim que o Supabase funciona
+ * (a proteção de verdade vem das "Policies" do bucket, não do segredo da
+ * chave). Como este é um site 100% estático (sem servidor próprio), a
+ * senha "1406" protege a TELA do site, mas não o arquivo bruto no bucket:
+ * qualquer pessoa que veja o código-fonte da página (ex: "Ver código-fonte"
+ * no navegador) consegue ler SUPABASE_URL, a chave e o nome do arquivo
+ * (EXPERIENCE_ID, em js/config.js) e montar a URL pública do backup direto
+ * pelo Supabase, sem passar pela senha. Isso é uma limitação inerente de
+ * qualquer app puramente estático (sem back-end) que sincroniza dados
+ * "privados" na nuvem — não é um bug para corrigir com mais código, e sim
+ * um limite de arquitetura. Na prática, o link só chega a quem vocês dois
+ * compartilharem, então o risco real é baixo — mas é bom saber que a
+ * senha protege a experiência dentro do site, não o arquivo na nuvem.
  * ============================================================================
  */
 
@@ -70,16 +86,6 @@ function validarFormatoAnonKey(chave) {
     } catch (e) {
         return { ok: false, motivo: 'Não foi possível decodificar a chave — confira se ela foi colada por inteiro.' };
     }
-}
-
-/** Gera (ou reaproveita) um código curto que identifica esta experiência na nuvem. */
-async function obterOuCriarCodigoCompartilhamento() {
-    let codigo = await obterConfiguracao('aurora_share_code');
-    if (!codigo) {
-        codigo = Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6);
-        await salvarConfiguracao('aurora_share_code', codigo);
-    }
-    return codigo;
 }
 
 /**
@@ -352,6 +358,76 @@ async function testarConexaoNuvem() {
     } catch (e) { /* não crítico */ }
 
     return { ok: true, etapa: 'completo', motivo: 'Upload, download e integridade confirmados com sucesso.' };
+}
+
+/**
+ * Teste de UPLOAD BINÁRIO REAL — sobe um arquivo de alguns MB (simulando o
+ * peso de um vídeo/foto de verdade) pelo MESMO caminho que o backup .zip
+ * real usa (POST binário direto, "Content-Type: application/zip",
+ * "x-upsert"). Isso é essencial porque testarConexaoNuvem() só testa um
+ * JSON de poucos bytes — passa tranquilamente mesmo que o bucket tenha um
+ * "File size limit" baixo demais, ou mesmo que a rede do celular seja
+ * lenta o bastante para o upload de um vídeo real cair pela metade. Este
+ * teste é o que realmente reproduz o problema que fotos e vídeos grandes
+ * podem encontrar.
+ */
+async function testarUploadMediaReal() {
+    if (!syncEstaConfigurado()) {
+        return { ok: false, motivo: 'Sincronização não configurada em js/sync.js.' };
+    }
+
+    const idTeste = `diagnostico_zip_${Date.now()}`;
+    const tamanhoBytes = 8 * 1024 * 1024; // 8MB — próximo do peso real de um backup .zip com fotos + um vídeo curto
+    const blobTeste = criarBlobDeTeste(tamanhoBytes);
+    const caminho = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${idTeste}.zip`;
+    const caminhoPublico = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${idTeste}.zip`;
+    const inicio = performance.now();
+
+    // 1) Upload binário (mesmo formato usado por publicarBackupNaNuvem).
+    try {
+        const respostaUpload = await fetch(caminho, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/zip',
+                'x-upsert': 'true'
+            },
+            body: blobTeste
+        });
+        if (!respostaUpload.ok) {
+            const corpo = await respostaUpload.text().catch(() => '');
+            return {
+                ok: false,
+                motivo: `Upload de ${(tamanhoBytes / (1024 * 1024)).toFixed(0)}MB falhou (HTTP ${respostaUpload.status}). Causa mais comum: "File size limit" do bucket (Storage > aurora-backups > Edit bucket, no painel do Supabase) ou política de INSERT ausente. Detalhe: ${corpo.slice(0, 200)}`
+            };
+        }
+    } catch (err) {
+        return { ok: false, motivo: `Não foi possível conectar ao Supabase para o upload: ${err.message}` };
+    }
+
+    // 2) Download público, para confirmar que o arquivo realmente chegou íntegro.
+    let blobBaixado;
+    try {
+        const respostaDownload = await fetch(caminhoPublico, { cache: 'no-store' });
+        if (!respostaDownload.ok) return { ok: false, motivo: `Upload funcionou, mas o download falhou (HTTP ${respostaDownload.status}). Confira se o bucket está público e se a policy de SELECT existe.` };
+        blobBaixado = await respostaDownload.blob();
+    } catch (err) {
+        return { ok: false, motivo: `Upload funcionou, mas o download falhou: ${err.message}` };
+    }
+
+    const duracaoMs = Math.round(performance.now() - inicio);
+
+    // 3) Limpeza (apaga o arquivo de teste) — falha aqui não invalida o teste principal.
+    try {
+        await fetch(caminho, { method: 'DELETE', headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
+    } catch (e) { /* não crítico */ }
+
+    if (!blobBaixado || blobBaixado.size !== blobTeste.size) {
+        return { ok: false, motivo: `O arquivo baixado não bate em tamanho com o enviado (enviado ${blobTeste.size} bytes, baixado ${blobBaixado ? blobBaixado.size : 0} bytes) — algo está truncando o upload/download.` };
+    }
+
+    return { ok: true, motivo: `Upload e download de ${(tamanhoBytes / (1024 * 1024)).toFixed(0)}MB binários confirmados em ${duracaoMs}ms, pelo mesmo caminho usado pelo backup .zip real. Vídeos e fotos devem sincronizar normalmente (respeitando o "File size limit" do bucket para o .zip completo).` };
 }
 
 function iniciarModuloSync() {

@@ -165,11 +165,13 @@ async function gerarPolaroidComFoto(fotoDataUrl, fraseCustom) {
 
     try {
         const canvas = await html2canvas(document.getElementById('polaroidExportavel'), { backgroundColor: '#ffffff', scale: 2 });
-        baixarCanvasComoPng(canvas, 'nosso-momento-polaroid.png');
+        baixarCanvasComoPng(canvas, 'nosso-momento-polaroid.png'); // download local: mantém PNG (qualidade máxima, é só um arquivo)
 
-        const blobPolaroid = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        // Versão salva no banco/nuvem: JPEG reduz bastante o tamanho (a foto já
+        // não tem transparência, então JPEG não perde nada visualmente aqui).
+        const blobPolaroid = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
         if (blobPolaroid) {
-            await salvarMedia({ id: 'polaroid_gerada', tipo: 'polaroid_gerada', blob: blobPolaroid });
+            await salvarMedia({ id: 'polaroid_gerada', tipo: 'polaroid_gerada', blob: blobPolaroid, mimeType: 'image/jpeg' });
             await exibirPolaroidSalva();
         }
 

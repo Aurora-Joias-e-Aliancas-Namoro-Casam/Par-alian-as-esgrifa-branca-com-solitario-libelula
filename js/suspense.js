@@ -379,8 +379,11 @@ async function salvarVideoComSeguranca(blob, mimeType) {
 
     if (statusEl) {
         if (sucesso) {
-            statusEl.textContent = 'Vídeo salvo com sucesso. Baixando uma cópia automaticamente...';
-            statusEl.className = 'save-status ok';
+            const tamanhoMB = (blob.size / (1024 * 1024)).toFixed(1);
+            const proximoDoLimite = blob.size > 45 * 1024 * 1024; // aviso perto do limite padrão de 50MB do bucket
+            statusEl.textContent = `Vídeo salvo com sucesso (${tamanhoMB}MB). Baixando uma cópia automaticamente...` +
+                (proximoDoLimite ? ' Atenção: esse vídeo está grande — pode não sincronizar com a nuvem se o bucket tiver limite de 50MB (veja diagnostico.html).' : '');
+            statusEl.className = proximoDoLimite ? 'save-status pending' : 'save-status ok';
         } else {
             statusEl.textContent = 'Não foi possível confirmar o salvamento interno, mas o download automático foi iniciado — não feche o app até ele terminar.';
             statusEl.className = 'save-status err';
@@ -628,7 +631,13 @@ function iniciarSuspense() {
         videoJaSalvo = false;
         document.getElementById('saveStatus').textContent = '';
         const mimeType = getSupportedMimeType();
-        mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+        const opcoesGravacao = montarOpcoesMediaRecorder('video'); // limita o bitrate (ver utils.js) para não estourar 50MB
+        try {
+            mediaRecorder = new MediaRecorder(mediaStream, opcoesGravacao);
+        } catch (e) {
+            // Navegador antigo que não aceita videoBitsPerSecond/audioBitsPerSecond — cai para o padrão dele.
+            mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+        }
 
         mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
 

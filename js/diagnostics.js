@@ -116,7 +116,7 @@ async function testeConfiguracaoNuvem() {
     }
     const formato = validarFormatoAnonKey(SUPABASE_ANON_KEY);
     if (!formato.ok) return { ok: false, motivo: `Chave configurada, mas com problema de formato: ${formato.motivo}` };
-    return { ok: true, motivo: `Formato da chave ok (${formato.motivo}). Use o botão "Testar conexão com a nuvem" abaixo para um teste completo.` };
+    return { ok: true, motivo: `Formato da chave ok (${formato.motivo}). Use os botões abaixo para um teste completo: "Testar conexão com a nuvem" (JSON pequeno) e "Testar upload de mídia real" (arquivo binário de alguns MB, o que realmente importa para fotos e vídeos).` };
 }
 
 /**
@@ -183,8 +183,26 @@ async function executarTesteNuvem() {
     resultadoEl.className = `save-status ${resultado.ok ? 'ok' : 'err'}`;
 }
 
+async function executarTesteMediaReal() {
+    const btn = document.getElementById('btnTestarMediaReal');
+    const resultadoEl = document.getElementById('diagResultadoMediaReal');
+    btn.disabled = true;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando 8MB de teste...';
+    resultadoEl.textContent = '';
+    resultadoEl.className = 'save-status pending';
+
+    const resultado = await testarUploadMediaReal();
+
+    btn.disabled = false;
+    btn.innerHTML = textoOriginal;
+    resultadoEl.textContent = resultado.motivo;
+    resultadoEl.className = `save-status ${resultado.ok ? 'ok' : 'err'}`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRodarDiagnostico').addEventListener('click', executarDiagnosticoCompleto);
     document.getElementById('btnTestarNuvem').addEventListener('click', executarTesteNuvem);
+    document.getElementById('btnTestarMediaReal').addEventListener('click', executarTesteMediaReal);
     executarDiagnosticoCompleto();
 });

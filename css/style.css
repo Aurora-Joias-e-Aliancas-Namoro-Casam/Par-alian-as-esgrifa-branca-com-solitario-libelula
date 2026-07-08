@@ -472,6 +472,7 @@ img { max-width: 100%; }
     .flashback-photo { transition: opacity 0.2s ease !important; filter: none !important; transform: none !important; }
     .envelope, .envelope-flap, .letter-paper, .envelope-seal { transition: none !important; }
     .vinheta-logo, .vinheta-particula { animation: none !important; }
+    .senha-shake { animation: none !important; }
 }
 
 /* ============================================================================
