@@ -84,17 +84,25 @@ db.version(2).stores({
  * sincronização para agendar um envio. Escreve direto nas tabelas (sem
  * passar por salvarConfiguracao) para não entrar em recursão.
  */
-async function marcarAtualizacaoLocal() {
+async function marcarAtualizacaoLocal(imediato = false) {
     const agora = String(Date.now());
     try { localStorage.setItem('aurora_atualizado_em', agora); } catch (e) { /* ignora */ }
     try { await db.configuracoes.put({ chave: 'aurora_atualizado_em', valor: agora }); } catch (e) { /* ignora */ }
-    if (typeof agendarEnvioNuvem === 'function') agendarEnvioNuvem();
+    if (typeof agendarEnvioNuvem === 'function') agendarEnvioNuvem(imediato);
 }
 
 /**
  * Salva um item de mídia com verificação de integridade: escreve, depois
  * relê do banco para confirmar que os bytes realmente foram persistidos.
  * Retorna true/false.
+ *
+ * IMPORTANTE: dispara a sincronização IMEDIATAMENTE (sem esperar o
+ * agrupamento de 1,2s) — vídeo, foto e áudio são ações únicas e raras,
+ * bem diferente de configurações pequenas que podem mudar várias vezes
+ * seguidas. Esperar aqui é o que causava vídeo/foto sumirem em outro
+ * aparelho: se a pessoa travasse a tela ou trocasse de app logo depois
+ * de gravar (comum no iPhone), o navegador suspendia o envio ainda
+ * agendado antes dele sequer começar.
  */
 async function salvarMedia(registro) {
     if (!registro || !registro.id) throw new Error('salvarMedia requer um id');
@@ -111,7 +119,7 @@ async function salvarMedia(registro) {
         const confere = await db.media.get(registro.id);
         if (!confere) return false;
         if (registro.blob && (!confere.blob || confere.blob.size !== registro.blob.size)) return false;
-        await marcarAtualizacaoLocal(); // toda mídia salva com sucesso conta como uma etapa concluída
+        await marcarAtualizacaoLocal(true); // toda mídia salva com sucesso conta como uma etapa concluída — sincroniza na hora
         return true;
     } catch (err) {
         console.error(`Falha ao confirmar mídia "${registro.id}":`, err);
@@ -130,7 +138,7 @@ async function obterMediaPorTipo(tipo) {
 async function excluirMedia(id) {
     try {
         await db.media.delete(id);
-        await marcarAtualizacaoLocal();
+        await marcarAtualizacaoLocal(true);
         return true;
     } catch (e) { console.error(`Falha ao excluir mídia "${id}":`, e); return false; }
 }
@@ -141,12 +149,16 @@ async function excluirMedia(id) {
 // mas o IndexedDB é a fonte de verdade redundante — se o localStorage for
 // limpo pelo navegador (comum em Safari após dias de inatividade), ainda
 // recuperamos daqui.
-async function salvarConfiguracao(chave, valor) {
+// `imediato`: use `true` para marcos importantes (ex.: data do pedido,
+// estágio "final") que não podem correr o risco de ficar só no timer de
+// 1,2s agendado — o resto (respostas de quiz, regras do contrato) continua
+// agrupado, para não martelar a rede a cada pequena mudança.
+async function salvarConfiguracao(chave, valor, imediato = false) {
     try { localStorage.setItem(chave, typeof valor === 'string' ? valor : JSON.stringify(valor)); } catch (e) { console.error('localStorage indisponível para', chave, e); }
     try { await db.configuracoes.put({ chave, valor }); } catch (e) { console.error('Falha ao salvar configuração no IndexedDB:', chave, e); }
     // 'aurora_atualizado_em' é escrita diretamente por marcarAtualizacaoLocal/sincronizarNaAbertura;
     // evita chamar a si mesma em loop.
-    if (chave !== 'aurora_atualizado_em') await marcarAtualizacaoLocal();
+    if (chave !== 'aurora_atualizado_em') await marcarAtualizacaoLocal(imediato);
 }
 
 async function obterConfiguracao(chave) {

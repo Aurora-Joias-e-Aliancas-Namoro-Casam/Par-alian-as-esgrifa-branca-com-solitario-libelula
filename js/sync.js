@@ -183,15 +183,71 @@ async function apagarBackupDaNuvem() {
 
 let __auroraAplicandoBackupRemoto = false; // suprime auto-envio enquanto aplicamos um backup vindo da nuvem
 let __auroraTimeoutEnvioNuvem = null;
+let __auroraSyncEmAndamento = 0; // contador de envios em voo (pode haver mais de um sobreposto)
 
-/** Chamado (via hook em db.js) sempre que algo muda localmente. Debounced para não martelar a rede. */
-function agendarEnvioNuvem() {
+/**
+ * CORREÇÃO IMPORTANTE (bug relatado: vídeo/foto/áudio somem em outro
+ * aparelho mesmo com "diagnóstico" passando): o envio automático era
+ * SILENCIOSO e esperava 2 segundos pra começar. No iPhone, se a pessoa
+ * trava a tela ou troca de app logo depois de gravar (bem comum!), o
+ * Safari/Chrome (que no iOS usa o mesmo motor do Safari) costuma
+ * suspender esse envio antes dele terminar — o vídeo fica salvo NO
+ * APARELHO, mas nunca chega na nuvem, e por isso nunca aparece no outro
+ * celular. Agora: (1) mídia grande dispara o envio IMEDIATAMENTE, sem
+ * esperar; (2) um aviso fica visível na tela dizendo pra não fechar o
+ * app até terminar; (3) se a pessoa tentar fechar a aba/navegar para
+ * fora durante o envio, o navegador pergunta antes de sair.
+ */
+function mostrarBannerSync(emAndamento) {
+    __auroraSyncEmAndamento = Math.max(0, __auroraSyncEmAndamento + (emAndamento ? 1 : -1));
+    const banner = document.getElementById('auroraSyncBanner');
+    if (banner) banner.classList.toggle('d-none', __auroraSyncEmAndamento <= 0);
+}
+
+window.addEventListener('beforeunload', (evt) => {
+    if (__auroraSyncEmAndamento > 0) {
+        evt.preventDefault();
+        evt.returnValue = 'Ainda estamos salvando na nuvem — se sair agora, o que você acabou de gravar pode não aparecer no outro aparelho.';
+        return evt.returnValue;
+    }
+});
+
+/** Publica na nuvem mostrando o aviso visível na tela enquanto durar (e removendo ao final, sucesso ou erro). */
+async function publicarComIndicadorVisivel() {
+    mostrarBannerSync(true);
+    try {
+        await publicarBackupNaNuvem(EXPERIENCE_ID);
+    } finally {
+        mostrarBannerSync(false);
+    }
+}
+
+/**
+ * Chamado (via hook em db.js) sempre que algo muda localmente.
+ * `imediato = true` (usado para vídeo, foto, áudio — ver salvarMedia em
+ * js/db.js) dispara o envio na hora, sem esperar; `imediato = false`
+ * (usado para configurações pequenas, ex.: respostas de quiz) continua
+ * agrupando várias mudanças rápidas num único envio, para não martelar
+ * a rede a cada tecla digitada.
+ */
+function agendarEnvioNuvem(imediato = false) {
     if (!syncEstaConfigurado()) return;
     if (__auroraAplicandoBackupRemoto) return; // essa mudança veio de um backup importado, não precisa reenviar
+
     clearTimeout(__auroraTimeoutEnvioNuvem);
-    __auroraTimeoutEnvioNuvem = setTimeout(() => {
-        publicarBackupNaNuvem(EXPERIENCE_ID).catch(err => console.error('Falha no envio automático para a nuvem:', err));
-    }, 2000);
+    const disparar = () => {
+        publicarComIndicadorVisivel().catch(err => {
+            console.error('Falha no envio automático para a nuvem:', err);
+            const statusEl = document.getElementById('compartilharStatus');
+            if (statusEl) { statusEl.textContent = 'Não sincronizou automaticamente — toque em "Compartilhar" para tentar de novo, ou confira sua internet.'; statusEl.className = 'save-status err'; }
+        });
+    };
+
+    if (imediato) {
+        disparar();
+    } else {
+        __auroraTimeoutEnvioNuvem = setTimeout(disparar, 1200);
+    }
 }
 
 /**
@@ -235,7 +291,7 @@ async function sincronizarNaAbertura() {
     } else if (timestampLocal > 0 && timestampLocal >= timestampNuvem) {
         // Este aparelho tem dados que a nuvem ainda não tem (ex.: primeira vez, ou sem internet antes) — envia agora.
         try {
-            await publicarBackupNaNuvem(EXPERIENCE_ID);
+            await publicarComIndicadorVisivel();
         } catch (err) {
             console.error('Falha ao publicar dados locais na nuvem ao abrir o site:', err);
         }
@@ -278,7 +334,7 @@ async function compartilharExperiencia() {
     if (syncEstaConfigurado()) {
         setStatus('Sincronizando com a nuvem...', 'pending');
         try {
-            await publicarBackupNaNuvem(EXPERIENCE_ID);
+            await publicarComIndicadorVisivel();
             setStatus('Sincronizado! O link já pode ser aberto em qualquer aparelho.', 'ok');
         } catch (err) {
             console.error('Falha ao sincronizar com a nuvem:', err);

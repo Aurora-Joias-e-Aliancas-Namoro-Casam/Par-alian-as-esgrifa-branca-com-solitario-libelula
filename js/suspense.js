@@ -239,7 +239,7 @@ function iniciarAssinatura() {
 
         await salvarMedia({ id: 'assinatura', tipo: 'assinatura', texto: assinaturaPng });
         if (!(await obterConfiguracao('aurora_data_pedido'))) {
-            await salvarConfiguracao('aurora_data_pedido', new Date().toISOString());
+            await salvarConfiguracao('aurora_data_pedido', new Date().toISOString(), true);
         }
 
         if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
@@ -681,7 +681,7 @@ function iniciarSuspense() {
     });
 
     document.getElementById('btnVerHistoria').addEventListener('click', async () => {
-        await salvarConfiguracao('aurora_stage', 'final');
+        await salvarConfiguracao('aurora_stage', 'final', true);
         iniciarFlashback(() => { goToRomancePage(); });
     });
 }

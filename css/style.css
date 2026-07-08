@@ -27,6 +27,7 @@ html {
 }
 
 body {
+    margin: 0;
     background-color: var(--offwhite);
     font-family: 'Jost', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--text-dark);
@@ -518,7 +519,14 @@ img { max-width: 100%; }
    CSS columns, cada foto como uma Polaroid levemente torta (efeito "coladas
    à mão"), zoom elegante no toque/clique e um girassol discreto no cabeçalho.
    ============================================================================ */
-.galeria-body { background: linear-gradient(180deg, #1c1014 0%, #241419 30%, #2f1a20 100%); min-height: 100vh; color: #f0d9dd; }
+.galeria-body { background: linear-gradient(180deg, #1c1014 0%, #241419 30%, #2f1a20 100%); min-height: 100vh; min-height: 100dvh; color: #f0d9dd; }
+/* CORREÇÃO (bordas brancas na galeria): o <html> global fica com o fundo
+   claro do site (var(--offwhite), ver topo do arquivo) — só o <body> desta
+   página era escurecido. Isso aparecia como uma borda/tira branca durante o
+   "bounce" de rolagem em iPhone (quando o conteúdo escuro não cobre 100%
+   da tela por um instante). Escurecendo o <html> aqui também, o fundo por
+   trás nunca fica claro, não importa o que aconteça durante a rolagem. */
+html.galeria-html { background-color: #1c1014; }
 
 .galeria-header { text-align: center; padding: 56px 20px 28px; position: relative; }
 .galeria-header .voltar-link { position: absolute; top: 20px; left: 16px; color: rgba(255,255,255,0.55); font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
@@ -552,3 +560,25 @@ img { max-width: 100%; }
 .galeria-lightbox-close { position: absolute; top: 18px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 2rem; line-height: 1; cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) { .galeria-item, .galeria-lightbox { transition: none !important; animation: none !important; } }
+
+/* ============================================================================
+   AVISO DE SINCRONIZAÇÃO EM ANDAMENTO
+   Fica visível por cima de qualquer tela enquanto um envio para a nuvem
+   está em voo — dá um motivo concreto pra pessoa não travar a tela/fechar
+   o app logo depois de gravar (ver js/sync.js).
+   ============================================================================ */
+.aurora-sync-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 5000;
+    padding: 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    background: #2a1620;
+    color: #f6d9c9;
+    font-size: 0.8rem;
+    text-align: center;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}

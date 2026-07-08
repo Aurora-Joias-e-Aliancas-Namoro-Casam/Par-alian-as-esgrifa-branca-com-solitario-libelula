@@ -20,6 +20,14 @@
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
+    <!-- Aviso visível durante o envio para a nuvem — fica por cima de qualquer
+         tela. É o que faz a pessoa esperar antes de travar a tela/fechar o
+         app, evitando que um envio agendado seja interrompido no meio. -->
+    <div id="auroraSyncBanner" class="aurora-sync-banner d-none">
+        <span class="spinner-border spinner-border-sm me-2"></span>
+        Salvando na nuvem — não feche o app nem tranque a tela ainda...
+    </div>
+
 
     <!-- ===================== VINHETA DE ABERTURA ===================== -->
     <div id="vinhetaAbertura" class="vinheta-abertura">
