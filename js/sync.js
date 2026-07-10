@@ -171,6 +171,81 @@ async function apagarBackupDaNuvem() {
 }
 
 /* ----------------------------------------------------------------------
+ * MARCADOR DE RESET ("tombstone")
+ * ----------------------------------------------------------------------
+ * CORREÇÃO IMPORTANTE (bug relatado: resetar em um aparelho não resetava
+ * o outro): apagar o backup da nuvem sozinho não bastava. O OUTRO
+ * aparelho ainda tinha os dados antigos guardados localmente (vídeo,
+ * fotos, etc.) — e como ele nunca soube que um reset aconteceu, na
+ * próxima vez que fosse aberto ele via "eu tenho dados e a nuvem não
+ * tem nada", e reenviava tudo de volta pra nuvem (ver a lógica de
+ * empurrar/puxar em sincronizarNaAbertura), literalmente ressuscitando
+ * o que acabou de ser apagado.
+ *
+ * A correção: ao resetar, além de apagar o backup, publicamos um
+ * pequeno arquivo "${EXPERIENCE_ID}-reset.json" com o instante exato do
+ * reset. QUALQUER aparelho que abrir o link depois confere esse
+ * marcador antes de mais nada — se ele for mais novo do que a última
+ * vez que aquele aparelho "viu" um reset, o aparelho se limpa também,
+ * em vez de reenviar os dados antigos.
+ * ---------------------------------------------------------------------- */
+
+/** Publica o marcador de reset na nuvem, avisando qualquer outro aparelho a se limpar também. */
+async function publicarMarcadorDeReset() {
+    if (!syncEstaConfigurado()) return;
+    const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-reset.json`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'x-upsert': 'true' },
+        body: JSON.stringify({ resetadoEm: Date.now() })
+    });
+    if (!resposta.ok) throw new Error(`Falha ao publicar marcador de reset (HTTP ${resposta.status})`);
+}
+
+/**
+ * Confere se outro aparelho resetou a experiência desde a última vez que
+ * ESTE aparelho verificou. Se sim, apaga tudo aqui também (mesma limpeza
+ * do botão "Resetar Site") e devolve `true` — quem chamar deve então dar
+ * `location.reload()` para reiniciar do zero.
+ */
+async function verificarResetRemoto() {
+    if (!syncEstaConfigurado()) return false;
+
+    let marcador = null;
+    try {
+        const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-reset.json`, { cache: 'no-store' });
+        if (resposta.status === 404) return false; // nunca houve reset — segue o fluxo normal
+        if (!resposta.ok) return false;
+        marcador = await resposta.json();
+    } catch (err) {
+        console.error('Falha ao checar marcador de reset na nuvem (seguindo normalmente):', err);
+        return false;
+    }
+
+    if (!marcador || !marcador.resetadoEm) return false;
+
+    let ackLocal = 0;
+    try { ackLocal = parseInt(localStorage.getItem('aurora_reset_visto_em') || '0', 10); } catch (e) { /* ignora */ }
+    if (marcador.resetadoEm <= ackLocal) return false; // este aparelho já está ciente deste reset (ou de um mais novo)
+
+    // Reset detectado — mesma limpeza completa do botão "Resetar Site".
+    try { await db.media.clear(); await db.configuracoes.clear(); } catch (e) { console.error('Falha ao limpar IndexedDB durante reset remoto:', e); }
+    try { localStorage.clear(); } catch (e) { /* ignora */ }
+    try { sessionStorage.clear(); } catch (e) { /* ignora */ }
+    try {
+        if (window.caches && caches.keys) {
+            const nomes = await caches.keys();
+            await Promise.all(nomes.map(nome => caches.delete(nome)));
+        }
+    } catch (e) { /* ignora */ }
+
+    // Registra que este aparelho já está ciente deste reset específico,
+    // para não ficar recarregando a página em loop nas próximas aberturas.
+    try { localStorage.setItem('aurora_reset_visto_em', String(marcador.resetadoEm)); } catch (e) { /* ignora */ }
+
+    return true;
+}
+
+/* ----------------------------------------------------------------------
  * SINCRONIZAÇÃO AUTOMÁTICA (link único, sem "?c=")
  * ----------------------------------------------------------------------
  * Diferente do fluxo antigo (que só sincronizava quando alguém tocava em
@@ -256,6 +331,18 @@ function agendarEnvioNuvem(imediato = false) {
  * aparelho tem mudanças que a nuvem ainda não tem).
  */
 async function sincronizarNaAbertura() {
+    if (syncEstaConfigurado()) {
+        try {
+            const foiResetadoRemotamente = await verificarResetRemoto();
+            if (foiResetadoRemotamente) {
+                location.reload();
+                return; // location.reload() é assíncrono — não deixa nada mais rodar neste ciclo
+            }
+        } catch (err) {
+            console.error('Falha ao checar reset remoto (seguindo com o carregamento normal):', err);
+        }
+    }
+
     // Compatibilidade com links antigos que ainda usem "?c=codigo".
     await verificarImportacaoPorLink();
 

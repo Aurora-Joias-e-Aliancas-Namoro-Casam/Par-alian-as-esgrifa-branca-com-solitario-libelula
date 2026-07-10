@@ -110,6 +110,14 @@ function getSupportedMimeType() {
     return '';
 }
 
+/** Detecta iOS (iPhone/iPad/iPod) — inclui o caso do iPadOS moderno, que se disfarça de "Macintosh" mas tem tela de toque. */
+function ehIOS() {
+    const ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    // iPadOS 13+ reporta como "Macintosh", só diferenciável pelo suporte a toque.
+    return ua.includes('Macintosh') && navigator.maxTouchPoints > 1;
+}
+
 function getSupportedMimeTypeParaModo(modo) {
     if (modo === 'video') return getSupportedMimeType();
     const tiposAudio = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
@@ -135,6 +143,18 @@ const OPCOES_GRAVACAO_AUDIO = { audioBitsPerSecond: 96_000 };
 /** Monta as opções do MediaRecorder já com mimeType + bitrate adequado ao modo ('video' ou 'audio'). */
 function montarOpcoesMediaRecorder(modo) {
     const mimeType = getSupportedMimeTypeParaModo(modo);
+
+    // CORREÇÃO (bug relatado: vídeo do pedido não salvava no iPhone): o
+    // WebKit do iOS (Safari e também o Chrome no iPhone, que usa o mesmo
+    // motor por exigência da Apple) tem bugs conhecidos onde informar
+    // videoBitsPerSecond/audioBitsPerSecond — mesmo dentro de valores
+    // razoáveis — faz o MediaRecorder gravar um arquivo vazio ou
+    // corrompido, SEM lançar nenhum erro visível no JavaScript. Como essa
+    // otimização de tamanho não é confiável nesse ambiente, no iOS usamos
+    // só o mimeType (o vídeo pode ficar um pouco maior, mas grava de
+    // verdade — o que importa muito mais aqui).
+    if (ehIOS()) return mimeType ? { mimeType } : {};
+
     const bitrate = modo === 'video' ? OPCOES_GRAVACAO_VIDEO : OPCOES_GRAVACAO_AUDIO;
     return mimeType ? { mimeType, ...bitrate } : { ...bitrate };
 }

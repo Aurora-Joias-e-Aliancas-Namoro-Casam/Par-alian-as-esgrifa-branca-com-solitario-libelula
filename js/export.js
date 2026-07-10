@@ -125,9 +125,12 @@ function capturarFotoPolaroid() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    // Espelha horizontalmente: câmera frontal "crua" sai invertida em relação ao que a pessoa vê na tela.
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    // CORREÇÃO: a câmera frontal já entrega o frame "verdadeiro" (não
+    // espelhado) — quem espelha é a TELA (CSS, ver #polaroidCameraVideo em
+    // style.css), só pra ficar confortável de enquadrar o rosto, tipo
+    // espelho de banheiro. A versão SALVA precisa ser a verdadeira, sem
+    // espelhar de novo — inverter aqui em cima do que já parecia invertido
+    // na tela é o que estava deixando a foto final ao contrário.
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     polaroidFotoCapturadaDataUrl = canvas.toDataURL('image/png');
 
@@ -312,6 +315,49 @@ async function gerarBackupZipBlob() {
     return await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
 }
 
+/* ----------------------------------------------------------------------
+   LEMBRETE DE BACKUP MANUAL
+   ----------------------------------------------------------------------
+   A sincronização automática com a nuvem é ótima, mas é uma dependência
+   de terceiro — vale ter, de vez em quando, uma cópia baixada de
+   verdade, fora de qualquer serviço. Este lembrete aparece só na página
+   final (depois que tudo já aconteceu), e só quando faz tempo que
+   ninguém baixa um backup — nunca no meio da experiência, e nunca toda
+   vez que a página abre (respeita "lembrar depois" por um tempo).
+   ---------------------------------------------------------------------- */
+const LEMBRETE_BACKUP_INTERVALO_DIAS = 14;
+
+async function verificarLembreteBackup() {
+    try {
+        const estagio = await obterConfiguracao('aurora_stage');
+        if (estagio !== 'final') return; // só faz sentido lembrar depois que tudo já aconteceu
+
+        const intervaloMs = LEMBRETE_BACKUP_INTERVALO_DIAS * 24 * 60 * 60 * 1000;
+        const agora = Date.now();
+
+        const ultimoBackup = parseInt(await obterConfiguracao('aurora_ultimo_backup_manual'), 10) || 0;
+        const adiadoEm = parseInt(await obterConfiguracao('aurora_lembrete_backup_adiado_em'), 10) || 0;
+
+        const semBackupHaMuitoTempo = (agora - ultimoBackup) > intervaloMs;
+        const naoFoiAdiadoRecentemente = (agora - adiadoEm) > intervaloMs;
+
+        if (semBackupHaMuitoTempo && naoFoiAdiadoRecentemente) {
+            const banner = document.getElementById('lembreteBackup');
+            if (banner) banner.classList.remove('d-none');
+        }
+    } catch (e) { console.error('Falha ao checar lembrete de backup', e); }
+}
+
+function esconderLembreteBackup() {
+    const banner = document.getElementById('lembreteBackup');
+    if (banner) banner.classList.add('d-none');
+}
+
+async function adiarLembreteBackup() {
+    await salvarConfiguracao('aurora_lembrete_backup_adiado_em', String(Date.now()));
+    esconderLembreteBackup();
+}
+
 async function baixarBackupCompleto() {
     const botao = document.getElementById('btnBackup');
     const textoOriginal = botao.innerHTML;
@@ -328,6 +374,12 @@ async function baixarBackupCompleto() {
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+        // Registra quando o último backup manual foi feito — usado pelo
+        // lembrete de backup (ver verificarLembreteBackup) pra não incomodar
+        // toda vez, só quando já faz tempo que ninguém baixa uma cópia.
+        await salvarConfiguracao('aurora_ultimo_backup_manual', String(Date.now()));
+        esconderLembreteBackup();
     } catch (err) {
         console.error('Falha ao gerar backup completo', err);
         alert('Não foi possível gerar o backup agora. Tente novamente.');
@@ -505,16 +557,75 @@ function iniciarModuloExport() {
         evt.target.value = '';
     });
 
+    document.getElementById('btnLembreteBackupAgora').addEventListener('click', baixarBackupCompleto);
+    document.getElementById('btnLembreteBackupDepois').addEventListener('click', adiarLembreteBackup);
+    verificarLembreteBackup();
+
+    /**
+     * SENHA DO RESET (proteção contra toque acidental — ver SENHA_RESET_SITE
+     * em js/config.js). Diferente do gate de memórias, este NUNCA fica
+     * "lembrado" — pede a senha toda vez que o botão é tocado, porque é
+     * uma ação destrutiva e rara.
+     */
+    function solicitarSenhaReset() {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('senhaResetOverlay');
+            const input = document.getElementById('senhaResetInput');
+            const erro = document.getElementById('senhaResetErro');
+            if (!overlay || !input) { resolve(false); return; }
+
+            overlay.classList.remove('d-none');
+            erro.classList.add('d-none');
+            input.value = '';
+            setTimeout(() => input.focus(), 300);
+
+            function fechar(resultado) {
+                overlay.classList.add('d-none');
+                document.getElementById('btnSenhaResetEntrar').onclick = null;
+                document.getElementById('btnSenhaResetCancelar').onclick = null;
+                input.onkeydown = null;
+                resolve(resultado);
+            }
+
+            function tentarConfirmar() {
+                const senhaDigitada = (input.value || '').trim();
+                if (senhaDigitada === SENHA_RESET_SITE) {
+                    fechar(true);
+                } else {
+                    erro.classList.remove('d-none');
+                    input.value = '';
+                    input.focus();
+                    overlay.querySelector('.senha-memorias-box').classList.remove('senha-shake');
+                    void overlay.offsetWidth; // força reflow para reiniciar a animação de "errado"
+                    overlay.querySelector('.senha-memorias-box').classList.add('senha-shake');
+                }
+            }
+
+            document.getElementById('btnSenhaResetEntrar').onclick = tentarConfirmar;
+            document.getElementById('btnSenhaResetCancelar').onclick = () => fechar(false);
+            input.onkeydown = (evt) => { if (evt.key === 'Enter') tentarConfirmar(); };
+        });
+    }
+
     document.getElementById('btnResetar').addEventListener('click', async () => {
-        if (!confirm('Isso vai apagar TUDO o que foi salvo — neste aparelho e na nuvem: vídeo, assinatura, mensagens, fotos, polaroid e progresso. Essa ação não pode ser desfeita. Continuar?')) return;
+        const senhaOk = await solicitarSenhaReset();
+        if (!senhaOk) return;
+
+        if (!confirm('Isso vai apagar TUDO o que foi salvo — neste aparelho e no outro (vídeo, assinatura, mensagens, fotos, polaroid e progresso). Essa ação não pode ser desfeita. Continuar?')) return;
 
         const botao = document.getElementById('btnResetar');
         if (botao) { botao.disabled = true; botao.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetando...'; }
 
-        // 1) Nuvem (fonte oficial entre aparelhos) — precisa ser apagada
-        //    primeiro, senão o próximo dispositivo a abrir o link puxaria de
-        //    volta os dados que acabamos de apagar localmente.
+        // 1) Nuvem (fonte oficial entre aparelhos) — apaga o backup E deixa
+        //    um "marcador de reset" (ver publicarMarcadorDeReset em
+        //    js/sync.js). Sem esse marcador, o OUTRO aparelho — que ainda
+        //    tem os dados antigos guardados localmente — acabaria
+        //    reenviando esses dados de volta pra nuvem na próxima vez que
+        //    fosse aberto, "ressuscitando" tudo que acabamos de apagar
+        //    aqui. O marcador avisa qualquer aparelho que abrir o link
+        //    depois que ele também precisa se limpar.
         try { await apagarBackupDaNuvem(); } catch (e) { console.error('Falha ao apagar backup na nuvem', e); }
+        try { await publicarMarcadorDeReset(); } catch (e) { console.error('Falha ao publicar marcador de reset na nuvem', e); }
 
         // 2) IndexedDB (mídias + configurações)
         try { await db.media.clear(); await db.configuracoes.clear(); } catch (e) { console.error('Falha ao limpar IndexedDB', e); }

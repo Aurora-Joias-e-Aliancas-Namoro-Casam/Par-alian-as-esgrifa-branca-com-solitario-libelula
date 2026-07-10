@@ -481,10 +481,10 @@ img { max-width: 100%; }
    Discretos, atrás do conteúdo (z-index baixo) e sem capturar toque.
    ============================================================================ */
 .girassois-decoracao { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-.girassol { position: absolute; opacity: 0.16; filter: blur(0.3px); animation: girassolBalanco 9s ease-in-out infinite; }
-.girassol-1 { width: 140px; height: 140px; top: -30px; left: -30px; animation-delay: 0s; }
-.girassol-2 { width: 110px; height: 110px; bottom: 40px; right: -25px; animation-delay: 2.4s; }
-.girassol-3 { width: 90px; height: 90px; bottom: -20px; left: 20px; opacity: 0.1; animation-delay: 4.8s; }
+.girassol { position: absolute; opacity: 0.38; filter: blur(0.2px) drop-shadow(0 4px 10px rgba(0,0,0,0.25)); animation: girassolBalanco 9s ease-in-out infinite; }
+.girassol-1 { width: 150px; height: 150px; top: -25px; left: -35px; animation-delay: 0s; }
+.girassol-2 { width: 120px; height: 120px; bottom: 50px; right: -30px; animation-delay: 2.4s; }
+.girassol-3 { width: 95px; height: 95px; bottom: -15px; left: 15px; opacity: 0.26; animation-delay: 4.8s; }
 @keyframes girassolBalanco { 0%, 100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-6px); } }
 .romance-page > *:not(.girassois-decoracao) { position: relative; z-index: 1; }
 
@@ -509,6 +509,9 @@ img { max-width: 100%; }
 .polaroid-camera-titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; color: #f0d9dd; margin-bottom: 14px; }
 .polaroid-camera-close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.6rem; line-height: 1; cursor: pointer; }
 #polaroidCameraVideo, #polaroidCameraFotoCapturada { width: 100%; border-radius: 10px; background: #000; max-height: 60vh; object-fit: cover; }
+/* Espelha só a PRÉVIA ao vivo (conforto de enquadrar, tipo espelho) — a
+   foto capturada usa o frame verdadeiro, sem espelhar (ver capturarFotoPolaroid em js/export.js). */
+#polaroidCameraVideo { transform: scaleX(-1); }
 .polaroid-legenda-input { width: 100%; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: #fff; font-size: 0.9rem; text-align: center; }
 .polaroid-legenda-input::placeholder { color: rgba(255,255,255,0.4); }
 
@@ -545,6 +548,23 @@ html.galeria-html { background-color: #1c1014; }
 .galeria-item.visivel { opacity: 1; transform: translateY(0) rotate(var(--tilt, 0deg)); }
 .galeria-item:hover { transform: translateY(-4px) rotate(0deg) scale(1.03); z-index: 2; }
 .galeria-item img { width: 100%; display: block; border-radius: 2px; }
+.galeria-item video { width: 100%; display: block; border-radius: 2px; background: #000; aspect-ratio: 3 / 4; object-fit: cover; }
+.galeria-item-video { position: relative; }
+.galeria-video-play {
+    position: absolute;
+    top: 10px; left: 10px; right: 10px; bottom: 30px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+}
+.galeria-video-play i {
+    font-size: 2.2rem;
+    color: #fff;
+    background: rgba(0,0,0,0.45);
+    border-radius: 50%;
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    padding-left: 4px; /* centraliza visualmente o ícone de "play", que é levemente assimétrico */
+}
 .galeria-item .galeria-legenda { font-family: 'Courier New', Courier, monospace; font-size: 0.75rem; color: #444; text-align: center; margin-top: 8px; }
 .galeria-item:nth-child(3n) { --tilt: -2.2deg; }
 .galeria-item:nth-child(3n+1) { --tilt: 1.6deg; }
@@ -556,6 +576,10 @@ html.galeria-html { background-color: #1c1014; }
 .galeria-lightbox { position: fixed; inset: 0; z-index: 5000; background: rgba(10,6,8,0.94); display: none; align-items: center; justify-content: center; padding: 24px; }
 .galeria-lightbox.aberto { display: flex; animation: fadeUp 0.25s ease; }
 .galeria-lightbox img { max-width: 100%; max-height: 82vh; border-radius: 6px; box-shadow: 0 24px 60px rgba(0,0,0,0.6); background: #fff; padding: 10px 10px 26px; }
+.galeria-lightbox video { max-width: 100%; max-height: 82vh; border-radius: 6px; box-shadow: 0 24px 60px rgba(0,0,0,0.6); background: #000; }
+.galeria-youtube-wrap { position: relative; width: min(92vw, 640px); aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.6); background: #000; }
+.galeria-youtube-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.galeria-video-play-youtube i { background: rgba(0,0,0,0.55); color: #FF0000; }
 .galeria-lightbox .galeria-legenda { font-family: 'Courier New', Courier, monospace; font-size: 0.8rem; color: #444; text-align: center; margin-top: -20px; }
 .galeria-lightbox-close { position: absolute; top: 18px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 2rem; line-height: 1; cursor: pointer; }
 
@@ -582,3 +606,53 @@ html.galeria-html { background-color: #1c1014; }
     font-family: 'Cormorant Garamond', Georgia, serif;
     box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
+
+/* ============================================================================
+   MODO VISUALIZAÇÃO DA LOJINHA ("rever sem afetar o banco")
+   ============================================================================ */
+.modo-visualizacao-barra {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 4500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: #2a1620;
+    color: #f6d9c9;
+    font-size: 0.82rem;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.3);
+}
+
+/* ============================================================================
+   LEMBRETE DE BACKUP MANUAL
+   ============================================================================ */
+.lembrete-backup-card {
+    max-width: 420px;
+    margin: 20px auto 0;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(212, 175, 145, 0.12);
+    border: 1px solid rgba(212, 175, 145, 0.35);
+    color: #f0d9dd;
+    font-size: 0.85rem;
+    text-align: center;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* ============================================================================
+   VINHETA EM "MODO RETORNO" (pós-pedido: "Para meu amor" em vez de "AURORA JOIAS")
+   ============================================================================ */
+.vinheta-modo-retorno .vinheta-logo {
+    font-size: 1.9rem;
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 0 30px;
+    max-width: 320px;
+}
+.vinheta-modo-retorno .vinheta-sub { display: none; }

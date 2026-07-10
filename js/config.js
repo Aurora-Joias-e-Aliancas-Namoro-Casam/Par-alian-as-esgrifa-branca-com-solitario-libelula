@@ -130,45 +130,117 @@ function getAsset(id) {
    GALERIA DE LEMBRANÇAS (página própria — galeria.html)
    ----------------------------------------------------------------------
    Padrão de nomenclatura (documentado aqui desde o início do projeto,
-   como pedido): salve as fotos dentro de assets/img/galeria/ sempre com
-   o nome:
+   como pedido): salve as fotos E VÍDEOS dentro de assets/img/galeria/
+   sempre com o nome:
 
        galeria_1.jpg
        galeria_2.jpg
-       galeria_3.jpg
+       galeria_3.mp4      <- um vídeo local, nesse exemplo
        galeria_4.jpg
        ...
 
    Sem limite de quantidade — a galeria foi feita para crescer com o
-   passar dos anos. Para adicionar novas fotos:
+   passar dos anos. Para adicionar um novo item:
      1. Salve o arquivo em assets/img/galeria/ com o próximo número da
-        sequência (ex.: se a última foi galeria_37.jpg, a próxima é
-        galeria_38.jpg). Aceita .jpg, .jpeg, .png e .webp.
-     2. Atualize apenas o número abaixo, em TOTAL_FOTOS_GALERIA, para o
-        total de fotos que agora existem.
-     3. Pronto — nenhum outro arquivo do projeto precisa ser tocado.
+        sequência (ex.: se o último foi galeria_37, o próximo é
+        galeria_38). Fotos aceitam .jpg, .jpeg, .png e .webp; vídeos
+        locais aceitam .mp4, .mov e .webm.
+     2. Se for um VÍDEO LOCAL, adicione uma entrada em TIPO_GALERIA
+        (abaixo) com esse mesmo número — é isso que diz pro site montar
+        um player de vídeo ali em vez de uma foto.
+     3. Se a extensão do arquivo não for a padrão do tipo (.jpg para
+        foto, .mp4 para vídeo), informe em EXTENSAO_GALERIA.
+     4. Atualize apenas o número em TOTAL_FOTOS_GALERIA, para o total de
+        itens que agora existem.
+     5. Pronto — nenhum outro arquivo do projeto precisa ser tocado.
 
-   Legendas são opcionais: para dar uma frase a uma foto específica,
-   adicione uma entrada em GALERIA_LEGENDAS usando o mesmo número.
+   VÍDEOS DO YOUTUBE (sem precisar do arquivo — ótimo pra vídeos grandes):
+   em vez dos passos 1 e 3 acima, marque o número em TIPO_GALERIA como
+   'youtube' e cole o link (ou só o ID) do vídeo em YOUTUBE_GALERIA, com
+   esse mesmo número. Nenhum arquivo precisa existir em
+   assets/img/galeria/ para esse número — o vídeo roda direto do
+   YouTube, dentro do site (não abre o app/site do YouTube).
+
+       TIPO_GALERIA = { 6: 'youtube' }
+       YOUTUBE_GALERIA = { 6: 'https://www.youtube.com/watch?v=XXXXXXXXXXX' }
+
+   (Pode colar o link como veio do "Compartilhar" do YouTube, do celular
+   ou do navegador — inclusive links curtos youtu.be e Shorts. Também
+   aceita só o código do vídeo, se preferir.)
+
+   Legendas são opcionais (funcionam igual para foto, vídeo local ou
+   vídeo do YouTube): para dar uma frase a um item específico, adicione
+   uma entrada em GALERIA_LEGENDAS usando o mesmo número.
    ---------------------------------------------------------------------- */
-const TOTAL_FOTOS_GALERIA = 0; // <- comece em 0; suba este número só depois de colocar as fotos reais na pasta (ver acima)
+const TOTAL_FOTOS_GALERIA = 0; // <- comece em 0; suba este número só depois de colocar os itens reais (ver acima)
 
 const GALERIA_LEGENDAS = {
     // 1: 'O dia do atoleiro — rimos até doer a barriga.',
     // 2: 'Colina, 30/05. O começo de tudo.',
 };
 
+/* Marque aqui o número de qualquer item que NÃO seja uma foto comum:
+   'video' para um vídeo local (arquivo em assets/img/galeria/), ou
+   'youtube' para um vídeo do YouTube (ver YOUTUBE_GALERIA abaixo — não
+   precisa de arquivo nenhum nesse caso). Qualquer número que não estiver
+   listado aqui é tratado como foto normalmente. */
+const TIPO_GALERIA = {
+    // 3: 'video',
+    // 6: 'youtube',
+};
+
+/* Link (ou só o ID) do vídeo do YouTube, para cada número marcado como
+   'youtube' em TIPO_GALERIA acima. */
+const YOUTUBE_GALERIA = {
+    // 6: 'https://www.youtube.com/watch?v=XXXXXXXXXXX',
+};
+
 const PASTA_GALERIA = 'assets/img/galeria';
 
-/** Caminho do arquivo de uma foto da galeria pelo número (ver padrão acima). */
-function getAssetGaleria(numero) {
-    return `${PASTA_GALERIA}/galeria_${numero}.${EXTENSAO_GALERIA[numero] || 'jpg'}`;
+const EXTENSAO_GALERIA = {
+    // Se algum item específico não usar a extensão padrão do seu tipo
+    // (.jpg para foto, .mp4 para vídeo), informe a extensão real aqui.
+    // Exemplo: 5: 'png',   Exemplo: 3: 'mov',
+};
+
+/** true se o item da galeria com esse número for um vídeo LOCAL (ver TIPO_GALERIA acima). */
+function ehVideoGaleria(numero) {
+    return (typeof TIPO_GALERIA === 'object' && TIPO_GALERIA[numero] === 'video');
 }
 
-const EXTENSAO_GALERIA = {
-    // Se alguma foto específica não for .jpg, informe a extensão real aqui.
-    // Exemplo: 5: 'png',
-};
+/** true se o item da galeria com esse número for um vídeo do YOUTUBE (ver TIPO_GALERIA acima). */
+function ehYoutubeGaleria(numero) {
+    return (typeof TIPO_GALERIA === 'object' && TIPO_GALERIA[numero] === 'youtube');
+}
+
+/**
+ * Extrai só o ID do vídeo de qualquer formato de link que o YouTube
+ * costuma gerar (watch?v=, youtu.be/, shorts/, embed/) — ou devolve o
+ * próprio valor se já for só o ID (assim a pessoa pode colar o link
+ * inteiro sem se preocupar em "limpar" ele antes).
+ */
+function extrairIdYoutube(valor) {
+    if (!valor) return '';
+    const texto = String(valor).trim();
+    const padroes = [
+        /youtu\.be\/([a-zA-Z0-9_-]{6,20})/,
+        /[?&]v=([a-zA-Z0-9_-]{6,20})/,
+        /youtube\.com\/shorts\/([a-zA-Z0-9_-]{6,20})/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]{6,20})/
+    ];
+    for (const padrao of padroes) {
+        const m = texto.match(padrao);
+        if (m) return m[1];
+    }
+    return texto; // já era só o ID (ou algo não reconhecido — usa como veio)
+}
+
+/** Caminho do arquivo de um item da galeria pelo número (só se aplica a foto/vídeo local — ver padrão acima). */
+function getAssetGaleria(numero) {
+    const extensaoPadrao = ehVideoGaleria(numero) ? 'mp4' : 'jpg';
+    const extensao = (typeof EXTENSAO_GALERIA === 'object' && EXTENSAO_GALERIA[numero]) ? EXTENSAO_GALERIA[numero] : extensaoPadrao;
+    return `${PASTA_GALERIA}/galeria_${numero}.${extensao}`;
+}
 
 /* ----------------------------------------------------------------------
    NOSSA HISTÓRIA — LINHA DO TEMPO
@@ -399,6 +471,21 @@ const COISAS_QUE_ELA_AMA = [
    em js/romance.js e o fluxo em js/main.js).
    ---------------------------------------------------------------------- */
 const SENHA_AREA_MEMORIAS = '1406';
+
+/* ----------------------------------------------------------------------
+   SENHA DO BOTÃO "RESETAR SITE"
+   ----------------------------------------------------------------------
+   Some qualquer indicação visual dessa senha na tela (o campo é do tipo
+   "password", mascarado) — só quem souber o número consegue resetar o
+   site. Nota honesta: como este é um site 100% estático (sem servidor
+   próprio), qualquer pessoa que abrir o código-fonte da página encontra
+   esta constante — não existe "segredo perfeito" possível nesse tipo de
+   projeto (o mesmo já vale para a chave do Supabase, ver js/sync.js).
+   Na prática isso não é um problema aqui: ninguém além de quem já tem
+   este arquivo vai inspecionar o código, e o objetivo real da senha é
+   evitar um toque acidental no botão, não resistir a um ataque.
+   ---------------------------------------------------------------------- */
+const SENHA_RESET_SITE = '13046700';
 
 /* ----------------------------------------------------------------------
    TEXTOS-CHAVE (fáceis de localizar e editar)

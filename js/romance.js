@@ -586,4 +586,40 @@ function iniciarModuloRomance() {
     document.getElementById('btnFecharLembranca').addEventListener('click', fecharLembrancaAmpliada);
     document.getElementById('btnLightboxAnterior').addEventListener('click', lightboxFotoAnterior);
     document.getElementById('btnLightboxProxima').addEventListener('click', lightboxProximaFoto);
+
+    document.getElementById('btnReverLoja').addEventListener('click', abrirLojaSomenteVisualizacao);
+    document.getElementById('btnVoltarDaLoja').addEventListener('click', fecharLojaSomenteVisualizacao);
+}
+
+/* ----------------------------------------------------------------------
+   "REVER A LOJINHA" — só visualização, nunca afeta o que já foi gravado
+   ----------------------------------------------------------------------
+   Depois que tudo já aconteceu, a pessoa pode querer rever a "lojinha
+   falsa" das alianças (o disfarce inicial do site) só por nostalgia. Isso
+   NÃO deve, de jeito nenhum, poder reiniciar o pedido — por isso o botão
+   "Confirmar Pagamento" da loja fica escondido enquanto estiver em modo
+   visualização, e nada aqui grava nada no banco.
+   ---------------------------------------------------------------------- */
+function abrirLojaSomenteVisualizacao() {
+    document.getElementById('romancePage').style.display = 'none';
+    const loja = document.getElementById('lojaScreen');
+    loja.style.display = '';
+    definirFundoBody(CORES_FUNDO.claro);
+
+    const botaoConfirmar = document.getElementById('btnConfirmarPedido');
+    if (botaoConfirmar) botaoConfirmar.classList.add('d-none'); // impede reiniciar o pedido sem querer
+
+    document.getElementById('modoVisualizacaoBarra').classList.remove('d-none');
+    window.scrollTo(0, 0);
+}
+
+function fecharLojaSomenteVisualizacao() {
+    document.getElementById('lojaScreen').style.display = 'none';
+    const botaoConfirmar = document.getElementById('btnConfirmarPedido');
+    if (botaoConfirmar) botaoConfirmar.classList.remove('d-none');
+
+    document.getElementById('modoVisualizacaoBarra').classList.add('d-none');
+    document.getElementById('romancePage').style.display = '';
+    definirFundoBody(CORES_FUNDO.escuro);
+    window.scrollTo(0, 0);
 }

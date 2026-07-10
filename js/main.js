@@ -76,4 +76,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     verificarOrientacao();
+    esconderVinhetaCarregamento(); // esconde a tela "Para meu amor" (se estava em modo carregamento pós-pedido) agora que já sabemos o que mostrar
 });

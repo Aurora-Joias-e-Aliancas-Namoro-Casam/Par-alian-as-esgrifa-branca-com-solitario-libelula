@@ -14,10 +14,17 @@ function iniciarVinheta() {
     const tela = document.getElementById('vinhetaAbertura');
     if (!tela) return;
 
+    // Se o pedido já aconteceu, o texto já foi trocado por um script embutido
+    // no <head>/HTML (roda antes de qualquer script externo, pra "AURORA
+    // JOIAS" nunca aparecer nem por um instante — ver index.html). Aqui só
+    // deixamos a tela como está, visível; quem esconde é
+    // esconderVinhetaCarregamento(), chamada em js/main.js assim que a
+    // decisão do que mostrar for tomada (pode levar alguns segundos, por
+    // causa da sincronização com a nuvem).
+    if (tela.classList.contains('vinheta-modo-retorno')) return;
+
     const jaExibida = sessionStorage.getItem('aurora_vinheta_exibida');
-    const retomandoNoFinal = localStorage.getItem('aurora_stage') === 'final';
-    const retomandoEmAndamento = Boolean(localStorage.getItem('aurora_data_pedido'));
-    if (jaExibida || retomandoNoFinal || retomandoEmAndamento) { tela.style.display = 'none'; return; }
+    if (jaExibida) { tela.style.display = 'none'; return; }
     sessionStorage.setItem('aurora_vinheta_exibida', '1');
 
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -29,6 +36,19 @@ function iniciarVinheta() {
         tela.classList.add('vinheta-saida');
         setTimeout(() => { tela.style.display = 'none'; }, 750);
     }, 2400);
+}
+
+/**
+ * Esconde a tela de carregamento pós-pedido ("Para meu amor") assim que o
+ * site já sabe o que vai mostrar. Não faz nada se a vinheta não estiver
+ * nesse modo (ex.: primeiro acesso, onde ela já se esconde sozinha com um
+ * timer fixo) — chamada sempre em js/main.js, incondicionalmente.
+ */
+function esconderVinhetaCarregamento() {
+    const tela = document.getElementById('vinhetaAbertura');
+    if (!tela || !tela.classList.contains('vinheta-modo-retorno')) return;
+    tela.classList.add('vinheta-saida');
+    setTimeout(() => { tela.style.display = 'none'; }, 750);
 }
 
 /* ---------------- Cupom falso (detalhe de imersão) ---------------- */
