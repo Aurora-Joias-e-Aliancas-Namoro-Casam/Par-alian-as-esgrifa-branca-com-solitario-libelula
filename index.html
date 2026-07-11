@@ -96,7 +96,7 @@
 
         <nav class="navbar navbar-light bg-white shadow-sm px-3 sticky-top d-flex justify-content-between align-items-center">
             <i class="bi bi-list fs-2 text-rosegold placeholder-link"></i>
-            <span class="navbar-brand mb-0 h1 text-rosegold fw-bold tracking-wide mx-auto">AURORA</span>
+            <span class="navbar-brand mb-0 h1 text-rosegold fw-bold tracking-wide mx-auto js-marca-loja">AURORA</span>
             <div class="d-flex gap-3">
                 <i class="bi bi-search fs-4 text-rosegold placeholder-link"></i>
                 <i class="bi bi-bag fs-4 text-rosegold placeholder-link position-relative">
@@ -240,15 +240,10 @@
 
             <div class="px-2 mt-5">
                 <div class="about-section position-relative">
-                    <svg class="loja-girassol-discreto" viewBox="0 0 100 100" aria-hidden="true"><g><circle cx="50" cy="50" r="14" fill="#7a5b1e"/><g fill="#F4C430">
-                        <ellipse cx="50" cy="18" rx="9" ry="16"/><ellipse cx="50" cy="82" rx="9" ry="16"/>
-                        <ellipse cx="18" cy="50" rx="16" ry="9"/><ellipse cx="82" cy="50" rx="16" ry="9"/>
-                        <ellipse cx="27" cy="27" rx="9" ry="16" transform="rotate(45 27 27)"/><ellipse cx="73" cy="73" rx="9" ry="16" transform="rotate(45 73 73)"/>
-                        <ellipse cx="73" cy="27" rx="9" ry="16" transform="rotate(-45 73 27)"/><ellipse cx="27" cy="73" rx="9" ry="16" transform="rotate(-45 27 73)"/>
-                    </g></g></svg>
+                    <svg class="loja-girassol-discreto" viewBox="0 0 200 200" aria-hidden="true"><use href="#girassolIlustracao"></use></svg>
                     <p class="about-eyebrow">Nossa história</p>
                     <h4>Feita à mão, pensada para durar</h4>
-                    <p>Desde 2009, a Aurora Joias trabalha com prata 950 e design autoral, unindo tradição joalheira e acabamento artesanal em cada peça. Cada aliança carrega um pouco desse cuidado — e a intenção de acompanhar histórias importantes por muitos anos.</p>
+                    <p>Desde 2009, a <span class="js-marca-loja">Aurora Joias</span> trabalha com prata 950 e design autoral, unindo tradição joalheira e acabamento artesanal em cada peça. Cada aliança carrega um pouco desse cuidado — e a intenção de acompanhar histórias importantes por muitos anos.</p>
                     <div class="about-badges">
                         <div class="about-badge"><i class="bi bi-gem"></i><span>Design autoral</span></div>
                         <div class="about-badge"><i class="bi bi-award"></i><span>Garantia vitalícia</span></div>
@@ -265,7 +260,7 @@
                     <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoColar" class="card-img-top related-img" alt="Colar Libélula Prata 950"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Colar Libélula Prata 950</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 259,00</p></div></div></div>
                     <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoBrinco" class="card-img-top related-img" alt="Brincos Flor Rosa Prata 950"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Brincos Flor Rosa Prata 950</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 189,00</p></div></div></div>
                     <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoPulseira" class="card-img-top related-img" alt="Pulseira Esgrifa Prata 950"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Pulseira Esgrifa Prata 950</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 219,00</p></div></div></div>
-                    <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoEstojo" class="card-img-top related-img" alt="Estojo Presenteável Aurora"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Estojo Presenteável Aurora</p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 59,00</p></div></div></div>
+                    <div class="col"><div class="card h-100 border-0 shadow-sm placeholder-link" style="cursor: pointer;"><img id="relacionadoEstojo" class="card-img-top related-img" alt="Estojo Presenteável Aurora"><div class="card-body p-2 text-center"><p class="card-title small fw-bold mb-0 text-truncate">Estojo Presenteável <span class="js-marca-loja">Aurora</span></p><p class="text-rosegold fw-bold small mt-1 mb-0">R$ 59,00</p></div></div></div>
                 </div>
             </div>
 
@@ -294,14 +289,14 @@
         </div>
 
         <footer class="bg-light pt-4 pb-5 border-top text-center" style="margin-bottom: 70px;">
-            <h5 class="text-rosegold fw-bold tracking-wide mb-3">AURORA JOIAS</h5>
+            <h5 class="text-rosegold fw-bold tracking-wide mb-3 js-marca-loja">AURORA JOIAS</h5>
             <div class="d-flex justify-content-center gap-4 mb-3">
                 <i class="bi bi-instagram fs-4 text-muted placeholder-link"></i>
                 <i class="bi bi-whatsapp fs-4 text-muted placeholder-link"></i>
                 <i class="bi bi-envelope fs-4 text-muted placeholder-link"></i>
             </div>
             <div class="small text-muted mb-2 placeholder-link">Política de Trocas | Termos de Serviço | Rastreio</div>
-            <p class="small text-muted" style="font-size: 0.7rem;">Aurora Joias Exclusivas S.A. | CNPJ: 14.063.005/0001-40<br>Rua Fictícia, 123 - Centro, São Paulo - SP<br>© 2026 Todos os direitos reservados.</p>
+            <p class="small text-muted" style="font-size: 0.7rem;"><span class="js-marca-loja">Aurora Joias Exclusivas S.A.</span> | CNPJ: 14.063.005/0001-40<br>Rua Fictícia, 123 - Centro, São Paulo - SP<br>© 2026 Todos os direitos reservados.</p>
         </footer>
 
         <div class="fixed-bottom bg-white p-3 shadow-lg border-top">
@@ -705,6 +700,28 @@
             <div class="text-center mt-3">
                 <button id="btnAdicionarLembranca" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-plus-lg me-1"></i>Adicionar lembrança</button>
                 <input type="file" id="inputLembrancas" accept="image/*" multiple class="d-none">
+            </div>
+        </div>
+
+        <div id="romanceVideoYoutubeWrap" class="mt-5 reveal-up" style="max-width: 460px; margin: 0 auto;">
+            <p class="romance-section-title">O vídeo do nosso pedido</p>
+
+            <div id="romanceVideoYoutubeVazio">
+                <p class="text-center text-white-50 small mb-3" style="max-width: 360px; margin: 0 auto;">Cole aqui o link do vídeo do pedido no YouTube (fica embutido aqui no site, sem ocupar memória do celular).</p>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <input type="text" id="inputVideoYoutubePedido" class="polaroid-legenda-input" placeholder="Link do YouTube" style="max-width: 240px;">
+                    <button id="btnSalvarVideoYoutubePedido" class="btn btn-share btn-sm rounded-pill">Salvar</button>
+                </div>
+                <p id="videoYoutubePedidoStatus" class="save-status"></p>
+            </div>
+
+            <div id="romanceVideoYoutubePreenchido" class="d-none">
+                <div class="galeria-youtube-wrap" style="margin: 0 auto;">
+                    <iframe id="romanceVideoYoutubeIframe" src="" title="Vídeo do nosso pedido" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                <div class="text-center mt-2">
+                    <button id="btnEditarVideoYoutubePedido" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-pencil me-1"></i>Trocar vídeo</button>
+                </div>
             </div>
         </div>
 

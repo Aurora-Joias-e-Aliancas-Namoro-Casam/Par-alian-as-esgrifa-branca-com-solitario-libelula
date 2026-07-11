@@ -285,6 +285,7 @@ async function gerarBackupZipBlob() {
         stage: await obterConfiguracao('aurora_stage'),
         regrasContrato: JSON.parse(await obterConfiguracao('aurora_regras_contrato') || 'null'),
         quizRespostas: JSON.parse(await obterConfiguracao('aurora_quiz_respostas') || 'null'),
+        videoPedidoYoutube: await obterConfiguracao('aurora_video_pedido_youtube'),
         medias: []
     };
 
@@ -408,6 +409,7 @@ async function aplicarBackupDeZip(zipDados) {
     if (manifest.stage) await salvarConfiguracao('aurora_stage', manifest.stage);
     if (manifest.regrasContrato) await salvarConfiguracao('aurora_regras_contrato', JSON.stringify(manifest.regrasContrato));
     if (manifest.quizRespostas) await salvarConfiguracao('aurora_quiz_respostas', JSON.stringify(manifest.quizRespostas));
+    if (manifest.videoPedidoYoutube) await salvarConfiguracao('aurora_video_pedido_youtube', manifest.videoPedidoYoutube);
 
     // Listas (mensagens para o futuro / lembranças): o backup é sempre a
     // "fotografia completa" da experiência naquele instante, então as
@@ -618,31 +620,14 @@ function iniciarModuloExport() {
 
         // 1) Nuvem (fonte oficial entre aparelhos) — apaga o backup E deixa
         //    um "marcador de reset" (ver publicarMarcadorDeReset em
-        //    js/sync.js). Sem esse marcador, o OUTRO aparelho — que ainda
-        //    tem os dados antigos guardados localmente — acabaria
-        //    reenviando esses dados de volta pra nuvem na próxima vez que
-        //    fosse aberto, "ressuscitando" tudo que acabamos de apagar
-        //    aqui. O marcador avisa qualquer aparelho que abrir o link
-        //    depois que ele também precisa se limpar.
+        //    js/sync.js), pra qualquer aparelho que abrir o link depois
+        //    saber que precisa se limpar também (a menos que já tenha
+        //    dados mais novos que este reset — ver sincronizarNaAbertura).
         try { await apagarBackupDaNuvem(); } catch (e) { console.error('Falha ao apagar backup na nuvem', e); }
         try { await publicarMarcadorDeReset(); } catch (e) { console.error('Falha ao publicar marcador de reset na nuvem', e); }
 
-        // 2) IndexedDB (mídias + configurações)
-        try { await db.media.clear(); await db.configuracoes.clear(); } catch (e) { console.error('Falha ao limpar IndexedDB', e); }
-
-        // 3) localStorage / sessionStorage
-        try { localStorage.clear(); } catch (e) { console.error('Falha ao limpar localStorage', e); }
-        try { sessionStorage.clear(); } catch (e) { console.error('Falha ao limpar sessionStorage', e); }
-
-        // 4) Cache do navegador usada pelo projeto (defensivo — este site não
-        //    registra um Service Worker hoje, mas se um dia passar a ter,
-        //    o reset continua limpando tudo corretamente).
-        try {
-            if (window.caches && caches.keys) {
-                const nomes = await caches.keys();
-                await Promise.all(nomes.map(nome => caches.delete(nome)));
-            }
-        } catch (e) { console.error('Falha ao limpar cache', e); }
+        // 2) Armazenamento local (IndexedDB + localStorage + sessionStorage + cache)
+        await limparArmazenamentoLocal();
 
         location.reload();
     });

@@ -571,7 +571,68 @@ function exibirEasterEggSobrenome() {
     if (el) el.textContent = TEXTO_EASTER_EGG_SOBRENOME;
 }
 
+/* ----------------------------------------------------------------------
+   VÍDEO DO PEDIDO NO YOUTUBE (alternativa ao vídeo local, que pode ficar
+   grande demais para o armazenamento do celular) — ver item do prompt.
+   Fica logo abaixo de "Nossas lembranças". Guardado como configuração
+   simples (só o ID do vídeo, texto pequeno) — sincroniza normalmente
+   entre aparelhos como qualquer outra configuração do site.
+   ---------------------------------------------------------------------- */
+async function iniciarVideoYoutubePedido() {
+    const idSalvo = await obterConfiguracao('aurora_video_pedido_youtube');
+    exibirVideoYoutubePedido(idSalvo);
+
+    document.getElementById('btnSalvarVideoYoutubePedido').addEventListener('click', salvarVideoYoutubePedido);
+    document.getElementById('inputVideoYoutubePedido').addEventListener('keydown', (evt) => { if (evt.key === 'Enter') salvarVideoYoutubePedido(); });
+    document.getElementById('btnEditarVideoYoutubePedido').addEventListener('click', () => {
+        document.getElementById('romanceVideoYoutubePreenchido').classList.add('d-none');
+        document.getElementById('romanceVideoYoutubeVazio').classList.remove('d-none');
+        document.getElementById('inputVideoYoutubePedido').value = '';
+    });
+}
+
+async function salvarVideoYoutubePedido() {
+    const input = document.getElementById('inputVideoYoutubePedido');
+    const status = document.getElementById('videoYoutubePedidoStatus');
+    const valor = (input.value || '').trim();
+
+    if (!valor) {
+        status.textContent = 'Cole o link do vídeo primeiro.';
+        status.className = 'save-status err';
+        return;
+    }
+
+    const id = extrairIdYoutube(valor);
+    if (!id) {
+        status.textContent = 'Não consegui reconhecer esse link do YouTube.';
+        status.className = 'save-status err';
+        return;
+    }
+
+    await salvarConfiguracao('aurora_video_pedido_youtube', id);
+    status.textContent = '';
+    status.className = 'save-status';
+    input.value = '';
+    exibirVideoYoutubePedido(id);
+}
+
+function exibirVideoYoutubePedido(id) {
+    const vazio = document.getElementById('romanceVideoYoutubeVazio');
+    const preenchido = document.getElementById('romanceVideoYoutubePreenchido');
+    if (id) {
+        document.getElementById('romanceVideoYoutubeIframe').src = `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+        vazio.classList.add('d-none');
+        preenchido.classList.remove('d-none');
+    } else {
+        document.getElementById('romanceVideoYoutubeIframe').src = '';
+        preenchido.classList.add('d-none');
+        vazio.classList.remove('d-none');
+    }
+}
+
 function iniciarModuloRomance() {
+    iniciarVideoYoutubePedido();
+
     const btnGerarContrato = document.getElementById('btnGerarContrato');
     if (btnGerarContrato) {
         btnGerarContrato.addEventListener('click', async () => {
@@ -609,6 +670,8 @@ function abrirLojaSomenteVisualizacao() {
     const botaoConfirmar = document.getElementById('btnConfirmarPedido');
     if (botaoConfirmar) botaoConfirmar.classList.add('d-none'); // impede reiniciar o pedido sem querer
 
+    trocarNomeLojaParaVisualizacao(true);
+
     document.getElementById('modoVisualizacaoBarra').classList.remove('d-none');
     window.scrollTo(0, 0);
 }
@@ -618,8 +681,43 @@ function fecharLojaSomenteVisualizacao() {
     const botaoConfirmar = document.getElementById('btnConfirmarPedido');
     if (botaoConfirmar) botaoConfirmar.classList.remove('d-none');
 
+    trocarNomeLojaParaVisualizacao(false);
+
     document.getElementById('modoVisualizacaoBarra').classList.add('d-none');
     document.getElementById('romancePage').style.display = '';
     definirFundoBody(CORES_FUNDO.escuro);
     window.scrollTo(0, 0);
+}
+
+/**
+ * Troca o nome "Aurora" por "Poloni" (e variações) só enquanto está no
+ * modo visualização da lojinha — nunca durante a experiência real do
+ * pedido (ali o disfarce "Aurora Joias" precisa continuar intacto). Cada
+ * elemento marcado com a classe "js-marca-loja" guarda o texto original
+ * em data-original na primeira troca, pra sempre voltar exatamente como
+ * era ao fechar — mesmo que o texto tenha maiúsculas, minúsculas, ou
+ * esteja no meio de uma frase maior.
+ */
+function trocarNomeLojaParaVisualizacao(ligar) {
+    document.querySelectorAll('.js-marca-loja').forEach((el) => {
+        if (!el.hasAttribute('data-original')) el.setAttribute('data-original', el.textContent);
+        const original = el.getAttribute('data-original');
+
+        if (ligar) {
+            el.textContent = original
+                .replace(/AURORA JOIAS/g, 'POLONI JOIAS')
+                .replace(/Aurora Joias/g, 'Poloni Joias')
+                .replace(/AURORA/g, 'POLONI')
+                .replace(/Aurora/g, 'Poloni');
+        } else {
+            el.textContent = original;
+        }
+    });
+
+    if (ligar) {
+        if (!window.__aurora_titulo_original) window.__aurora_titulo_original = document.title;
+        document.title = document.title.replace(/Aurora Joias/i, 'Poloni Joias');
+    } else if (window.__aurora_titulo_original) {
+        document.title = window.__aurora_titulo_original;
+    }
 }

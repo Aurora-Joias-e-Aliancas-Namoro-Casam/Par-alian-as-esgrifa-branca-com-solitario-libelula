@@ -230,8 +230,25 @@ img { max-width: 100%; }
 .envelope.aberto .envelope-flap { transform: rotateX(180deg); }
 .envelope-seal { position: absolute; top: 34%; left: 50%; width: 42px; height: 42px; transform: translate(-50%, -50%); border-radius: 50%; background: var(--rosegold); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem; box-shadow: 0 6px 14px rgba(0,0,0,0.45); z-index: 6; transition: opacity 0.35s ease, transform 0.35s ease; }
 .envelope.aberto .envelope-seal { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-.letter-paper { position: absolute; left: 50%; bottom: 4%; width: 86%; min-height: 62%; background: #FBF7F0; border-radius: 3px; box-shadow: 0 14px 34px rgba(0,0,0,0.4); padding: 20px 16px 16px; z-index: 3; transform: translate(-50%, 6%) scale(0.82); opacity: 0; transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s, opacity 0.9s ease 0.55s, z-index 0s 0.55s; }
-.envelope.aberto .letter-paper { transform: translate(-50%, -62%) scale(1.06); opacity: 1; z-index: 7; }
+.letter-paper {
+    position: absolute; left: 50%; bottom: 4%; width: 86%;
+    /* CORREÇÃO (carta longa saindo da tela): antes, a altura da caixa não
+       tinha limite, e o "translateY(-62%)" subia a caixa proporcionalmente
+       à PRÓPRIA altura dela — numa carta curta (como um versículo) isso
+       ficava bem centralizado, mas numa carta longa de verdade (múltiplos
+       parágrafos escritos à mão) a caixa ficava enorme e esse mesmo -62%
+       virava um deslocamento gigante, empurrando metade do texto pra fora
+       da tela. Agora a altura tem um teto (com rolagem própria dentro da
+       carta se o texto for mais longo que isso) e o deslocamento usa "vh"
+       (relativo à tela) em vez de "%" (relativo à própria caixa) — assim
+       o tamanho da carta nunca mais afeta onde ela é posicionada. */
+    max-height: 64vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    min-height: 62%; background: #FBF7F0; border-radius: 3px; box-shadow: 0 14px 34px rgba(0,0,0,0.4);
+    padding: 20px 16px 16px; z-index: 3;
+    transform: translate(-50%, 6%) scale(0.82); opacity: 0;
+    transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s, opacity 0.9s ease 0.55s, z-index 0s 0.55s;
+}
+.envelope.aberto .letter-paper { transform: translate(-50%, -40vh) scale(1.02); opacity: 1; z-index: 7; }
 .letter-paper::before { content: ''; position: absolute; inset: 6px; border: 1px solid #e3d5ba; pointer-events: none; }
 .letter-eyebrow { font-family: 'Jost', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); text-align: center; margin-bottom: 10px; opacity: 0; transition: opacity 0.8s ease; }
 .letter-eyebrow.visivel { opacity: 1; }

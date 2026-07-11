@@ -178,17 +178,34 @@ async function apagarBackupDaNuvem() {
  * aparelho ainda tinha os dados antigos guardados localmente (vídeo,
  * fotos, etc.) — e como ele nunca soube que um reset aconteceu, na
  * próxima vez que fosse aberto ele via "eu tenho dados e a nuvem não
- * tem nada", e reenviava tudo de volta pra nuvem (ver a lógica de
- * empurrar/puxar em sincronizarNaAbertura), literalmente ressuscitando
- * o que acabou de ser apagado.
+ * tem nada", e reenviava tudo de volta pra nuvem, ressuscitando o que
+ * acabou de ser apagado.
  *
- * A correção: ao resetar, além de apagar o backup, publicamos um
- * pequeno arquivo "${EXPERIENCE_ID}-reset.json" com o instante exato do
- * reset. QUALQUER aparelho que abrir o link depois confere esse
- * marcador antes de mais nada — se ele for mais novo do que a última
- * vez que aquele aparelho "viu" um reset, o aparelho se limpa também,
- * em vez de reenviar os dados antigos.
+ * CORREÇÃO DE UM BUG QUE ISSO CAUSOU DEPOIS (relatado: "para meu amor"
+ * aparece e, segundos depois, volta pra tela de comprar as alianças): a
+ * primeira versão comparava o marcador de reset contra um "ack" salvo em
+ * CADA aparelho — se aquele aparelho nunca tivesse "visto" aquele reset
+ * específico (por exemplo: um teste de reset feito há tempos, cujo
+ * marcador nunca é apagado), ele se limpava de novo, MESMO que a nuvem já
+ * tivesse dados reais e mais novos que aquele reset. Ou seja, um reset de
+ * teste antigo conseguia apagar dados de verdade, mais recentes.
+ *
+ * A correção: em vez de comparar contra um "ack" por aparelho, comparamos
+ * o instante do reset contra o instante do dado mais recente que existe
+ * de verdade (nuvem OU local). Um reset só é "válido"/pendente se for MAIS
+ * NOVO que qualquer dado real conhecido — ou seja, se ninguém ainda
+ * recomeçou desde então. Assim que dados novos são publicados na nuvem
+ * depois de um reset, aquele reset vira automaticamente "página virada"
+ * para sempre, sem precisar de nenhum controle extra por aparelho.
  * ---------------------------------------------------------------------- */
+
+/** Baixa só o marcador de reset (timestamp). Retorna `null` se nunca existiu (404). */
+async function buscarMarcadorDeReset() {
+    const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-reset.json`, { cache: 'no-store' });
+    if (resposta.status === 404) return null;
+    if (!resposta.ok) throw new Error(`Falha ao consultar marcador de reset (HTTP ${resposta.status})`);
+    return await resposta.json();
+}
 
 /** Publica o marcador de reset na nuvem, avisando qualquer outro aparelho a se limpar também. */
 async function publicarMarcadorDeReset() {
@@ -201,34 +218,9 @@ async function publicarMarcadorDeReset() {
     if (!resposta.ok) throw new Error(`Falha ao publicar marcador de reset (HTTP ${resposta.status})`);
 }
 
-/**
- * Confere se outro aparelho resetou a experiência desde a última vez que
- * ESTE aparelho verificou. Se sim, apaga tudo aqui também (mesma limpeza
- * do botão "Resetar Site") e devolve `true` — quem chamar deve então dar
- * `location.reload()` para reiniciar do zero.
- */
-async function verificarResetRemoto() {
-    if (!syncEstaConfigurado()) return false;
-
-    let marcador = null;
-    try {
-        const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-reset.json`, { cache: 'no-store' });
-        if (resposta.status === 404) return false; // nunca houve reset — segue o fluxo normal
-        if (!resposta.ok) return false;
-        marcador = await resposta.json();
-    } catch (err) {
-        console.error('Falha ao checar marcador de reset na nuvem (seguindo normalmente):', err);
-        return false;
-    }
-
-    if (!marcador || !marcador.resetadoEm) return false;
-
-    let ackLocal = 0;
-    try { ackLocal = parseInt(localStorage.getItem('aurora_reset_visto_em') || '0', 10); } catch (e) { /* ignora */ }
-    if (marcador.resetadoEm <= ackLocal) return false; // este aparelho já está ciente deste reset (ou de um mais novo)
-
-    // Reset detectado — mesma limpeza completa do botão "Resetar Site".
-    try { await db.media.clear(); await db.configuracoes.clear(); } catch (e) { console.error('Falha ao limpar IndexedDB durante reset remoto:', e); }
+/** Limpeza local completa (IndexedDB + localStorage + sessionStorage + cache) — usada pelo reset manual e pelo reset remoto detectado. */
+async function limparArmazenamentoLocal() {
+    try { await db.media.clear(); await db.configuracoes.clear(); } catch (e) { console.error('Falha ao limpar IndexedDB:', e); }
     try { localStorage.clear(); } catch (e) { /* ignora */ }
     try { sessionStorage.clear(); } catch (e) { /* ignora */ }
     try {
@@ -237,12 +229,6 @@ async function verificarResetRemoto() {
             await Promise.all(nomes.map(nome => caches.delete(nome)));
         }
     } catch (e) { /* ignora */ }
-
-    // Registra que este aparelho já está ciente deste reset específico,
-    // para não ficar recarregando a página em loop nas próximas aberturas.
-    try { localStorage.setItem('aurora_reset_visto_em', String(marcador.resetadoEm)); } catch (e) { /* ignora */ }
-
-    return true;
 }
 
 /* ----------------------------------------------------------------------
@@ -287,12 +273,36 @@ window.addEventListener('beforeunload', (evt) => {
     }
 });
 
-/** Publica na nuvem mostrando o aviso visível na tela enquanto durar (e removendo ao final, sucesso ou erro). */
+let __auroraPublicacaoEmAndamento = false; // true enquanto um envio já está em voo
+let __auroraPublicacaoPendente = false;    // true se algo mudou DE NOVO enquanto esse envio estava em voo
+
+/**
+ * Publica na nuvem mostrando o aviso visível na tela enquanto durar. Serializado
+ * de propósito: como mídia grande agora dispara o envio IMEDIATAMENTE (ver
+ * agendarEnvioNuvem), duas ações rápidas em sequência (ex.: gravar o vídeo e,
+ * enquanto ele ainda está subindo, adicionar uma lembrança) poderiam disparar
+ * DOIS envios em paralelo — e se o mais antigo (e mais lento, por ser maior)
+ * terminasse DEPOIS do mais novo, ele sobrescreveria a nuvem com um estado
+ * desatualizado, perdendo a lembrança adicionada depois. Em vez de deixar os
+ * dois rodarem ao mesmo tempo, uma nova chamada enquanto já existe um envio em
+ * voo só marca "pendente" e é reprocessada assim que o envio atual terminar —
+ * sempre lendo o estado mais atual do banco na hora de gerar o próximo zip.
+ */
 async function publicarComIndicadorVisivel() {
+    if (__auroraPublicacaoEmAndamento) {
+        __auroraPublicacaoPendente = true;
+        return;
+    }
+
+    __auroraPublicacaoEmAndamento = true;
     mostrarBannerSync(true);
     try {
-        await publicarBackupNaNuvem(EXPERIENCE_ID);
+        do {
+            __auroraPublicacaoPendente = false;
+            await publicarBackupNaNuvem(EXPERIENCE_ID);
+        } while (__auroraPublicacaoPendente);
     } finally {
+        __auroraPublicacaoEmAndamento = false;
         mostrarBannerSync(false);
     }
 }
@@ -331,18 +341,6 @@ function agendarEnvioNuvem(imediato = false) {
  * aparelho tem mudanças que a nuvem ainda não tem).
  */
 async function sincronizarNaAbertura() {
-    if (syncEstaConfigurado()) {
-        try {
-            const foiResetadoRemotamente = await verificarResetRemoto();
-            if (foiResetadoRemotamente) {
-                location.reload();
-                return; // location.reload() é assíncrono — não deixa nada mais rodar neste ciclo
-            }
-        } catch (err) {
-            console.error('Falha ao checar reset remoto (seguindo com o carregamento normal):', err);
-        }
-    }
-
     // Compatibilidade com links antigos que ainda usem "?c=codigo".
     await verificarImportacaoPorLink();
 
@@ -350,15 +348,34 @@ async function sincronizarNaAbertura() {
 
     const timestampLocal = parseInt(await obterConfiguracao('aurora_atualizado_em'), 10) || 0;
 
+    let marcadorReset = null;
     let meta = null;
     try {
-        meta = await buscarMetaDaNuvem(EXPERIENCE_ID);
+        [marcadorReset, meta] = await Promise.all([
+            buscarMarcadorDeReset().catch(err => { console.error('Falha ao checar marcador de reset (seguindo normalmente):', err); return null; }),
+            buscarMetaDaNuvem(EXPERIENCE_ID).catch(err => { console.error('Não foi possível consultar a nuvem ao abrir o site:', err); return null; })
+        ]);
     } catch (err) {
-        console.error('Não foi possível consultar a nuvem ao abrir o site (seguindo com os dados locais):', err);
+        console.error('Falha ao consultar a nuvem ao abrir o site (seguindo com os dados locais):', err);
         return;
     }
 
+    const resetadoEm = (marcadorReset && marcadorReset.resetadoEm) ? marcadorReset.resetadoEm : 0;
     const timestampNuvem = (meta && meta.atualizadoEm) ? meta.atualizadoEm : 0;
+
+    // Um reset só é "pendente" se for mais novo que QUALQUER dado real
+    // conhecido (nuvem OU local) — ou seja, se ninguém ainda recomeçou
+    // desde então. Assim que dados novos existem depois de um reset
+    // (nuvem ou localmente), aquele reset já foi superado e é ignorado —
+    // é isso que evita um reset de teste antigo apagar dados de verdade
+    // mais recentes.
+    const resetPendente = resetadoEm > 0 && resetadoEm > timestampNuvem && resetadoEm > timestampLocal;
+
+    if (resetPendente) {
+        await limparArmazenamentoLocal();
+        location.reload();
+        return; // location.reload() é assíncrono — não deixa nada mais rodar neste ciclo
+    }
 
     if (meta && timestampNuvem > timestampLocal) {
         // A nuvem tem uma versão mais nova (ex.: foi concluída em outro aparelho) — baixa o zip completo e aplica aqui.

@@ -15,15 +15,116 @@
 
     <header class="galeria-header">
         <a href="index.html" class="voltar-link"><i class="bi bi-arrow-left"></i> voltar</a>
-        <svg class="galeria-girassol" viewBox="0 0 100 100" aria-hidden="true">
-            <circle cx="50" cy="50" r="14" fill="#7a5b1e"/>
-            <g fill="#F4C430">
-                <ellipse cx="50" cy="18" rx="9" ry="16"/><ellipse cx="50" cy="82" rx="9" ry="16"/>
-                <ellipse cx="18" cy="50" rx="16" ry="9"/><ellipse cx="82" cy="50" rx="16" ry="9"/>
-                <ellipse cx="27" cy="27" rx="9" ry="16" transform="rotate(45 27 27)"/><ellipse cx="73" cy="73" rx="9" ry="16" transform="rotate(45 73 73)"/>
-                <ellipse cx="73" cy="27" rx="9" ry="16" transform="rotate(-45 73 27)"/><ellipse cx="27" cy="73" rx="9" ry="16" transform="rotate(-45 27 73)"/>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+        <radialGradient id="girassolMiolo" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#8a5a2e"/>
+            <stop offset="55%" stop-color="#6b4222"/>
+            <stop offset="100%" stop-color="#3f2513"/>
+        </radialGradient>
+        <linearGradient id="girassolPetalaFora" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#E8891C"/>
+            <stop offset="100%" stop-color="#FFD65C"/>
+        </linearGradient>
+        <linearGradient id="girassolPetalaDentro" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#C96A12"/>
+            <stop offset="100%" stop-color="#F4A522"/>
+        </linearGradient>
+        <symbol id="girassolIlustracao" viewBox="0 0 200 200">
+            <g transform="translate(100,100)">
+                <g fill="url(#girassolPetalaFora)">
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(0.0)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(27.7)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(55.4)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(83.1)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(110.8)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(138.5)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(166.2)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(193.8)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(221.5)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(249.2)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(276.9)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(304.6)"/>
+                <path d="M -10,-30 C -18,-55 -16,-84 0,-100 C 16,-84 18,-55 10,-30 C 6,-25 -6,-25 -10,-30 Z" transform="rotate(332.3)"/>
+                </g>
+                <g fill="url(#girassolPetalaDentro)">
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(13.8)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(41.5)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(69.2)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(96.9)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(124.6)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(152.3)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(180.0)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(207.7)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(235.4)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(263.1)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(290.8)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(318.5)"/>
+                <path d="M -8,-26 C -14,-46 -12,-68 0,-82 C 12,-68 14,-46 8,-26 C 5,-22 -5,-22 -8,-26 Z" transform="rotate(346.2)"/>
+                </g>
+                <circle r="30" fill="url(#girassolMiolo)"/>
+                <g fill="#2c1a0d" opacity="0.55">
+                <circle cx="-2.6" cy="2.4" r="1.12"/>
+                <circle cx="0.4" cy="-4.9" r="1.13"/>
+                <circle cx="3.7" cy="4.8" r="1.15"/>
+                <circle cx="-6.9" cy="-1.2" r="1.17"/>
+                <circle cx="6.6" cy="-4.2" r="1.18"/>
+                <circle cx="-2.2" cy="8.3" r="1.20"/>
+                <circle cx="-4.3" cy="-8.2" r="1.21"/>
+                <circle cx="9.3" cy="3.4" r="1.23"/>
+                <circle cx="-9.7" cy="4.0" r="1.25"/>
+                <circle cx="4.7" cy="-10.0" r="1.26"/>
+                <circle cx="3.5" cy="11.1" r="1.28"/>
+                <circle cx="-10.5" cy="-6.1" r="1.30"/>
+                <circle cx="12.3" cy="-2.7" r="1.31"/>
+                <circle cx="-7.5" cy="10.7" r="1.33"/>
+                <circle cx="-1.7" cy="-13.5" r="1.35"/>
+                <circle cx="10.7" cy="9.0" r="1.36"/>
+                <circle cx="-14.4" cy="0.6" r="1.38"/>
+                <circle cx="10.5" cy="-10.5" r="1.39"/>
+                <circle cx="-0.7" cy="15.3" r="1.41"/>
+                <circle cx="-10.0" cy="-12.0" r="1.43"/>
+                <circle cx="15.9" cy="2.1" r="1.44"/>
+                <circle cx="-13.5" cy="9.4" r="1.46"/>
+                <circle cx="3.7" cy="-16.4" r="1.48"/>
+                <circle cx="8.5" cy="14.9" r="1.49"/>
+                <circle cx="-16.7" cy="-5.3" r="1.51"/>
+                <circle cx="16.2" cy="-7.5" r="1.53"/>
+                <circle cx="-7.0" cy="16.8" r="1.54"/>
+                <circle cx="-6.3" cy="-17.5" r="1.56"/>
+                <circle cx="16.7" cy="8.8" r="1.57"/>
+                <circle cx="-18.6" cy="4.9" r="1.59"/>
+                <circle cx="10.6" cy="-16.4" r="1.61"/>
+                <circle cx="3.4" cy="19.5" r="1.62"/>
+                <circle cx="-15.9" cy="-12.3" r="1.64"/>
+                <circle cx="20.4" cy="-1.7" r="1.66"/>
+                <circle cx="-14.1" cy="15.2" r="1.67"/>
+                <circle cx="0.1" cy="-21.0" r="1.69"/>
+                <circle cx="14.3" cy="15.8" r="1.71"/>
+                <circle cx="-21.5" cy="-2.0" r="1.72"/>
+                <circle cx="17.4" cy="-13.2" r="1.74"/>
+                <circle cx="-4.0" cy="21.8" r="1.75"/>
+                <circle cx="-12.0" cy="-19.0" r="1.77"/>
+                <circle cx="21.9" cy="6.0" r="1.79"/>
+                <circle cx="-20.5" cy="10.5" r="1.80"/>
+                <circle cx="8.1" cy="-21.8" r="1.82"/>
+                <circle cx="8.9" cy="21.8" r="1.84"/>
+                <circle cx="-21.5" cy="-10.2" r="1.85"/>
+                <circle cx="23.0" cy="-7.1" r="1.87"/>
+                <circle cx="-12.3" cy="21.0" r="1.89"/>
+                <circle cx="-5.1" cy="-24.0" r="1.90"/>
+                <circle cx="20.2" cy="14.4" r="1.92"/>
+                <circle cx="-24.8" cy="3.1" r="1.93"/>
+                <circle cx="16.4" cy="-19.2" r="1.95"/>
+                <circle cx="0.9" cy="25.5" r="1.97"/>
+                <circle cx="-18.1" cy="-18.4" r="1.98"/>
+                <circle cx="26.0" cy="1.3" r="2.00"/>
+                </g>
             </g>
-        </svg>
+        </symbol>
+    </defs>
+</svg>
+        <svg class="galeria-girassol" viewBox="0 0 200 200" aria-hidden="true"><use href="#girassolIlustracao"></use></svg>
         <p class="galeria-eyebrow">Nosso álbum</p>
         <h1 class="galeria-titulo">Nossa Galeria</h1>
         <p class="galeria-sub">Pedacinhos da nossa história, guardados aqui para sempre. Um álbum que vai crescer com a gente, ano após ano.</p>
