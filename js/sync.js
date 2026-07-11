@@ -137,7 +137,12 @@ async function importarBackupDaNuvem(codigo) {
 
 /** Baixa só o arquivo pequeno de metadados (timestamp) de um código. Retorna `null` se não existir (404). */
 async function buscarMetaDaNuvem(codigo) {
-    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}-meta.json`;
+    // "?t=" muda a cada chamada de propósito: as URLs "públicas" do Supabase
+    // Storage passam por um CDN, e "cache: no-store" só evita o cache do
+    // NAVEGADOR — não evita o cache do CDN na frente do bucket. Sem isso, um
+    // aparelho podia continuar recebendo uma resposta antiga (inclusive um
+    // 404 já superado) por um tempo depois de algo mudar de verdade.
+    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}-meta.json?t=${Date.now()}`;
     const resposta = await fetch(url, { cache: 'no-store' });
     if (resposta.status === 404) return null;
     if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
@@ -146,7 +151,7 @@ async function buscarMetaDaNuvem(codigo) {
 
 /** Baixa o .zip completo (ArrayBuffer) de um código. Retorna `null` se não existir (404). */
 async function buscarBackupZipDaNuvem(codigo) {
-    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}.zip`;
+    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}.zip?t=${Date.now()}`; // ver nota sobre cache do CDN em buscarMetaDaNuvem
     const resposta = await fetch(url, { cache: 'no-store' });
     if (resposta.status === 404) return null;
     if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
@@ -201,7 +206,7 @@ async function apagarBackupDaNuvem() {
 
 /** Baixa só o marcador de reset (timestamp). Retorna `null` se nunca existiu (404). */
 async function buscarMarcadorDeReset() {
-    const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-reset.json`, { cache: 'no-store' });
+    const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-reset.json?t=${Date.now()}`, { cache: 'no-store' }); // ver nota sobre cache do CDN em buscarMetaDaNuvem
     if (resposta.status === 404) return null;
     if (!resposta.ok) throw new Error(`Falha ao consultar marcador de reset (HTTP ${resposta.status})`);
     return await resposta.json();
