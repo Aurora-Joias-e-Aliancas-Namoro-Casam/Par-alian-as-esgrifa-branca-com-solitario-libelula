@@ -618,13 +618,20 @@ function iniciarModuloExport() {
         const botao = document.getElementById('btnResetar');
         if (botao) { botao.disabled = true; botao.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetando...'; }
 
-        // 1) Nuvem (fonte oficial entre aparelhos) — apaga o backup E deixa
-        //    um "marcador de reset" (ver publicarMarcadorDeReset em
-        //    js/sync.js), pra qualquer aparelho que abrir o link depois
-        //    saber que precisa se limpar também (a menos que já tenha
-        //    dados mais novos que este reset — ver sincronizarNaAbertura).
-        try { await apagarBackupDaNuvem(); } catch (e) { console.error('Falha ao apagar backup na nuvem', e); }
-        try { await publicarMarcadorDeReset(); } catch (e) { console.error('Falha ao publicar marcador de reset na nuvem', e); }
+        // 1) Nuvem (fonte oficial entre aparelhos) — a parte CRÍTICA é
+        //    sobrescrever o meta.json com a marca de reset (ver
+        //    publicarResetNaNuvem em js/sync.js): é isso que qualquer outro
+        //    aparelho confere ao abrir o link, pra saber que precisa se
+        //    limpar também (a menos que já tenha dados mais novos que este
+        //    reset — ver sincronizarNaAbertura). Apagar o .zip antigo é só
+        //    limpeza, não crítico.
+        try { await apagarZipDaNuvem(); } catch (e) { console.error('Falha ao apagar o zip antigo na nuvem (não crítico)', e); }
+        try {
+            await publicarResetNaNuvem();
+        } catch (e) {
+            console.error('Falha ao publicar o reset na nuvem', e);
+            alert('Atenção: não consegui confirmar que o reset chegou na nuvem (sem internet agora?). Este aparelho já foi limpo, mas o outro pode continuar mostrando os dados antigos até você repetir o reset com uma conexão estável.');
+        }
 
         // 2) Armazenamento local (IndexedDB + localStorage + sessionStorage + cache)
         await limparArmazenamentoLocal();
