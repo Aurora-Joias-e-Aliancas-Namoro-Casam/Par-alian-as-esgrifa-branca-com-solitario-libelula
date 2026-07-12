@@ -13,7 +13,7 @@
  * ============================================================================
  */
 
-let __galeriaFotosCarregadas = 0;
+let __galeriaFotosCarregadas = 15;
 
 function montarGaleria() {
     const masonry = document.getElementById('galeriaMasonry');
