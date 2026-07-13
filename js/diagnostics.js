@@ -200,9 +200,152 @@ async function executarTesteMediaReal() {
     resultadoEl.className = `save-status ${resultado.ok ? 'ok' : 'err'}`;
 }
 
+function formatarDataHoraDiag(timestampMs) {
+    if (!timestampMs) return '— (nunca)';
+    const d = new Date(timestampMs);
+    return `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR')} (${timestampMs})`;
+}
+
+/**
+ * Mostra lado a lado o que ESTE aparelho pensa que é o estado atual e o
+ * que a nuvem realmente tem agora — lendo os MESMOS valores que
+ * sincronizarNaAbertura() usa para decidir entre puxar/empurrar/resetar,
+ * sem nenhuma lógica escondida. É o jeito mais direto de ver, com dados
+ * reais, por que um reset não chegou (ou chegou) em outro aparelho.
+ */
+async function executarVerEstadoReset() {
+    const btn = document.getElementById('btnVerEstadoReset');
+    const painel = document.getElementById('diagEstadoReset');
+    btn.disabled = true;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Consultando...';
+    painel.classList.remove('d-none');
+    painel.innerHTML = '<p class="text-white-50 mb-0">Consultando armazenamento local e a nuvem...</p>';
+
+    try {
+        // --- Local ---
+        const timestampLocal = parseInt(await obterConfiguracao('aurora_atualizado_em'), 10) || 0;
+        const stageLocal = (await obterConfiguracao('aurora_stage')) || '(vazio)';
+        const dataPedidoLocal = (await obterConfiguracao('aurora_data_pedido')) || '(vazio)';
+        const videoLocal = await obterMedia('video_pedido');
+        const assinaturaLocal = await obterMedia('assinatura');
+
+        // --- Nuvem (leitura direta, sem cache, mesmo caminho que sincronizarNaAbertura usa) ---
+        let meta = null;
+        let erroNuvem = null;
+        if (syncEstaConfigurado()) {
+            try { meta = await buscarMetaDaNuvem(EXPERIENCE_ID); } catch (err) { erroNuvem = err.message; }
+        }
+        const timestampNuvem = (meta && meta.atualizadoEm) ? meta.atualizadoEm : 0;
+        const nuvemFoiResetada = Boolean(meta && meta.resetado);
+
+        // --- O que sincronizarNaAbertura() faria com esses valores agora ---
+        const resetPendente = nuvemFoiResetada && timestampNuvem > timestampLocal;
+        let decisao;
+        if (!syncEstaConfigurado()) decisao = 'Sincronização não configurada — nada acontece.';
+        else if (resetPendente) decisao = 'RESETARIA este aparelho agora (a nuvem tem um reset mais novo que este aparelho ainda não viu).';
+        else if (meta && !nuvemFoiResetada && timestampNuvem > timestampLocal) decisao = 'PUXARIA da nuvem agora (a nuvem tem dados mais novos).';
+        else if (timestampLocal > 0 && timestampLocal >= timestampNuvem) decisao = 'EMPURRARIA os dados deste aparelho para a nuvem agora (este aparelho está "à frente" ou empatado).';
+        else decisao = 'Não faria nada (nada em nenhum dos dois lados).';
+
+        painel.innerHTML = `
+            <h6>Este aparelho (local)</h6>
+            <div class="linha"><span>aurora_stage</span><span>${stageLocal}</span></div>
+            <div class="linha"><span>aurora_data_pedido</span><span>${dataPedidoLocal}</span></div>
+            <div class="linha"><span>aurora_atualizado_em</span><span>${formatarDataHoraDiag(timestampLocal)}</span></div>
+            <div class="linha"><span>vídeo do pedido salvo?</span><span>${videoLocal && videoLocal.blob ? `sim (${(videoLocal.blob.size / (1024 * 1024)).toFixed(1)}MB)` : 'não'}</span></div>
+            <div class="linha"><span>assinatura salva?</span><span>${assinaturaLocal && assinaturaLocal.texto ? 'sim' : 'não'}</span></div>
+
+            <h6>Nuvem (meta.json agora)</h6>
+            ${erroNuvem ? `<div class="linha"><span>Erro ao consultar</span><span>${erroNuvem}</span></div>` : `
+            <div class="linha"><span>existe?</span><span>${meta ? 'sim' : 'não (nunca sincronizado, ou já foi apagado)'}</span></div>
+            <div class="linha"><span>resetado</span><span>${nuvemFoiResetada ? 'true' : 'false'}</span></div>
+            <div class="linha"><span>atualizadoEm</span><span>${formatarDataHoraDiag(timestampNuvem)}</span></div>
+            `}
+
+            <div class="veredito ${erroNuvem ? 'alerta' : (resetPendente ? 'alerta' : 'ok')}">${decisao}</div>
+        `;
+    } catch (err) {
+        painel.innerHTML = `<p class="text-danger mb-0">Falha ao consultar: ${err.message}</p>`;
+        console.error(err);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+    }
+}
+
+/** Confere (via HEAD, sem baixar o arquivo inteiro) se um caminho realmente existe no servidor. */
+async function verificarArquivoExiste(caminho) {
+    try {
+        const resposta = await fetch(`${caminho}?t=${Date.now()}`, { method: 'HEAD', cache: 'no-store' });
+        if (resposta.ok) return { ok: true };
+        if (resposta.status === 404) return { ok: false, motivo: 'arquivo não encontrado — confira o nome EXATO (maiúsculas/minúsculas importam) e a extensão' };
+        return { ok: false, motivo: `HTTP ${resposta.status}` };
+    } catch (err) {
+        return { ok: false, motivo: 'falha ao verificar (sem internet, ou aberto direto do arquivo em vez de um servidor)' };
+    }
+}
+
+/**
+ * Testa, um por um, cada item configurado na galeria (TOTAL_FOTOS_GALERIA
+ * em js/config.js) e mostra exatamente qual arquivo existe ou não — em
+ * vez de a galeria só "não mostrar nada" sem explicar o motivo.
+ */
+async function executarTesteGaleria() {
+    const btn = document.getElementById('btnTestarGaleria');
+    const painel = document.getElementById('diagGaleriaResultado');
+    btn.disabled = true;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Testando...';
+    painel.classList.remove('d-none');
+    painel.innerHTML = '<p class="text-white-50 mb-0">Testando cada item...</p>';
+
+    if (typeof TOTAL_FOTOS_GALERIA !== 'number' || TOTAL_FOTOS_GALERIA <= 0) {
+        painel.innerHTML = `
+            <div class="veredito alerta">TOTAL_FOTOS_GALERIA está em ${TOTAL_FOTOS_GALERIA} em js/config.js — é por isso que a galeria aparece vazia. Depois de colocar os arquivos na pasta assets/img/galeria/, esse número precisa ser atualizado para a quantidade total de itens.</div>
+        `;
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        return;
+    }
+
+    const linhasHtml = [];
+    let totalOk = 0;
+
+    for (let numero = 1; numero <= TOTAL_FOTOS_GALERIA; numero++) {
+        const ehVideo = ehVideoGaleria(numero);
+        const ehYoutube = ehYoutubeGaleria(numero);
+        const tipo = ehYoutube ? 'YouTube' : (ehVideo ? 'vídeo local' : 'foto');
+
+        if (ehYoutube) {
+            const bruto = (typeof YOUTUBE_GALERIA === 'object' && YOUTUBE_GALERIA[numero]) || '';
+            const id = extrairIdYoutube(bruto);
+            const ok = Boolean(id);
+            if (ok) totalOk++;
+            linhasHtml.push(`<div class="linha ${ok ? 'ok' : 'erro'}"><span>#${numero} (${tipo})</span><span>${ok ? `✓ ID: ${id}` : '✗ marcado como youtube mas SEM link em YOUTUBE_GALERIA'}</span></div>`);
+        } else {
+            const caminho = getAssetGaleria(numero);
+            const resultado = await verificarArquivoExiste(caminho);
+            if (resultado.ok) totalOk++;
+            linhasHtml.push(`<div class="linha ${resultado.ok ? 'ok' : 'erro'}"><span>#${numero} (${tipo})</span><span>${resultado.ok ? `✓ ${caminho}` : `✗ ${caminho} — ${resultado.motivo}`}</span></div>`);
+        }
+    }
+
+    const resumo = totalOk === TOTAL_FOTOS_GALERIA
+        ? { classe: 'ok', texto: `Todos os ${TOTAL_FOTOS_GALERIA} itens foram encontrados corretamente.` }
+        : { classe: 'alerta', texto: `${totalOk} de ${TOTAL_FOTOS_GALERIA} itens encontrados. Os marcados com ✗ acima não existem no caminho esperado — confira o nome exato do arquivo (minúsculo, sem espaços, "galeria_N.extensão") dentro de assets/img/galeria/. Atenção especial a fotos exportadas do iPhone: se o arquivo for .HEIC, ele precisa ser convertido para .jpg antes, porque a maioria dos navegadores não exibe HEIC diretamente.` };
+
+    painel.innerHTML = linhasHtml.join('') + `<div class="veredito ${resumo.classe}">${resumo.texto}</div>`;
+
+    btn.disabled = false;
+    btn.innerHTML = textoOriginal;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRodarDiagnostico').addEventListener('click', executarDiagnosticoCompleto);
     document.getElementById('btnTestarNuvem').addEventListener('click', executarTesteNuvem);
     document.getElementById('btnTestarMediaReal').addEventListener('click', executarTesteMediaReal);
+    document.getElementById('btnVerEstadoReset').addEventListener('click', executarVerEstadoReset);
+    document.getElementById('btnTestarGaleria').addEventListener('click', executarTesteGaleria);
     executarDiagnosticoCompleto();
 });

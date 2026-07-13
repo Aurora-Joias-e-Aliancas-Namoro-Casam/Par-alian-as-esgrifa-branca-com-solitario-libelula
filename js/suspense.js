@@ -286,6 +286,7 @@ function iniciarVerificacaoIdentidade() {
 
 /* ---------------- Gravação de vídeo (verificação de identidade) ---------------- */
 let mediaStream = null;
+let streamGravacaoEspelhada = null;
 let mediaRecorder = null;
 let recordedChunks = [];
 let permissoesLiberadas = false;
@@ -553,6 +554,7 @@ function iniciarFlashback(aoTerminar) {
     const tela = document.getElementById('flashbackScreen');
     const flash = document.getElementById('flashbackFlash');
     const label = document.getElementById('flashbackLabel');
+    const btnContinuar = document.getElementById('btnFlashbackContinuar');
     const fotos = ['fbFoto1', 'fbFoto2', 'fbFoto3', 'fbFoto4', 'fbFoto5'];
     const legendas = ['onde tudo começou', 'as risadinhas de sempre', 'os perrengues que resolvemos juntos', 'os dias mais simples', 'e hoje, mais um capítulo'];
 
@@ -562,8 +564,19 @@ function iniciarFlashback(aoTerminar) {
     fotos.forEach(id => document.getElementById(id).classList.remove('fb-ativa'));
     label.classList.remove('fb-visivel');
     label.textContent = '';
+    btnContinuar.classList.add('d-none');
 
-    const intervaloEntreFotos = 1500;
+    /**
+     * CORREÇÃO (item do prompt): antes, o flashback trocava de foto rápido
+     * e avançava sozinho pra "Nossa História" com um timer fixo, cortando a
+     * música da carta no meio. Agora: as trocas são mais lentas, a ÚLTIMA
+     * foto fica parada na tela (não desaparece sozinha), e o botão
+     * "Continuar" só aparece quando a música da carta já tiver terminado de
+     * tocar (ou na hora, se por algum motivo ela não estava tocando/falhou
+     * — pra nunca deixar a pessoa travada esperando um áudio que não vai
+     * chegar). Ela pode então ouvir a música inteira antes de seguir.
+     */
+    const intervaloEntreFotos = 2800;
     fotos.forEach((id, i) => {
         setTimeout(() => {
             fotos.forEach(outroId => document.getElementById(outroId).classList.remove('fb-ativa'));
@@ -576,13 +589,36 @@ function iniciarFlashback(aoTerminar) {
         }, i * intervaloEntreFotos);
     });
 
-    const duracaoTotal = fotos.length * intervaloEntreFotos + 900;
-    setTimeout(() => {
+    const tempoAteUltimaFoto = (fotos.length - 1) * intervaloEntreFotos + 900;
+    const musica = document.getElementById('musicaFundo');
+    let jaContinuou = false;
+
+    function continuar() {
+        if (jaContinuou) return;
+        jaContinuou = true;
+        if (musica) musica.removeEventListener('ended', continuar);
         tela.style.display = 'none';
         fotos.forEach(id => document.getElementById(id).classList.remove('fb-ativa'));
         label.classList.remove('fb-visivel');
+        btnContinuar.classList.add('d-none');
         aoTerminar();
-    }, duracaoTotal);
+    }
+
+    setTimeout(() => {
+        // Chegou na última foto — ela fica parada aqui. Mostra "Continuar"
+        // assim que a música tiver terminado (ou já mostra na hora se ela
+        // não estava tocando/já tinha terminado antes/falhou ao iniciar).
+        const musicaAindaTocando = musica && !musica.paused && !musica.ended;
+        if (musicaAindaTocando) {
+            musica.addEventListener('ended', () => {
+                btnContinuar.classList.remove('d-none');
+            }, { once: true });
+        } else {
+            btnContinuar.classList.remove('d-none');
+        }
+    }, tempoAteUltimaFoto);
+
+    btnContinuar.addEventListener('click', continuar, { once: true });
 }
 
 function carregarImagensFlashback() {
@@ -632,16 +668,25 @@ function iniciarSuspense() {
         document.getElementById('saveStatus').textContent = '';
         const mimeType = getSupportedMimeType();
         const opcoesGravacao = montarOpcoesMediaRecorder('video'); // limita o bitrate (ver utils.js) para não estourar 50MB
+
+        // Espelha o vídeo de verdade antes de gravar (ver criarStreamEspelhado
+        // em js/utils.js) — corrige aparelhos onde a câmera frontal entrega o
+        // stream já espelhado, o que fazia o vídeo salvo sair invertido.
+        streamGravacaoEspelhada = criarStreamEspelhado(mediaStream);
+        const streamParaGravar = streamGravacaoEspelhada.stream;
+
         try {
-            mediaRecorder = new MediaRecorder(mediaStream, opcoesGravacao);
+            mediaRecorder = new MediaRecorder(streamParaGravar, opcoesGravacao);
         } catch (e) {
             // Navegador antigo que não aceita videoBitsPerSecond/audioBitsPerSecond — cai para o padrão dele.
-            mediaRecorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+            mediaRecorder = mimeType ? new MediaRecorder(streamParaGravar, { mimeType }) : new MediaRecorder(streamParaGravar);
         }
 
         mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
 
         mediaRecorder.onstop = async () => {
+            if (streamGravacaoEspelhada) { streamGravacaoEspelhada.parar(); streamGravacaoEspelhada = null; }
+
             const tipoFinal = mediaRecorder.mimeType || 'video/webm';
             const gravacaoBlob = new Blob(recordedChunks, { type: tipoFinal });
 

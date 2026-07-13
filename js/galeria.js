@@ -2,8 +2,11 @@
  * ============================================================================
  * GALERIA.JS — Álbum permanente de lembranças (item 4 do prompt de melhorias)
  * ============================================================================
- * Lê o padrão documentado em js/config.js (TOTAL_FOTOS_GALERIA, TIPO_GALERIA,
- * YOUTUBE_GALERIA, getAssetGaleria e GALERIA_LEGENDAS) e monta o masonry.
+ * 100% estático, de propósito: os itens são arquivos colocados manualmente
+ * em assets/img/galeria/ (ou links do YouTube), configurados em
+ * js/config.js (TOTAL_FOTOS_GALERIA, TIPO_GALERIA, YOUTUBE_GALERIA,
+ * getAssetGaleria, GALERIA_LEGENDAS). Não usa banco de dados nem
+ * sincronização — só HTML/CSS/JS lendo arquivos do próprio repositório.
  * Cada item pode ser: foto (padrão), vídeo local (arquivo em
  * assets/img/galeria/) ou vídeo do YouTube (roda embutido, sem precisar de
  * arquivo — ótimo pra vídeos grandes). Vídeos (locais ou YouTube) aparecem
@@ -13,19 +16,14 @@
  * ============================================================================
  */
 
-let __galeriaFotosCarregadas = 15;
+let __galeriaFotosCarregadas = 0;
 
 function montarGaleria() {
     const masonry = document.getElementById('galeriaMasonry');
-    const vazio = document.getElementById('galeriaVazio');
     if (!masonry) return;
 
     const total = (typeof TOTAL_FOTOS_GALERIA === 'number' && TOTAL_FOTOS_GALERIA > 0) ? TOTAL_FOTOS_GALERIA : 0;
-
-    if (total === 0) {
-        vazio.classList.remove('d-none');
-        return;
-    }
+    if (total === 0) { verificarSeGaleriaFicouVazia(); return; }
 
     for (let numero = 1; numero <= total; numero++) {
         const legenda = (typeof GALERIA_LEGENDAS === 'object' && GALERIA_LEGENDAS[numero]) ? GALERIA_LEGENDAS[numero] : '';
@@ -101,7 +99,6 @@ function montarGaleria() {
         masonry.appendChild(item);
     }
 
-    // Se, depois de tentar carregar tudo, nada existir de fato, mostra o estado vazio.
     setTimeout(verificarSeGaleriaFicouVazia, 1500);
 }
 
@@ -175,7 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         return; // BLOQUEIO_DESKTOP_ATIVO: tela de bloqueio já exibida, para tudo o mais
     }
+
     montarGaleria();
+
     document.getElementById('galeriaLightboxClose').addEventListener('click', fecharLightbox);
     document.getElementById('galeriaLightbox').addEventListener('click', (evt) => {
         if (evt.target.id === 'galeriaLightbox') fecharLightbox();

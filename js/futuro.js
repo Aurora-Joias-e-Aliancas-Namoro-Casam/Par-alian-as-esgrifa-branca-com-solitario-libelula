@@ -9,6 +9,7 @@
  */
 
 let futuroStream = null;
+let futuroStreamEspelhado = null;
 let futuroRecorder = null;
 let futuroChunks = [];
 let futuroModo = null; // 'texto' | 'audio' | 'video'
@@ -16,9 +17,12 @@ let futuroBlobPendente = null;
 let futuroMimePendente = null;
 let futuroTimerIntervalo = null;
 let futuroTimerSegundos = 0;
+let futuroTimeoutMaximo = null;
+const FUTURO_VIDEO_DURACAO_MAXIMA_SEGUNDOS = 60; // limite pra não encher o banco de dados com vídeos longos (ver prompt de correções)
 
 function pararStreamFuturo() {
     if (futuroStream) { futuroStream.getTracks().forEach(t => t.stop()); futuroStream = null; }
+    if (futuroStreamEspelhado) { futuroStreamEspelhado.parar(); futuroStreamEspelhado = null; }
 }
 
 function iniciarTimerFuturo() {
@@ -42,6 +46,7 @@ function pararTimerFuturo() {
 function resetarFuturoOverlayEstado() {
     futuroModo = null; futuroBlobPendente = null; futuroMimePendente = null; futuroChunks = [];
     pararTimerFuturo();
+    if (futuroTimeoutMaximo) { clearTimeout(futuroTimeoutMaximo); futuroTimeoutMaximo = null; }
 
     document.getElementById('futuroEscolha').classList.remove('d-none');
     document.getElementById('futuroTextoArea').classList.add('d-none');
@@ -72,6 +77,7 @@ function abrirFuturoOverlay() {
 
 function fecharFuturoOverlay() {
     document.getElementById('futuroOverlay').classList.add('d-none');
+    if (futuroTimeoutMaximo) { clearTimeout(futuroTimeoutMaximo); futuroTimeoutMaximo = null; }
     if (futuroRecorder && futuroRecorder.state !== 'inactive') { try { futuroRecorder.stop(); } catch (e) {} }
     pararStreamFuturo();
     pararTimerFuturo();
@@ -114,17 +120,27 @@ function iniciarGravacaoFuturo() {
     statusEl.textContent = ''; statusEl.className = 'save-status';
 
     const opcoesGravacao = montarOpcoesMediaRecorder(futuroModo); // limita o bitrate (ver utils.js) para não estourar 50MB
+
+    // Espelha o vídeo de verdade antes de gravar (ver criarStreamEspelhado em
+    // js/utils.js) — corrige aparelhos onde a câmera frontal entrega o
+    // stream já espelhado, o que fazia a mensagem gravada sair invertida.
+    // Áudio não precisa disso (não tem "lado").
+    const streamParaGravar = futuroModo === 'video'
+        ? (futuroStreamEspelhado = criarStreamEspelhado(futuroStream)).stream
+        : futuroStream;
+
     try {
-        futuroRecorder = new MediaRecorder(futuroStream, opcoesGravacao);
+        futuroRecorder = new MediaRecorder(streamParaGravar, opcoesGravacao);
     } catch (err) {
         // Navegador antigo que não aceita videoBitsPerSecond/audioBitsPerSecond — tenta o padrão dele antes de desistir.
         try {
             const mimeType = getSupportedMimeTypeParaModo(futuroModo);
-            futuroRecorder = mimeType ? new MediaRecorder(futuroStream, { mimeType }) : new MediaRecorder(futuroStream);
+            futuroRecorder = mimeType ? new MediaRecorder(streamParaGravar, { mimeType }) : new MediaRecorder(streamParaGravar);
         } catch (err2) {
             console.error('Falha ao iniciar o gravador de mídia', err2);
             statusEl.textContent = 'Não foi possível iniciar a gravação neste navegador.';
             statusEl.className = 'save-status err';
+            if (futuroStreamEspelhado) { futuroStreamEspelhado.parar(); futuroStreamEspelhado = null; }
             return;
         }
     }
@@ -133,6 +149,9 @@ function iniciarGravacaoFuturo() {
 
     futuroRecorder.onstop = () => {
         pararTimerFuturo();
+        if (futuroTimeoutMaximo) { clearTimeout(futuroTimeoutMaximo); futuroTimeoutMaximo = null; }
+        if (futuroStreamEspelhado) { futuroStreamEspelhado.parar(); futuroStreamEspelhado = null; }
+
         const tipoFinal = futuroRecorder.mimeType || (futuroModo === 'video' ? 'video/webm' : 'audio/webm');
         futuroBlobPendente = new Blob(futuroChunks, { type: tipoFinal });
         futuroMimePendente = tipoFinal;
@@ -154,9 +173,21 @@ function iniciarGravacaoFuturo() {
     iniciarTimerFuturo();
     document.getElementById('btnFuturoIniciar').classList.add('d-none');
     document.getElementById('btnFuturoParar').classList.remove('d-none');
+
+    // Limite de 1 minuto pra mensagens em vídeo, pra não encher o banco de
+    // dados com gravações longas (ver prompt de correções). Áudio fica sem
+    // limite por enquanto — arquivos de áudio são bem mais leves.
+    if (futuroModo === 'video') {
+        futuroTimeoutMaximo = setTimeout(() => {
+            statusEl.textContent = 'Chegou no limite de 1 minuto — parando a gravação automaticamente.';
+            statusEl.className = 'save-status pending';
+            pararGravacaoFuturo();
+        }, FUTURO_VIDEO_DURACAO_MAXIMA_SEGUNDOS * 1000);
+    }
 }
 
 function pararGravacaoFuturo() {
+    if (futuroTimeoutMaximo) { clearTimeout(futuroTimeoutMaximo); futuroTimeoutMaximo = null; }
     if (futuroRecorder && futuroRecorder.state !== 'inactive') futuroRecorder.stop();
     document.getElementById('btnFuturoParar').classList.add('d-none');
 }

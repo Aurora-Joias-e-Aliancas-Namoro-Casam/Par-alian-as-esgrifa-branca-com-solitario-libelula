@@ -195,6 +195,7 @@ img { max-width: 100%; }
 @keyframes rotatePhone { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
 #conteudoGravacao .signature-pad-wrap { max-width: 520px !important; }
 #videoPreview, #videoPlayback { aspect-ratio: 16 / 9 !important; }
+#videoPreview { transform: scaleX(-1); } /* espelha só a prévia ao vivo (conforto de enquadrar) — o arquivo gravado já sai espelhado corretamente por conta própria, ver criarStreamEspelhado em js/utils.js */
 .rec-dot { width: 10px; height: 10px; background: #ff3b3b; border-radius: 50%; display: inline-block; margin-right: 6px; animation: recBlink 1s step-start infinite; }
 @keyframes recBlink { 50% { opacity: 0; } }
 .save-status { font-size: 0.75rem; margin-top: 8px; min-height: 16px; }
@@ -211,12 +212,13 @@ img { max-width: 100%; }
 /* ---------------- Flashback cinematográfico ---------------- */
 .flashback-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; background: #0a0608; z-index: 10800; display: none; align-items: center; justify-content: center; overflow: hidden; }
 .flashback-photo { position: absolute; width: 62vw; max-width: 300px; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.7); opacity: 0; filter: blur(6px); transform: scale(0.85); transition: opacity 0.28s ease, transform 0.55s ease, filter 0.45s ease; }
-.flashback-photo img, .flashback-photo .imagem-placeholder-vazio { width: 100%; aspect-ratio: 1/1; display: block; border-radius: 8px; }
+.flashback-photo img, .flashback-photo .imagem-placeholder-vazio { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; border-radius: 8px; }
 .flashback-photo.fb-ativa { opacity: 1; filter: blur(0); transform: scale(1.04); }
 .flashback-flash { position: absolute; inset: 0; background: white; opacity: 0; pointer-events: none; transition: opacity 0.12s ease; }
 .flashback-flash.fb-piscar { opacity: 0.22; }
 .flashback-label { position: absolute; bottom: 12%; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.55); font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1rem; letter-spacing: 1px; opacity: 0; transition: opacity 0.6s ease; }
 .flashback-label.fb-visivel { opacity: 1; }
+.flashback-continuar { position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%); z-index: 3; animation: fadeUp 0.6s ease forwards; }
 
 /* ---------------- Carta final (envelope + carta manuscrita) ---------------- */
 .letter-stage { perspective: 1400px; width: 100%; max-width: 320px; margin: 22px auto 6px; min-height: 300px; position: relative; }
@@ -232,23 +234,34 @@ img { max-width: 100%; }
 .envelope.aberto .envelope-seal { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
 .letter-paper {
     position: absolute; left: 50%; bottom: 4%; width: 86%;
-    /* CORREÇÃO (carta longa saindo da tela): antes, a altura da caixa não
-       tinha limite, e o "translateY(-62%)" subia a caixa proporcionalmente
-       à PRÓPRIA altura dela — numa carta curta (como um versículo) isso
-       ficava bem centralizado, mas numa carta longa de verdade (múltiplos
-       parágrafos escritos à mão) a caixa ficava enorme e esse mesmo -62%
-       virava um deslocamento gigante, empurrando metade do texto pra fora
-       da tela. Agora a altura tem um teto (com rolagem própria dentro da
-       carta se o texto for mais longo que isso) e o deslocamento usa "vh"
-       (relativo à tela) em vez de "%" (relativo à própria caixa) — assim
-       o tamanho da carta nunca mais afeta onde ela é posicionada. */
-    max-height: 64vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    max-height: 62%;
     min-height: 62%; background: #FBF7F0; border-radius: 3px; box-shadow: 0 14px 34px rgba(0,0,0,0.4);
     padding: 20px 16px 16px; z-index: 3;
     transform: translate(-50%, 6%) scale(0.82); opacity: 0;
     transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s, opacity 0.9s ease 0.55s, z-index 0s 0.55s;
 }
-.envelope.aberto .letter-paper { transform: translate(-50%, -40vh) scale(1.02); opacity: 1; z-index: 7; }
+/* CORREÇÃO (carta saindo da tela / "puxar pra cima recarrega a página"): as
+   versões anteriores tentavam posicionar a carta calculando um deslocamento
+   a partir de onde o envelope está NA PÁGINA — mas isso depende de quanto a
+   pessoa já rolou a tela até ali, e uma carta longa de verdade (vários
+   parágrafos) podia ficar parcialmente ACIMA da área que dá pra rolar até,
+   não só fora da tela visível. Quando a pessoa tentava "puxar pra cima" pra
+   alcançar aquele trecho, na real ela já estava no topo da rolagem — e esse
+   gesto vira "puxar pra atualizar" no Safari/Chrome do iPhone, recarregando
+   a página sem querer.
+   Agora, quando aberta, a carta gruda direto no CENTRO DA TELA (position:
+   fixed), não mais relativa ao envelope — sempre alcançável, e com rolagem
+   própria DENTRO da carta (max-height + overflow-y) pra qualquer tamanho de
+   texto, sem nunca depender de rolar a página por trás dela. */
+.envelope.aberto .letter-paper {
+    position: fixed;
+    top: 50%; left: 50%; bottom: auto;
+    width: min(86vw, 400px);
+    max-height: 78vh;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1; z-index: 9000;
+}
 .letter-paper::before { content: ''; position: absolute; inset: 6px; border: 1px solid #e3d5ba; pointer-events: none; }
 .letter-eyebrow { font-family: 'Jost', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); text-align: center; margin-bottom: 10px; opacity: 0; transition: opacity 0.8s ease; }
 .letter-eyebrow.visivel { opacity: 1; }
@@ -529,6 +542,7 @@ img { max-width: 100%; }
 /* Espelha só a PRÉVIA ao vivo (conforto de enquadrar, tipo espelho) — a
    foto capturada usa o frame verdadeiro, sem espelhar (ver capturarFotoPolaroid em js/export.js). */
 #polaroidCameraVideo { transform: scaleX(-1); }
+#futuroPreviewVideo { transform: scaleX(-1); } /* espelha só a prévia ao vivo — o arquivo gravado já sai espelhado corretamente, ver criarStreamEspelhado em js/utils.js */
 .polaroid-legenda-input { width: 100%; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: #fff; font-size: 0.9rem; text-align: center; }
 .polaroid-legenda-input::placeholder { color: rgba(255,255,255,0.4); }
 
@@ -673,3 +687,35 @@ html.galeria-html { background-color: #1c1014; }
     max-width: 320px;
 }
 .vinheta-modo-retorno .vinheta-sub { display: none; }
+
+/* ============================================================================
+   "O QUE EU SINTO POR VOCÊ" — campo de texto livre
+   ============================================================================ */
+.sentimentos-textarea {
+    width: 100%;
+    min-height: 130px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    resize: vertical;
+}
+.sentimentos-textarea::placeholder { color: rgba(255,255,255,0.4); font-style: italic; }
+.sentimentos-texto {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: #f6e4de;
+    white-space: pre-wrap;
+    text-align: left;
+    background: rgba(255,255,255,0.05);
+    border-left: 3px solid var(--rosegold);
+    padding: 16px 18px;
+    border-radius: 4px;
+}
+

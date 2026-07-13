@@ -106,8 +106,7 @@ const PLACEHOLDERS = {
     imagem_momento_3: { arquivo: 'momento-3.jpg', tipo: 'imagem', descricao: 'Foto solta na "mesa de fotos"' },
     imagem_momento_4: { arquivo: 'momento-4.jpg', tipo: 'imagem', descricao: 'Foto solta na "mesa de fotos"' },
 
-    // ---- Vídeo / áudio ----
-    video_carta: { arquivo: 'video-carta.mp4', tipo: 'video', descricao: '(Opcional) Vídeo que pode ser exibido antes da carta abrir, se você quiser gravar algo previamente' },
+    // ---- Áudio ----
     audio_nossa_musica: { arquivo: 'nossa-musica.mp3', tipo: 'audio', descricao: 'A trilha que toca ao abrir a carta final (ex: Um Dia Te Levo Comigo)' },
     audio_playlist_1: { arquivo: 'playlist-1.mp3', tipo: 'audio', descricao: 'Faixa 1 da playlist do casal' },
     audio_playlist_2: { arquivo: 'playlist-2.mp3', tipo: 'audio', descricao: 'Faixa 2 da playlist do casal' },

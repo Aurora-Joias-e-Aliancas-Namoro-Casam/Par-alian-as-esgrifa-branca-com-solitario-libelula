@@ -26,7 +26,7 @@ function iniciarBloqueioDesktop() {
     overlay.innerHTML = `
         <div class="desktop-block-card">
             <i class="bi bi-phone text-rosegold desktop-block-icon"></i>
-            <p class="desktop-block-eyebrow">Aurora Joias</p>
+            <p class="desktop-block-eyebrow">Aryah Joias</p>
             <h1 class="desktop-block-title">Esta experiência foi criada para o celular</h1>
             <p class="desktop-block-texto">Para preservar cada detalhe — fotos, sons e um pequeno segredo guardado no caminho — abra este link no seu smartphone.</p>
             <div id="desktopBlockQr" class="desktop-block-qr" aria-label="QR Code para abrir no celular"></div>

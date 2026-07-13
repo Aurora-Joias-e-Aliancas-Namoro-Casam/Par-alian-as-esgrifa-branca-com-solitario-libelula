@@ -33,7 +33,7 @@ js/main.js              → inicialização geral
 assets/img/             → coloque aqui as fotos (ver lista de placeholders)
 assets/img/galeria/     → itens da Galeria (padrão galeria_1.jpg, galeria_2.mp4, ... — ver LEIA-ME.md na pasta)
 assets/audio/           → coloque aqui as músicas
-assets/video/           → (opcional) vídeos
+assets/video/           → (não usado atualmente — nenhum placeholder aponta pra cá)
 ```
 
 ## Placeholders de mídia — o que enviar e onde

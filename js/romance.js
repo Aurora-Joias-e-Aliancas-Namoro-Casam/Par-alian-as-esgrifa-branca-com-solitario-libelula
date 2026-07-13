@@ -630,8 +630,58 @@ function exibirVideoYoutubePedido(id) {
     }
 }
 
+/* ----------------------------------------------------------------------
+   "O QUE EU SINTO POR VOCÊ" — campo de texto livre na página final, com
+   placeholder poético pra dar um norte de por onde começar a escrever.
+   ---------------------------------------------------------------------- */
+async function iniciarSentimentos() {
+    const salvo = await obterConfiguracao('aurora_sentimentos_texto');
+    exibirSentimentos(salvo);
+
+    document.getElementById('btnSalvarSentimentos').addEventListener('click', salvarSentimentos);
+    document.getElementById('btnEditarSentimentos').addEventListener('click', () => {
+        document.getElementById('sentimentosPreenchido').classList.add('d-none');
+        document.getElementById('sentimentosVazio').classList.remove('d-none');
+        const textoAtual = document.getElementById('sentimentosTexto').textContent || '';
+        const input = document.getElementById('sentimentosInput');
+        input.value = textoAtual;
+        input.focus();
+    });
+}
+
+async function salvarSentimentos() {
+    const input = document.getElementById('sentimentosInput');
+    const status = document.getElementById('sentimentosStatus');
+    const texto = (input.value || '').trim();
+
+    if (!texto) {
+        status.textContent = 'Escreva algo antes de salvar.';
+        status.className = 'save-status err';
+        return;
+    }
+
+    await salvarConfiguracao('aurora_sentimentos_texto', texto);
+    status.textContent = '';
+    status.className = 'save-status';
+    exibirSentimentos(texto);
+}
+
+function exibirSentimentos(texto) {
+    const vazio = document.getElementById('sentimentosVazio');
+    const preenchido = document.getElementById('sentimentosPreenchido');
+    if (texto) {
+        document.getElementById('sentimentosTexto').textContent = texto;
+        vazio.classList.add('d-none');
+        preenchido.classList.remove('d-none');
+    } else {
+        preenchido.classList.add('d-none');
+        vazio.classList.remove('d-none');
+    }
+}
+
 function iniciarModuloRomance() {
     iniciarVideoYoutubePedido();
+    iniciarSentimentos();
 
     const btnGerarContrato = document.getElementById('btnGerarContrato');
     if (btnGerarContrato) {
@@ -690,9 +740,9 @@ function fecharLojaSomenteVisualizacao() {
 }
 
 /**
- * Troca o nome "Aurora" por "Poloni" (e variações) só enquanto está no
+ * Troca o nome "Aryah" por "Poloni" (e variações) só enquanto está no
  * modo visualização da lojinha — nunca durante a experiência real do
- * pedido (ali o disfarce "Aurora Joias" precisa continuar intacto). Cada
+ * pedido (ali o disfarce "Aryah Joias" precisa continuar intacto). Cada
  * elemento marcado com a classe "js-marca-loja" guarda o texto original
  * em data-original na primeira troca, pra sempre voltar exatamente como
  * era ao fechar — mesmo que o texto tenha maiúsculas, minúsculas, ou
@@ -705,10 +755,10 @@ function trocarNomeLojaParaVisualizacao(ligar) {
 
         if (ligar) {
             el.textContent = original
-                .replace(/AURORA JOIAS/g, 'POLONI JOIAS')
-                .replace(/Aurora Joias/g, 'Poloni Joias')
-                .replace(/AURORA/g, 'POLONI')
-                .replace(/Aurora/g, 'Poloni');
+                .replace(/ARYAH JOIAS/g, 'POLONI JOIAS')
+                .replace(/Aryah Joias/g, 'Poloni Joias')
+                .replace(/ARYAH/g, 'POLONI')
+                .replace(/Aryah/g, 'Poloni');
         } else {
             el.textContent = original;
         }
@@ -716,7 +766,7 @@ function trocarNomeLojaParaVisualizacao(ligar) {
 
     if (ligar) {
         if (!window.__aurora_titulo_original) window.__aurora_titulo_original = document.title;
-        document.title = document.title.replace(/Aurora Joias/i, 'Poloni Joias');
+        document.title = document.title.replace(/Aryah Joias/i, 'Poloni Joias');
     } else if (window.__aurora_titulo_original) {
         document.title = window.__aurora_titulo_original;
     }

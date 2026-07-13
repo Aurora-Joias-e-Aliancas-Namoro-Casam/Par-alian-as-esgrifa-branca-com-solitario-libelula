@@ -140,7 +140,70 @@ function getSupportedMimeTypeParaModo(modo) {
 const OPCOES_GRAVACAO_VIDEO = { videoBitsPerSecond: 2_000_000, audioBitsPerSecond: 96_000 }; // ~2Mbps vídeo + 96kbps áudio
 const OPCOES_GRAVACAO_AUDIO = { audioBitsPerSecond: 96_000 };
 
-/** Monta as opções do MediaRecorder já com mimeType + bitrate adequado ao modo ('video' ou 'audio'). */
+/* ----------------------------------------------------------------------
+   ESPELHAMENTO REAL DO VÍDEO GRAVADO (não só a pré-visualização)
+   ----------------------------------------------------------------------
+   Em alguns aparelhos/navegadores, o stream BRUTO da câmera frontal já
+   vem espelhado por baixo dos panos (não é um efeito visual — é assim
+   que o próprio arquivo gravado sai). Um espelhamento por CSS (como o
+   usado na pré-visualização da Polaroid) só muda o que aparece NA TELA;
+   não afeta o que o MediaRecorder efetivamente grava. Pra corrigir o
+   ARQUIVO de verdade, é preciso redesenhar cada quadro num <canvas>
+   espelhado e gravar a partir dele — é isso que criarStreamEspelhado()
+   faz abaixo, devolvendo um novo MediaStream (vídeo espelhado + o áudio
+   original, sem processamento) pronto para o MediaRecorder.
+   ---------------------------------------------------------------------- */
+function criarStreamEspelhado(streamOriginal) {
+    // Navegador sem suporte a captureStream (raro) — devolve o stream original sem espelhar, pra não quebrar a gravação.
+    if (!streamOriginal || typeof HTMLCanvasElement === 'undefined' || !HTMLCanvasElement.prototype.captureStream) {
+        return { stream: streamOriginal, parar: () => {} };
+    }
+
+    const trilhaVideo = streamOriginal.getVideoTracks()[0];
+    const config = (trilhaVideo && trilhaVideo.getSettings) ? trilhaVideo.getSettings() : {};
+    const largura = config.width || 1280;
+    const altura = config.height || 720;
+
+    const videoOrigem = document.createElement('video');
+    videoOrigem.muted = true;
+    videoOrigem.playsInline = true;
+    videoOrigem.srcObject = streamOriginal;
+    videoOrigem.play().catch(() => { /* alguns navegadores exigem interação — o loop abaixo espera o readyState mesmo assim */ });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = largura;
+    canvas.height = altura;
+    const ctx = canvas.getContext('2d');
+
+    let ativo = true;
+    function desenharQuadro() {
+        if (!ativo) return;
+        if (videoOrigem.readyState >= 2) {
+            ctx.save();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(videoOrigem, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+        requestAnimationFrame(desenharQuadro);
+    }
+    desenharQuadro();
+
+    let streamCanvas, streamFinal;
+    try {
+        streamCanvas = canvas.captureStream(30);
+        streamFinal = new MediaStream([...streamCanvas.getVideoTracks(), ...streamOriginal.getAudioTracks()]);
+    } catch (e) {
+        console.error('Falha ao espelhar o vídeo via canvas, gravando sem espelhar:', e);
+        ativo = false;
+        return { stream: streamOriginal, parar: () => {} };
+    }
+
+    return {
+        stream: streamFinal,
+        parar: () => { ativo = false; videoOrigem.pause(); videoOrigem.srcObject = null; }
+    };
+}
 function montarOpcoesMediaRecorder(modo) {
     const mimeType = getSupportedMimeTypeParaModo(modo);
 
