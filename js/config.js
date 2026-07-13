@@ -186,13 +186,13 @@ const GALERIA_LEGENDAS = {
 const TIPO_GALERIA = {
     // 3: 'video',
     // 6: 'youtube',
-   16: 'video',
-   17: 'video',
-   18: 'video',
-   19: 'video',
-   20: 'video',
-   21: 'video',
-   22: 'video',
+      16: 'video',
+      17: 'video',
+      18: 'video',
+      19: 'video',
+      20: 'video',
+      21: 'video',
+      22: 'video',
 };
 
 /* Link (ou só o ID) do vídeo do YouTube, para cada número marcado como
