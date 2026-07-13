@@ -171,7 +171,7 @@ function getAsset(id) {
    vídeo do YouTube): para dar uma frase a um item específico, adicione
    uma entrada em GALERIA_LEGENDAS usando o mesmo número.
    ---------------------------------------------------------------------- */
-const TOTAL_FOTOS_GALERIA = 0; // <- comece em 0; suba este número só depois de colocar os itens reais (ver acima)
+const TOTAL_FOTOS_GALERIA = 22; // <- comece em 0; suba este número só depois de colocar os itens reais (ver acima)
 
 const GALERIA_LEGENDAS = {
     // 1: 'O dia do atoleiro — rimos até doer a barriga.',
@@ -186,6 +186,13 @@ const GALERIA_LEGENDAS = {
 const TIPO_GALERIA = {
     // 3: 'video',
     // 6: 'youtube',
+   16: 'video'
+   17: 'video'
+   18: 'video'
+   19: 'video'
+   20: 'video'
+   21: 'video'
+   22: 'video'
 };
 
 /* Link (ou só o ID) do vídeo do YouTube, para cada número marcado como
