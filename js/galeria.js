@@ -16,7 +16,7 @@
  * ============================================================================
  */
 
-let __galeriaFotosCarregadas = 0;
+let __galeriaFotosCarregadas = 22;
 
 function montarGaleria() {
     const masonry = document.getElementById('galeriaMasonry');
