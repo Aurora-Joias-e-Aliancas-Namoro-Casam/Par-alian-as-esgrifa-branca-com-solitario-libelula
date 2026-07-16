@@ -571,7 +571,8 @@ html.galeria-html { background-color: #1c1014; }
 .galeria-girassol { width: 34px; height: 34px; margin: 0 auto 6px; opacity: 0.85; }
 
 .galeria-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 70px; }
-.galeria-masonry { column-count: 2; column-gap: 16px; }
+.galeria-masonry { column-count: 1; column-gap: 16px; }
+@media (min-width: 480px) { .galeria-masonry { column-count: 2; column-gap: 16px; } }
 @media (min-width: 640px) { .galeria-masonry { column-count: 3; column-gap: 20px; } }
 @media (min-width: 980px) { .galeria-masonry { column-count: 4; column-gap: 24px; } }
 
@@ -637,6 +638,17 @@ html.galeria-html { background-color: #1c1014; }
     font-family: 'Cormorant Garamond', Georgia, serif;
     box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
+.aurora-sync-banner-erro { background: rgba(180, 60, 40, 0.95); color: #fff; }
+.aurora-aviso-fechar {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.1rem;
+    line-height: 1;
+    margin-left: 8px;
+    padding: 0 4px;
+    vertical-align: middle;
+}
 
 /* ============================================================================
    MODO VISUALIZAÇÃO DA LOJINHA ("rever sem afetar o banco")
@@ -689,22 +701,8 @@ html.galeria-html { background-color: #1c1014; }
 .vinheta-modo-retorno .vinheta-sub { display: none; }
 
 /* ============================================================================
-   "O QUE EU SINTO POR VOCÊ" — campo de texto livre
+   "O QUE EU SINTO POR VOCÊ" — texto fixo, editado direto no HTML (ver index.html)
    ============================================================================ */
-.sentimentos-textarea {
-    width: 100%;
-    min-height: 130px;
-    padding: 14px 16px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.06);
-    color: #fff;
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.05rem;
-    line-height: 1.5;
-    resize: vertical;
-}
-.sentimentos-textarea::placeholder { color: rgba(255,255,255,0.4); font-style: italic; }
 .sentimentos-texto {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-style: italic;
@@ -719,3 +717,17 @@ html.galeria-html { background-color: #1c1014; }
     border-radius: 4px;
 }
 
+
+/* ============================================================================
+   AVISO DE VÍDEO GRANDE DEMAIS PRA NUVEM (com orientação de YouTube)
+   ============================================================================ */
+.video-grande-aviso {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    color: #ffe6a3;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}

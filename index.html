@@ -448,6 +448,10 @@
                         <button id="btnPararGravacao" class="btn btn-danger flex-fill rounded-pill fw-bold btn-sm d-none"><span class="rec-dot"></span>Parar</button>
                     </div>
                     <p id="saveStatus" class="save-status"></p>
+                    <div id="videoGrandeAviso" class="video-grande-aviso d-none">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Esse vídeo ficou grande demais pra sincronizar automaticamente com a nuvem (o plano gratuito aceita até 50MB por arquivo). <strong>Uma cópia já foi baixada no seu celular.</strong> Suba esse arquivo no YouTube (pode ser como "Não listado") e cole o link na seção <strong>"Vídeo do nosso pedido"</strong> na página final — assim ele aparece certinho em qualquer aparelho, sem depender do envio automático.
+                    </div>
                     <div id="videoActions" class="d-none mt-2 d-flex flex-column gap-2">
                         <button id="btnRegravar" class="btn btn-light border rounded-pill btn-sm fw-bold">Regravar</button>
                     </div>
@@ -834,17 +838,15 @@
         <div class="text-center mt-5 reveal-up" style="max-width: 460px; margin-left: auto; margin-right: auto;">
             <p class="romance-section-title">O que eu sinto por você</p>
 
-            <div id="sentimentosVazio">
-                <textarea id="sentimentosInput" class="sentimentos-textarea" rows="6" placeholder="Escreva aqui o que nem sempre consigo dizer olhando nos seus olhos: o que mudou em mim desde que te conheci, o que eu mais admiro em você, o que eu prometo pra nós dois daqui pra frente..."></textarea>
-                <br>
-                <button id="btnSalvarSentimentos" class="btn btn-share btn-sm rounded-pill mt-2">Salvar</button>
-                <p id="sentimentosStatus" class="save-status"></p>
-            </div>
-
-            <div id="sentimentosPreenchido" class="d-none">
-                <p class="sentimentos-texto" id="sentimentosTexto"></p>
-                <button id="btnEditarSentimentos" class="btn btn-outline-light btn-sm rounded-pill mt-2"><i class="bi bi-pencil me-1"></i>Editar</button>
-            </div>
+            <!--
+                Escreva aqui, direto no HTML, o que você quiser dizer pra ela.
+                Pode ser um texto de qualquer tamanho — quebras de linha e
+                parágrafos funcionam normalmente. Não precisa mexer em mais
+                nada além do texto abaixo (dentro das tags <p>).
+            -->
+            <p class="sentimentos-texto">
+                Escreva aqui o que sente por ela — edite este texto direto no arquivo index.html, procurando por "O que eu sinto por você".
+            </p>
         </div>
 
         <div class="text-center mt-5 reveal-up">

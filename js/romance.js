@@ -472,7 +472,7 @@ async function goToRomancePage() {
 
     const dataPedidoIso = await obterConfiguracao('aurora_data_pedido');
     if (dataPedidoIso) {
-        document.getElementById('dataPedidoTexto').textContent = `Nosso pedido: ${formatarDataPedido(dataPedidoIso)}`;
+        document.getElementById('dataPedidoTexto').textContent = `Nosso pedido: ${formatarDataPedidoComHora(dataPedidoIso)}`;
         const elTimeline = document.getElementById('dataPedidoTimeline');
         if (elTimeline) elTimeline.textContent = formatarDataPedido(dataPedidoIso);
 
@@ -630,58 +630,8 @@ function exibirVideoYoutubePedido(id) {
     }
 }
 
-/* ----------------------------------------------------------------------
-   "O QUE EU SINTO POR VOCÊ" — campo de texto livre na página final, com
-   placeholder poético pra dar um norte de por onde começar a escrever.
-   ---------------------------------------------------------------------- */
-async function iniciarSentimentos() {
-    const salvo = await obterConfiguracao('aurora_sentimentos_texto');
-    exibirSentimentos(salvo);
-
-    document.getElementById('btnSalvarSentimentos').addEventListener('click', salvarSentimentos);
-    document.getElementById('btnEditarSentimentos').addEventListener('click', () => {
-        document.getElementById('sentimentosPreenchido').classList.add('d-none');
-        document.getElementById('sentimentosVazio').classList.remove('d-none');
-        const textoAtual = document.getElementById('sentimentosTexto').textContent || '';
-        const input = document.getElementById('sentimentosInput');
-        input.value = textoAtual;
-        input.focus();
-    });
-}
-
-async function salvarSentimentos() {
-    const input = document.getElementById('sentimentosInput');
-    const status = document.getElementById('sentimentosStatus');
-    const texto = (input.value || '').trim();
-
-    if (!texto) {
-        status.textContent = 'Escreva algo antes de salvar.';
-        status.className = 'save-status err';
-        return;
-    }
-
-    await salvarConfiguracao('aurora_sentimentos_texto', texto);
-    status.textContent = '';
-    status.className = 'save-status';
-    exibirSentimentos(texto);
-}
-
-function exibirSentimentos(texto) {
-    const vazio = document.getElementById('sentimentosVazio');
-    const preenchido = document.getElementById('sentimentosPreenchido');
-    if (texto) {
-        document.getElementById('sentimentosTexto').textContent = texto;
-        vazio.classList.add('d-none');
-        preenchido.classList.remove('d-none');
-    } else {
-        preenchido.classList.add('d-none');
-        vazio.classList.remove('d-none');
-    }
-}
-
 function iniciarModuloRomance() {
     iniciarVideoYoutubePedido();
-    iniciarSentimentos();
 
     const btnGerarContrato = document.getElementById('btnGerarContrato');
     if (btnGerarContrato) {

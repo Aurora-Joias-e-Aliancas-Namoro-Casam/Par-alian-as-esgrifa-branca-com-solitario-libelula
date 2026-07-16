@@ -227,7 +227,11 @@ async function salvarMensagemFuturoGravada() {
     if (sucesso) {
         document.getElementById('futuroGravacaoArea').classList.add('d-none');
         document.getElementById('futuroSucesso').classList.remove('d-none');
-        statusEl.textContent = '';
+        const proximoDoLimite = futuroModo === 'video' && futuroBlobPendente.size > 45 * 1024 * 1024;
+        statusEl.textContent = proximoDoLimite
+            ? `Essa mensagem ficou com ${(futuroBlobPendente.size / (1024 * 1024)).toFixed(1)}MB — grande demais pra sincronizar com a nuvem (limite de 50MB do plano gratuito). Prefira mensagens mais curtas, ou envie essa por outro meio.`
+            : '';
+        statusEl.className = proximoDoLimite ? 'save-status pending' : 'save-status';
         renderizarMensagensFuturo();
     } else {
         statusEl.textContent = 'Não foi possível confirmar o salvamento. Tente novamente.';

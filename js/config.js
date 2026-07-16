@@ -128,96 +128,53 @@ function getAsset(id) {
 /* ----------------------------------------------------------------------
    GALERIA DE LEMBRANÇAS (página própria — galeria.html)
    ----------------------------------------------------------------------
-   Padrão de nomenclatura (documentado aqui desde o início do projeto,
-   como pedido): salve as fotos E VÍDEOS dentro de assets/img/galeria/
-   sempre com o nome:
+   Simples de propósito: o site descobre sozinho quantos itens existem e
+   se cada um é foto ou vídeo, só pela extensão do arquivo. Você não
+   precisa contar nem classificar nada.
+
+   Salve as fotos e vídeos dentro de assets/img/galeria/ sempre com o
+   nome "galeria_" + número em sequência, começando em 1:
 
        galeria_1.jpg
-       galeria_2.jpg
-       galeria_3.mp4      <- um vídeo local, nesse exemplo
-       galeria_4.jpg
+       galeria_2.mp4      <- um vídeo, nesse exemplo (funciona igual pra foto)
+       galeria_3.jpg
        ...
 
-   Sem limite de quantidade — a galeria foi feita para crescer com o
-   passar dos anos. Para adicionar um novo item:
-     1. Salve o arquivo em assets/img/galeria/ com o próximo número da
-        sequência (ex.: se o último foi galeria_37, o próximo é
-        galeria_38). Fotos aceitam .jpg, .jpeg, .png e .webp; vídeos
-        locais aceitam .mp4, .mov e .webm.
-     2. Se for um VÍDEO LOCAL, adicione uma entrada em TIPO_GALERIA
-        (abaixo) com esse mesmo número — é isso que diz pro site montar
-        um player de vídeo ali em vez de uma foto.
-     3. Se a extensão do arquivo não for a padrão do tipo (.jpg para
-        foto, .mp4 para vídeo), informe em EXTENSAO_GALERIA.
-     4. Atualize apenas o número em TOTAL_FOTOS_GALERIA, para o total de
-        itens que agora existem.
-     5. Pronto — nenhum outro arquivo do projeto precisa ser tocado.
+   Para adicionar um novo item, só salve o arquivo com o próximo número
+   da sequência. Não precisa editar nenhum arquivo do projeto — nem
+   contar quantos itens existem, nem dizer se é foto ou vídeo (o site vê
+   sozinho pela extensão do arquivo: .jpg/.jpeg/.png/.webp = foto,
+   .mp4/.mov/.webm = vídeo).
 
-   VÍDEOS DO YOUTUBE (sem precisar do arquivo — ótimo pra vídeos grandes):
-   em vez dos passos 1 e 3 acima, marque o número em TIPO_GALERIA como
-   'youtube' e cole o link (ou só o ID) do vídeo em YOUTUBE_GALERIA, com
-   esse mesmo número. Nenhum arquivo precisa existir em
-   assets/img/galeria/ para esse número — o vídeo roda direto do
-   YouTube, dentro do site (não abre o app/site do YouTube).
+   O site para de procurar depois de alguns números seguidos sem
+   encontrar nada — então não precisa "reservar" números, nem se
+   preocupar em deixar buracos na numeração.
 
-       TIPO_GALERIA = { 6: 'youtube' }
-       YOUTUBE_GALERIA = { 6: 'https://www.youtube.com/watch?v=XXXXXXXXXXX' }
+   VÍDEOS DO YOUTUBE (sem precisar do arquivo — ótimo pra vídeos
+   grandes): como esses não são um arquivo local, adicione o link numa
+   lista à parte, em GALERIA_YOUTUBE (abaixo). Roda embutido dentro do
+   site (não abre o app/site do YouTube). Recomendo subir como "Não
+   listado" no YouTube, assim só quem tem o link acessa.
 
-   (Pode colar o link como veio do "Compartilhar" do YouTube, do celular
-   ou do navegador — inclusive links curtos youtu.be e Shorts. Também
-   aceita só o código do vídeo, se preferir.)
-
-   Legendas são opcionais (funcionam igual para foto, vídeo local ou
-   vídeo do YouTube): para dar uma frase a um item específico, adicione
-   uma entrada em GALERIA_LEGENDAS usando o mesmo número.
+   Legendas são opcionais (funcionam para foto, vídeo local ou vídeo do
+   YouTube): para dar uma frase a uma foto/vídeo local específico,
+   adicione uma entrada em GALERIA_LEGENDAS usando o mesmo número do
+   arquivo; para um vídeo do YouTube, escreva a legenda junto dele em
+   GALERIA_YOUTUBE.
    ---------------------------------------------------------------------- */
-const TOTAL_FOTOS_GALERIA = 22; // <- comece em 0; suba este número só depois de colocar os itens reais (ver acima)
+const PASTA_GALERIA = 'assets/img/galeria';
 
 const GALERIA_LEGENDAS = {
     // 1: 'O dia do atoleiro — rimos até doer a barriga.',
     // 2: 'Colina, 30/05. O começo de tudo.',
 };
 
-/* Marque aqui o número de qualquer item que NÃO seja uma foto comum:
-   'video' para um vídeo local (arquivo em assets/img/galeria/), ou
-   'youtube' para um vídeo do YouTube (ver YOUTUBE_GALERIA abaixo — não
-   precisa de arquivo nenhum nesse caso). Qualquer número que não estiver
-   listado aqui é tratado como foto normalmente. */
-const TIPO_GALERIA = {
-    // 3: 'video',
-    // 6: 'youtube',
-      16: 'video',
-      17: 'video',
-      18: 'video',
-      19: 'video',
-      20: 'video',
-      21: 'video',
-      22: 'video',
-};
-
-/* Link (ou só o ID) do vídeo do YouTube, para cada número marcado como
-   'youtube' em TIPO_GALERIA acima. */
-const YOUTUBE_GALERIA = {
-    // 6: 'https://www.youtube.com/watch?v=XXXXXXXXXXX',
-};
-
-const PASTA_GALERIA = 'assets/img/galeria';
-
-const EXTENSAO_GALERIA = {
-    // Se algum item específico não usar a extensão padrão do seu tipo
-    // (.jpg para foto, .mp4 para vídeo), informe a extensão real aqui.
-    // Exemplo: 5: 'png',   Exemplo: 3: 'mov',
-};
-
-/** true se o item da galeria com esse número for um vídeo LOCAL (ver TIPO_GALERIA acima). */
-function ehVideoGaleria(numero) {
-    return (typeof TIPO_GALERIA === 'object' && TIPO_GALERIA[numero] === 'video');
-}
-
-/** true se o item da galeria com esse número for um vídeo do YOUTUBE (ver TIPO_GALERIA acima). */
-function ehYoutubeGaleria(numero) {
-    return (typeof TIPO_GALERIA === 'object' && TIPO_GALERIA[numero] === 'youtube');
-}
+/* Vídeos do YouTube (não precisam de arquivo — ver explicação acima).
+   Cole o link como veio do "Compartilhar" do YouTube (celular ou
+   navegador) — aceita inclusive links curtos youtu.be e Shorts. */
+const GALERIA_YOUTUBE = [
+    // { link: 'https://www.youtube.com/watch?v=XXXXXXXXXXX', legenda: 'Legenda opcional' },
+];
 
 /**
  * Extrai só o ID do vídeo de qualquer formato de link que o YouTube
@@ -241,12 +198,9 @@ function extrairIdYoutube(valor) {
     return texto; // já era só o ID (ou algo não reconhecido — usa como veio)
 }
 
-/** Caminho do arquivo de um item da galeria pelo número (só se aplica a foto/vídeo local — ver padrão acima). */
-function getAssetGaleria(numero) {
-    const extensaoPadrao = ehVideoGaleria(numero) ? 'mp4' : 'jpg';
-    const extensao = (typeof EXTENSAO_GALERIA === 'object' && EXTENSAO_GALERIA[numero]) ? EXTENSAO_GALERIA[numero] : extensaoPadrao;
-    return `${PASTA_GALERIA}/galeria_${numero}.${extensao}`;
-}
+/* Extensões aceitas para descoberta automática — ver montarGaleria() em js/galeria.js. */
+const GALERIA_EXTENSOES_FOTO = ['jpg', 'jpeg', 'png', 'webp'];
+const GALERIA_EXTENSOES_VIDEO = ['mp4', 'mov', 'webm'];
 
 /* ----------------------------------------------------------------------
    NOSSA HISTÓRIA — LINHA DO TEMPO

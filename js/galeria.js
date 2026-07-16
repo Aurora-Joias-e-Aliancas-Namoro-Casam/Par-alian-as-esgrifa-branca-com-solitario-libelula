@@ -1,92 +1,149 @@
 /**
  * ============================================================================
- * GALERIA.JS — Álbum permanente de lembranças (item 4 do prompt de melhorias)
+ * GALERIA.JS — Álbum permanente de lembranças
  * ============================================================================
- * 100% estático, de propósito: os itens são arquivos colocados manualmente
- * em assets/img/galeria/ (ou links do YouTube), configurados em
- * js/config.js (TOTAL_FOTOS_GALERIA, TIPO_GALERIA, YOUTUBE_GALERIA,
- * getAssetGaleria, GALERIA_LEGENDAS). Não usa banco de dados nem
+ * 100% estático: os itens são arquivos colocados manualmente em
+ * assets/img/galeria/ (galeria_1.jpg, galeria_2.mp4, ...) ou links do
+ * YouTube (GALERIA_YOUTUBE em js/config.js). Não usa banco de dados nem
  * sincronização — só HTML/CSS/JS lendo arquivos do próprio repositório.
- * Cada item pode ser: foto (padrão), vídeo local (arquivo em
- * assets/img/galeria/) ou vídeo do YouTube (roda embutido, sem precisar de
- * arquivo — ótimo pra vídeos grandes). Vídeos (locais ou YouTube) aparecem
- * com um ícone de play por cima da capa. Itens que ainda não existirem no
- * disco (onerror) simplesmente não aparecem — assim a página nunca quebra
- * enquanto o álbum estiver sendo preenchido aos poucos.
+ *
+ * DESCOBERTA AUTOMÁTICA: em vez de exigir configurar quantos itens
+ * existem e qual o tipo de cada um, o site tenta cada número em
+ * sequência (galeria_1, galeria_2, ...) contra cada extensão aceita
+ * (fotos e vídeos, ver GALERIA_EXTENSOES_FOTO/VIDEO em js/config.js) e
+ * usa a primeira que encontrar — o tipo (foto ou vídeo) é decidido pela
+ * própria extensão do arquivo que existir. Para de procurar depois de
+ * alguns números seguidos sem encontrar nada, então não precisa
+ * "reservar" números nem editar nenhuma configuração ao adicionar itens.
  * ============================================================================
  */
 
-let __galeriaFotosCarregadas = 22;
+let __galeriaFotosCarregadas = 0;
+const GALERIA_MAX_NUMERO = 500;       // teto de segurança, nunca deve ser alcançado na prática
+const GALERIA_LACUNA_PARA_PARAR = 6;  // depois de 6 números seguidos sem nada, para de procurar
 
-function montarGaleria() {
+/** Confere (via HEAD, sem baixar o arquivo inteiro) se um caminho existe no servidor. */
+async function galeriaArquivoExiste(caminho) {
+    try {
+        const resposta = await fetch(caminho, { method: 'HEAD', cache: 'no-store' });
+        return resposta.ok;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Tenta descobrir o item "galeria_N" testando cada extensão de foto e
+ * vídeo aceita, em paralelo. Devolve { caminho, tipo } da primeira que
+ * existir, ou `null` se nenhuma existir.
+ */
+async function galeriaDescobrirItem(numero) {
+    const candidatos = [
+        ...GALERIA_EXTENSOES_FOTO.map(ext => ({ ext, tipo: 'foto' })),
+        ...GALERIA_EXTENSOES_VIDEO.map(ext => ({ ext, tipo: 'video' }))
+    ];
+
+    const resultados = await Promise.all(candidatos.map(async (c) => {
+        const caminho = `${PASTA_GALERIA}/galeria_${numero}.${c.ext}`;
+        const existe = await galeriaArquivoExiste(caminho);
+        return existe ? { caminho, tipo: c.tipo } : null;
+    }));
+
+    return resultados.find(r => r !== null) || null;
+}
+
+async function montarGaleria() {
     const masonry = document.getElementById('galeriaMasonry');
     if (!masonry) return;
 
-    const total = (typeof TOTAL_FOTOS_GALERIA === 'number' && TOTAL_FOTOS_GALERIA > 0) ? TOTAL_FOTOS_GALERIA : 0;
-    if (total === 0) { verificarSeGaleriaFicouVazia(); return; }
+    let numero = 1;
+    let lacunaAtual = 0;
 
-    for (let numero = 1; numero <= total; numero++) {
-        const legenda = (typeof GALERIA_LEGENDAS === 'object' && GALERIA_LEGENDAS[numero]) ? GALERIA_LEGENDAS[numero] : '';
-        const ehVideo = ehVideoGaleria(numero);
-        const ehYoutube = ehYoutubeGaleria(numero);
-        const tipo = ehYoutube ? 'youtube' : (ehVideo ? 'video' : 'foto');
+    while (numero <= GALERIA_MAX_NUMERO && lacunaAtual < GALERIA_LACUNA_PARA_PARAR) {
+        const encontrado = await galeriaDescobrirItem(numero);
+        if (encontrado) {
+            lacunaAtual = 0;
+            adicionarItemNaGrade(numero, encontrado.caminho, encontrado.tipo, masonry);
+        } else {
+            lacunaAtual++;
+        }
+        numero++;
+    }
+
+    montarItensYoutube(masonry);
+
+    setTimeout(verificarSeGaleriaFicouVazia, 1200);
+}
+
+function adicionarItemNaGrade(numero, src, tipo, masonry) {
+    const legenda = (typeof GALERIA_LEGENDAS === 'object' && GALERIA_LEGENDAS[numero]) ? GALERIA_LEGENDAS[numero] : '';
+
+    const item = document.createElement('figure');
+    item.className = (tipo === 'video') ? 'galeria-item galeria-item-video m-0' : 'galeria-item m-0';
+
+    if (tipo === 'video') {
+        const video = document.createElement('video');
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        video.src = `${src}#t=0.5`; // pede o frame de 0.5s como "capa" (evita quadro preto do início em alguns vídeos)
+        video.onloadedmetadata = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
+        video.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
+
+        const iconePlay = document.createElement('div');
+        iconePlay.className = 'galeria-video-play';
+        iconePlay.innerHTML = '<i class="bi bi-play-fill"></i>';
+
+        item.appendChild(video);
+        item.appendChild(iconePlay);
+    } else {
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.alt = legenda || `Lembrança ${numero}`;
+        img.src = src;
+        img.onload = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
+        img.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
+
+        item.appendChild(img);
+    }
+
+    if (legenda) {
+        const cap = document.createElement('figcaption');
+        cap.className = 'galeria-legenda';
+        cap.textContent = legenda;
+        item.appendChild(cap);
+    }
+
+    item.addEventListener('click', () => abrirLightbox(src, legenda, tipo));
+    masonry.appendChild(item);
+}
+
+function montarItensYoutube(masonry) {
+    if (!Array.isArray(GALERIA_YOUTUBE)) return;
+
+    GALERIA_YOUTUBE.forEach((entrada) => {
+        const idYoutube = extrairIdYoutube((entrada && entrada.link) || '');
+        if (!idYoutube) return;
+        const legenda = (entrada && entrada.legenda) || '';
 
         const item = document.createElement('figure');
-        item.className = (tipo !== 'foto') ? 'galeria-item galeria-item-video m-0' : 'galeria-item m-0';
+        item.className = 'galeria-item galeria-item-video m-0';
 
-        let src; // para foto/video: caminho do arquivo. Para youtube: o ID do vídeo.
+        const capa = document.createElement('img');
+        capa.loading = 'lazy';
+        capa.alt = legenda || 'Vídeo do YouTube';
+        // hqdefault sempre existe pra qualquer vídeo público/não-listado do YouTube, sem precisar de chave de API.
+        capa.src = `https://img.youtube.com/vi/${idYoutube}/hqdefault.jpg`;
+        capa.onload = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
+        capa.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
 
-        if (tipo === 'youtube') {
-            const idYoutube = extrairIdYoutube((typeof YOUTUBE_GALERIA === 'object' && YOUTUBE_GALERIA[numero]) || '');
-            if (!idYoutube) continue; // número marcado como youtube mas sem link cadastrado ainda — pula, não quebra a página
-            src = idYoutube;
+        const iconePlay = document.createElement('div');
+        iconePlay.className = 'galeria-video-play galeria-video-play-youtube';
+        iconePlay.innerHTML = '<i class="bi bi-youtube"></i>';
 
-            const capa = document.createElement('img');
-            capa.loading = 'lazy';
-            capa.alt = legenda || `Vídeo do YouTube ${numero}`;
-            // hqdefault sempre existe pra qualquer vídeo público/não-listado do YouTube, sem precisar de chave de API.
-            capa.src = `https://img.youtube.com/vi/${idYoutube}/hqdefault.jpg`;
-            capa.onload = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
-            capa.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
-
-            const iconePlay = document.createElement('div');
-            iconePlay.className = 'galeria-video-play galeria-video-play-youtube';
-            iconePlay.innerHTML = '<i class="bi bi-youtube"></i>';
-
-            item.appendChild(capa);
-            item.appendChild(iconePlay);
-        } else if (tipo === 'video') {
-            src = getAssetGaleria(numero);
-
-            const video = document.createElement('video');
-            video.muted = true;
-            video.loop = true;
-            video.playsInline = true;
-            video.preload = 'metadata';
-            video.src = `${src}#t=0.5`; // pede o frame de 0.5s como "capa" (evita quadro preto do início em alguns vídeos)
-
-            video.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
-            video.onloadedmetadata = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
-
-            const iconePlay = document.createElement('div');
-            iconePlay.className = 'galeria-video-play';
-            iconePlay.innerHTML = '<i class="bi bi-play-fill"></i>';
-
-            item.appendChild(video);
-            item.appendChild(iconePlay);
-        } else {
-            src = getAssetGaleria(numero);
-
-            const img = document.createElement('img');
-            img.loading = 'lazy';
-            img.alt = legenda || `Lembrança ${numero}`;
-            img.src = src;
-
-            img.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
-            img.onload = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
-
-            item.appendChild(img);
-        }
+        item.appendChild(capa);
+        item.appendChild(iconePlay);
 
         if (legenda) {
             const cap = document.createElement('figcaption');
@@ -95,11 +152,9 @@ function montarGaleria() {
             item.appendChild(cap);
         }
 
-        item.addEventListener('click', () => abrirLightbox(src, legenda, tipo));
+        item.addEventListener('click', () => abrirLightbox(idYoutube, legenda, 'youtube'));
         masonry.appendChild(item);
-    }
-
-    setTimeout(verificarSeGaleriaFicouVazia, 1500);
+    });
 }
 
 function verificarSeGaleriaFicouVazia() {

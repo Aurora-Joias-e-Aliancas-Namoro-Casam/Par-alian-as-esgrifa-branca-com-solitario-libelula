@@ -313,7 +313,12 @@ async function gerarBackupZipBlob() {
     }
 
     zip.file('manifest.json', JSON.stringify(manifest));
-    return await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    // CORREÇÃO: sem compressão adicional (STORE, não DEFLATE) — vídeo, foto
+    // e áudio já são formatos comprimidos (MP4/JPEG/etc.), então tentar
+    // comprimir de novo só gasta processamento do celular (bem perceptível
+    // num vídeo de 100MB+) pra ganhar quase nada de espaço. O manifest.json
+    // (texto) é pequeno o bastante pra não fazer diferença real.
+    return await zip.generateAsync({ type: 'blob', compression: 'STORE' });
 }
 
 /* ----------------------------------------------------------------------

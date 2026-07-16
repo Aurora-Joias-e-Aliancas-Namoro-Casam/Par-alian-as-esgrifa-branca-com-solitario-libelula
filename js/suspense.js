@@ -381,10 +381,12 @@ async function salvarVideoComSeguranca(blob, mimeType) {
     if (statusEl) {
         if (sucesso) {
             const tamanhoMB = (blob.size / (1024 * 1024)).toFixed(1);
-            const proximoDoLimite = blob.size > 45 * 1024 * 1024; // aviso perto do limite padrão de 50MB do bucket
-            statusEl.textContent = `Vídeo salvo com sucesso (${tamanhoMB}MB). Baixando uma cópia automaticamente...` +
-                (proximoDoLimite ? ' Atenção: esse vídeo está grande — pode não sincronizar com a nuvem se o bucket tiver limite de 50MB (veja diagnostico.html).' : '');
+            const proximoDoLimite = blob.size > 45 * 1024 * 1024; // aviso perto do limite fixo de 50MB do plano gratuito do Supabase
+            statusEl.textContent = `Vídeo salvo com sucesso (${tamanhoMB}MB). Baixando uma cópia automaticamente...`;
             statusEl.className = proximoDoLimite ? 'save-status pending' : 'save-status ok';
+
+            const avisoEl = document.getElementById('videoGrandeAviso');
+            if (avisoEl) avisoEl.classList.toggle('d-none', !proximoDoLimite);
         } else {
             statusEl.textContent = 'Não foi possível confirmar o salvamento interno, mas o download automático foi iniciado — não feche o app até ele terminar.';
             statusEl.className = 'save-status err';
@@ -567,14 +569,12 @@ function iniciarFlashback(aoTerminar) {
     btnContinuar.classList.add('d-none');
 
     /**
-     * CORREÇÃO (item do prompt): antes, o flashback trocava de foto rápido
-     * e avançava sozinho pra "Nossa História" com um timer fixo, cortando a
-     * música da carta no meio. Agora: as trocas são mais lentas, a ÚLTIMA
-     * foto fica parada na tela (não desaparece sozinha), e o botão
-     * "Continuar" só aparece quando a música da carta já tiver terminado de
-     * tocar (ou na hora, se por algum motivo ela não estava tocando/falhou
-     * — pra nunca deixar a pessoa travada esperando um áudio que não vai
-     * chegar). Ela pode então ouvir a música inteira antes de seguir.
+     * CORREÇÃO (relatado: ficava parado esperando a música toda, sem botão
+     * visível — sensação de estar travado): o botão "Continuar" agora
+     * aparece na hora, assim que chega na última foto — nunca espera a
+     * música terminar. A música (se estiver tocando) continua rodando
+     * normalmente por trás mesmo depois de continuar, então nada se perde;
+     * só não FORÇA mais a pessoa a ficar parada minutos numa foto.
      */
     const intervaloEntreFotos = 2800;
     fotos.forEach((id, i) => {
@@ -590,13 +590,13 @@ function iniciarFlashback(aoTerminar) {
     });
 
     const tempoAteUltimaFoto = (fotos.length - 1) * intervaloEntreFotos + 900;
-    const musica = document.getElementById('musicaFundo');
     let jaContinuou = false;
 
     function continuar() {
         if (jaContinuou) return;
         jaContinuou = true;
-        if (musica) musica.removeEventListener('ended', continuar);
+        // A música (se estiver tocando) NÃO é pausada aqui de propósito —
+        // continua rodando naturalmente por trás da página seguinte.
         tela.style.display = 'none';
         fotos.forEach(id => document.getElementById(id).classList.remove('fb-ativa'));
         label.classList.remove('fb-visivel');
@@ -605,17 +605,9 @@ function iniciarFlashback(aoTerminar) {
     }
 
     setTimeout(() => {
-        // Chegou na última foto — ela fica parada aqui. Mostra "Continuar"
-        // assim que a música tiver terminado (ou já mostra na hora se ela
-        // não estava tocando/já tinha terminado antes/falhou ao iniciar).
-        const musicaAindaTocando = musica && !musica.paused && !musica.ended;
-        if (musicaAindaTocando) {
-            musica.addEventListener('ended', () => {
-                btnContinuar.classList.remove('d-none');
-            }, { once: true });
-        } else {
-            btnContinuar.classList.remove('d-none');
-        }
+        // Chegou na última foto — ela fica parada aqui, com o botão
+        // "Continuar" visível na hora (não espera nada tocar até o fim).
+        btnContinuar.classList.remove('d-none');
     }, tempoAteUltimaFoto);
 
     btnContinuar.addEventListener('click', continuar, { once: true });

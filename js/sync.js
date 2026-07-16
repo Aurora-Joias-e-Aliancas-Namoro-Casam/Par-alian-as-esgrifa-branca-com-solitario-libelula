@@ -95,22 +95,72 @@ function validarFormatoAnonKey(chave) {
  * timestamp — para que sincronizarNaAbertura() consiga checar "existe
  * algo mais novo?" sem precisar baixar o zip inteiro toda vez.
  */
+
+const TAMANHO_MAXIMO_PARTE_BYTES = 45 * 1024 * 1024; // cada parte fica um pouco abaixo do limite fixo de 50MB do plano gratuito
+const AVISO_QUOTA_TOTAL_BYTES = 900 * 1024 * 1024; // aviso ao se aproximar do 1GB de espaço TOTAL do plano gratuito (dividir em partes não resolve isso)
+
+/** Caminho de uma parte do backup — se só existe 1 parte, usa o nome de sempre (compatível com backups antigos). */
+function caminhoParteZip(codigo, indice, totalPartes) {
+    return totalPartes <= 1 ? `${codigo}.zip` : `${codigo}.zip.parte${indice}`;
+}
+
+/**
+ * CORREÇÃO (a pergunta que gerou isso: "não dá pra, se passar de 48MB,
+ * dividir em 2 arquivos?"): em vez de só recusar backups grandes demais,
+ * quando o total passa do limite fixo de 50MB por arquivo do plano
+ * gratuito do Supabase, o backup é dividido em pedaços menores — cada um
+ * enviado como um arquivo próprio — e remontado automaticamente na hora
+ * de baixar (ver buscarBackupZipDaNuvem, mais abaixo). O meta.json passa
+ * a guardar quantas partes existem.
+ *
+ * Importante: isso contorna o limite POR ARQUIVO, mas não aumenta o
+ * espaço TOTAL disponível — o plano gratuito do Supabase continua tendo
+ * 1GB no total, somando tudo (por isso ainda existe um aviso separado se
+ * o backup sozinho já estiver perto disso). Se esse for o caso, vale
+ * considerar o YouTube pro vídeo do pedido (sai da conta do backup) ou o
+ * plano pago do Supabase.
+ */
 async function publicarBackupNaNuvem(codigo) {
     const zipBlob = await gerarBackupZipBlob();
     const atualizadoEm = parseInt(await obterConfiguracao('aurora_atualizado_em'), 10) || Date.now();
 
-    const urlZip = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${codigo}.zip`;
-    const respostaZip = await fetch(urlZip, {
-        method: 'POST',
-        headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/zip',
-            'x-upsert': 'true'
-        },
-        body: zipBlob
-    });
-    if (!respostaZip.ok) throw new Error(`Falha ao publicar na nuvem: ${respostaZip.status}`);
+    if (zipBlob.size > AVISO_QUOTA_TOTAL_BYTES) {
+        const tamanhoMB = (zipBlob.size / (1024 * 1024)).toFixed(0);
+        throw new Error(`O backup ficou com ${tamanhoMB}MB — perto do espaço TOTAL de 1GB do plano gratuito da nuvem (dividir em partes não resolve isso, é um limite de espaço, não de tamanho por arquivo). Baixe uma cópia manual ("Backup da Nossa História", na página final) para não perder nada, e considere usar o YouTube para o vídeo do pedido (cole o link na seção "Vídeo do nosso pedido") em vez de depender do envio automático dele.`);
+    }
+
+    const totalPartes = Math.max(1, Math.ceil(zipBlob.size / TAMANHO_MAXIMO_PARTE_BYTES));
+
+    for (let i = 0; i < totalPartes; i++) {
+        const inicio = i * TAMANHO_MAXIMO_PARTE_BYTES;
+        const fim = Math.min(inicio + TAMANHO_MAXIMO_PARTE_BYTES, zipBlob.size);
+        const parte = zipBlob.slice(inicio, fim);
+
+        const url = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${caminhoParteZip(codigo, i, totalPartes)}`;
+        const resposta = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/zip',
+                'x-upsert': 'true'
+            },
+            body: parte
+        });
+        if (!resposta.ok) throw new Error(`Falha ao publicar parte ${i + 1} de ${totalPartes} na nuvem: ${resposta.status}`);
+    }
+
+    // Limpeza best-effort de partes "sobrando" de um envio anterior maior
+    // (ex.: o backup diminuiu de tamanho, ou voltou a caber numa parte só).
+    try {
+        const nomesParaApagar = [];
+        for (let i = totalPartes; i < totalPartes + 3; i++) nomesParaApagar.push(`${codigo}.zip.parte${i}`);
+        if (totalPartes > 1) nomesParaApagar.push(`${codigo}.zip`); // era um arquivo único, agora virou múltiplas partes
+        await Promise.all(nomesParaApagar.map(nome => fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${nome}`, {
+            method: 'DELETE',
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        }).catch(() => {})));
+    } catch (e) { /* limpeza, não crítico */ }
 
     const urlMeta = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${codigo}-meta.json`;
     const respostaMeta = await fetch(urlMeta, {
@@ -121,7 +171,7 @@ async function publicarBackupNaNuvem(codigo) {
             'Content-Type': 'application/json',
             'x-upsert': 'true'
         },
-        body: JSON.stringify({ atualizadoEm })
+        body: JSON.stringify({ atualizadoEm, partes: totalPartes })
     });
     if (!respostaMeta.ok) throw new Error(`Falha ao publicar metadados na nuvem: ${respostaMeta.status}`);
 
@@ -130,12 +180,13 @@ async function publicarBackupNaNuvem(codigo) {
 
 /** Baixa o backup (.zip) de um código de compartilhamento e aplica no aparelho atual. */
 async function importarBackupDaNuvem(codigo) {
-    const zipDados = await buscarBackupZipDaNuvem(codigo);
+    const meta = await buscarMetaDaNuvem(codigo);
+    const zipDados = await buscarBackupZipDaNuvem(codigo, meta ? meta.partes : 1);
     if (!zipDados) throw new Error('Não foi possível localizar essa experiência.');
     await aplicarBackupDeZip(zipDados);
 }
 
-/** Baixa só o arquivo pequeno de metadados (timestamp) de um código. Retorna `null` se não existir (404). */
+/** Baixa só o arquivo pequeno de metadados (timestamp + quantas partes o backup tem) de um código. Retorna `null` se não existir (404). */
 async function buscarMetaDaNuvem(codigo) {
     // "?t=" muda a cada chamada de propósito: as URLs "públicas" do Supabase
     // Storage passam por um CDN, e "cache: no-store" só evita o cache do
@@ -149,30 +200,53 @@ async function buscarMetaDaNuvem(codigo) {
     return await resposta.json();
 }
 
-/** Baixa o .zip completo (ArrayBuffer) de um código. Retorna `null` se não existir (404). */
-async function buscarBackupZipDaNuvem(codigo) {
-    const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}.zip?t=${Date.now()}`; // ver nota sobre cache do CDN em buscarMetaDaNuvem
-    const resposta = await fetch(url, { cache: 'no-store' });
-    if (resposta.status === 404) return null;
-    if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
-    return await resposta.arrayBuffer();
+/**
+ * Baixa o .zip completo (ArrayBuffer) de um código. Se o backup foi
+ * dividido em várias partes (ver publicarBackupNaNuvem), baixa cada uma e
+ * remonta na ordem certa antes de devolver. Retorna `null` se não existir
+ * (404) — inclusive se alguma parte estiver faltando, pra nunca aplicar
+ * um backup incompleto/corrompido.
+ */
+async function buscarBackupZipDaNuvem(codigo, totalPartes) {
+    const partes = Math.max(1, totalPartes || 1);
+
+    if (partes === 1) {
+        const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}.zip?t=${Date.now()}`; // ver nota sobre cache do CDN em buscarMetaDaNuvem
+        const resposta = await fetch(url, { cache: 'no-store' });
+        if (resposta.status === 404) return null;
+        if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
+        return await resposta.arrayBuffer();
+    }
+
+    const buffers = [];
+    for (let i = 0; i < partes; i++) {
+        const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}.zip.parte${i}?t=${Date.now()}`;
+        const resposta = await fetch(url, { cache: 'no-store' });
+        if (resposta.status === 404) return null; // uma parte sumiu — não aplica um backup incompleto
+        if (!resposta.ok) throw new Error(`Falha ao baixar parte ${i + 1} de ${partes} da nuvem (${resposta.status})`);
+        buffers.push(await resposta.arrayBuffer());
+    }
+
+    const tamanhoTotal = buffers.reduce((soma, b) => soma + b.byteLength, 0);
+    const combinado = new Uint8Array(tamanhoTotal);
+    let offset = 0;
+    for (const b of buffers) { combinado.set(new Uint8Array(b), offset); offset += b.byteLength; }
+    return combinado.buffer;
 }
 
-/** Apaga o .zip antigo da nuvem (limpeza — não é a parte crítica do reset, ver publicarResetNaNuvem). */
+/** Apaga o(s) arquivo(s) de backup antigo(s) da nuvem — incluindo partes, se o backup tiver sido dividido (limpeza — não é a parte crítica do reset, ver publicarResetNaNuvem). */
 async function apagarZipDaNuvem() {
     if (!syncEstaConfigurado()) return;
-    // Inclui o nome antigo (.json) por compatibilidade com experiências criadas antes desta correção.
+    // Inclui o nome antigo (.json) por compatibilidade com experiências criadas antes desta correção,
+    // e um número generoso de partes possíveis (ver publicarBackupNaNuvem) — DELETE num arquivo que
+    // não existe simplesmente não faz nada, então não tem problema tentar mais do que o necessário.
     const arquivos = [`${EXPERIENCE_ID}.zip`, `${EXPERIENCE_ID}.json`, `${EXPERIENCE_ID}-reset.json`];
-    for (const nomeArquivo of arquivos) {
-        try {
-            await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${nomeArquivo}`, {
-                method: 'DELETE',
-                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-            });
-        } catch (err) {
-            console.error(`Falha ao apagar "${nomeArquivo}" na nuvem (não crítico):`, err);
-        }
-    }
+    for (let i = 0; i < 20; i++) arquivos.push(`${EXPERIENCE_ID}.zip.parte${i}`);
+
+    await Promise.all(arquivos.map(nomeArquivo => fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${nomeArquivo}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    }).catch(err => console.error(`Falha ao apagar "${nomeArquivo}" na nuvem (não crítico):`, err))));
 }
 
 /* ----------------------------------------------------------------------
@@ -260,7 +334,14 @@ let __auroraSyncEmAndamento = 0; // contador de envios em voo (pode haver mais d
 function mostrarBannerSync(emAndamento) {
     __auroraSyncEmAndamento = Math.max(0, __auroraSyncEmAndamento + (emAndamento ? 1 : -1));
     const banner = document.getElementById('auroraSyncBanner');
-    if (banner) banner.classList.toggle('d-none', __auroraSyncEmAndamento <= 0);
+    if (!banner) return;
+    if (emAndamento) {
+        // Reseta pro texto padrão — evita mostrar um erro antigo (com botão de
+        // fechar) por cima de um envio novo que está começando agora.
+        banner.classList.remove('aurora-sync-banner-erro');
+        banner.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando na nuvem — não feche o app nem tranque a tela ainda...';
+    }
+    banner.classList.toggle('d-none', __auroraSyncEmAndamento <= 0);
 }
 
 window.addEventListener('beforeunload', (evt) => {
@@ -306,6 +387,29 @@ async function publicarComIndicadorVisivel() {
 }
 
 /**
+ * Mostra um aviso persistente no topo da tela (o mesmo espaço do "Salvando
+ * na nuvem...") — diferente do status pequeno da página final
+ * (#compartilharStatus), este aparece em QUALQUER tela do site, o que
+ * importa pra avisos críticos como "o backup passou perto do limite total de espaço",
+ * que costumam acontecer logo depois de gravar o vídeo — bem antes da
+ * pessoa chegar na página final onde o status pequeno fica escondido.
+ * Fica visível até a pessoa tocar pra fechar (não se limita a alguns
+ * segundos, pra não passar despercebido).
+ */
+function mostrarAvisoPersistente(mensagem) {
+    const banner = document.getElementById('auroraSyncBanner');
+    if (!banner) return;
+    banner.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${mensagem} <button type="button" class="aurora-aviso-fechar" aria-label="Fechar">&times;</button>`;
+    banner.classList.remove('d-none');
+    banner.classList.add('aurora-sync-banner-erro');
+    banner.querySelector('.aurora-aviso-fechar').addEventListener('click', () => {
+        banner.classList.add('d-none');
+        banner.classList.remove('aurora-sync-banner-erro');
+        banner.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando na nuvem — não feche o app nem tranque a tela ainda...';
+    });
+}
+
+/**
  * Chamado (via hook em db.js) sempre que algo muda localmente.
  * `imediato = true` (usado para vídeo, foto, áudio — ver salvarMedia em
  * js/db.js) dispara o envio na hora, sem esperar; `imediato = false`
@@ -313,16 +417,41 @@ async function publicarComIndicadorVisivel() {
  * agrupando várias mudanças rápidas num único envio, para não martelar
  * a rede a cada tecla digitada.
  */
+/**
+ * CORREÇÃO CRÍTICA (bug relatado: reset não propagava mesmo depois de
+ * várias tentativas): os testes de diagnóstico em diagnostico.html salvam
+ * e apagam dados de teste reais no banco (pra confirmar que salvar/ler
+ * funciona) — e isso, sem essa proteção, disparava sincronizações de
+ * verdade com a nuvem, reenviando (ou sobrescrevendo) o estado real só
+ * por causa de um teste técnico. Como o diagnóstico roda automaticamente
+ * toda vez que a página abre, isso significava que CONFERIR o estado do
+ * reset podia, ele mesmo, apagar o sinal de reset antes do outro
+ * aparelho ter a chance de vê-lo. js/diagnostics.js liga essa chave antes
+ * de rodar os testes e desliga depois.
+ */
+window.__auroraSuprimirSyncDiagnostico = false;
+
 function agendarEnvioNuvem(imediato = false) {
     if (!syncEstaConfigurado()) return;
     if (__auroraAplicandoBackupRemoto) return; // essa mudança veio de um backup importado, não precisa reenviar
+    if (window.__auroraSuprimirSyncDiagnostico) return; // mudança causada por um teste de diagnóstico — não é conteúdo real, não sincroniza
 
     clearTimeout(__auroraTimeoutEnvioNuvem);
     const disparar = () => {
         publicarComIndicadorVisivel().catch(err => {
             console.error('Falha no envio automático para a nuvem:', err);
+            const mensagemEspecifica = (err && err.message && err.message.includes('espaço TOTAL')) ? err.message : null;
+
+            if (mensagemEspecifica) {
+                // Aviso importante — mostra em qualquer tela do site, não só na página final.
+                mostrarAvisoPersistente(mensagemEspecifica);
+            }
+
             const statusEl = document.getElementById('compartilharStatus');
-            if (statusEl) { statusEl.textContent = 'Não sincronizou automaticamente — toque em "Compartilhar" para tentar de novo, ou confira sua internet.'; statusEl.className = 'save-status err'; }
+            if (statusEl) {
+                statusEl.textContent = mensagemEspecifica || 'Não sincronizou automaticamente — toque em "Compartilhar" para tentar de novo, ou confira sua internet.';
+                statusEl.className = 'save-status err';
+            }
         });
     };
 
@@ -383,7 +512,7 @@ async function sincronizarNaAbertura() {
         // A nuvem tem uma versão mais nova (ex.: foi concluída em outro aparelho) — baixa o zip completo e aplica aqui.
         __auroraAplicandoBackupRemoto = true;
         try {
-            const zipDados = await buscarBackupZipDaNuvem(EXPERIENCE_ID);
+            const zipDados = await buscarBackupZipDaNuvem(EXPERIENCE_ID, meta.partes);
             if (zipDados) {
                 await aplicarBackupDeZip(zipDados);
                 await db.configuracoes.put({ chave: 'aurora_atualizado_em', valor: String(timestampNuvem) });

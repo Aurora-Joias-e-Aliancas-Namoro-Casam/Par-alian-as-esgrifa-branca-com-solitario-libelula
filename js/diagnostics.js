@@ -131,33 +131,42 @@ async function executarDiagnosticoCompleto() {
     resumo.className = 'diag-resumo diag-pending';
     resumo.textContent = 'Executando verificações...';
 
-    const testes = [
-        ['IndexedDB disponível neste navegador', testeIndexedDbDisponivel],
-        ['Banco de dados abre corretamente', testeBancoAbre],
-        ['Configurações simples (escrita + leitura)', testeConfiguracaoTextoSimples],
-        ['Arquivo pequeno (≈50KB, simula uma foto)', () => testeBlobRoundtrip(50 * 1024, 'Arquivo pequeno')],
-        ['Arquivo grande (≈8MB, simula um vídeo curto)', () => testeBlobRoundtrip(8 * 1024 * 1024, 'Arquivo grande')],
-        ['Espaço de armazenamento disponível', testeEstimativaArmazenamento],
-        ['Armazenamento persistente (proteção contra limpeza automática)', testeArmazenamentoPersistente],
-        ['Suporte a gravação de câmera/microfone', testeSuporteGravacao],
-        ['Configuração de sincronização na nuvem', testeConfiguracaoNuvem]
-    ];
+    // Impede que os testes abaixo (que salvam/apagam dados de verdade no
+    // banco, só pra confirmar que ler/escrever funciona) disparem uma
+    // sincronização real com a nuvem — ver agendarEnvioNuvem em js/sync.js.
+    window.__auroraSuprimirSyncDiagnostico = true;
 
-    let todosOk = true;
-    for (const [nome, fn] of testes) {
-        const item = document.createElement('li');
-        item.className = 'diag-item diag-rodando';
-        item.innerHTML = `<i class="bi bi-hourglass-split"></i><div><strong>${nome}</strong><p>Verificando...</p></div>`;
-        lista.appendChild(item);
+    try {
+        const testes = [
+            ['IndexedDB disponível neste navegador', testeIndexedDbDisponivel],
+            ['Banco de dados abre corretamente', testeBancoAbre],
+            ['Configurações simples (escrita + leitura)', testeConfiguracaoTextoSimples],
+            ['Arquivo pequeno (≈50KB, simula uma foto)', () => testeBlobRoundtrip(50 * 1024, 'Arquivo pequeno')],
+            ['Arquivo grande (≈8MB, simula um vídeo curto)', () => testeBlobRoundtrip(8 * 1024 * 1024, 'Arquivo grande')],
+            ['Espaço de armazenamento disponível', testeEstimativaArmazenamento],
+            ['Armazenamento persistente (proteção contra limpeza automática)', testeArmazenamentoPersistente],
+            ['Suporte a gravação de câmera/microfone', testeSuporteGravacao],
+            ['Configuração de sincronização na nuvem', testeConfiguracaoNuvem]
+        ];
 
-        let resultado;
-        try { resultado = await fn(); } catch (e) { resultado = { ok: false, motivo: `Erro inesperado: ${e.message}` }; }
+        var todosOk = true;
+        for (const [nome, fn] of testes) {
+            const item = document.createElement('li');
+            item.className = 'diag-item diag-rodando';
+            item.innerHTML = `<i class="bi bi-hourglass-split"></i><div><strong>${nome}</strong><p>Verificando...</p></div>`;
+            lista.appendChild(item);
 
-        item.classList.remove('diag-rodando');
-        if (resultado.ok === true) { item.classList.add('diag-ok'); item.querySelector('i').className = 'bi bi-check-circle-fill'; }
-        else if (resultado.ok === false) { item.classList.add('diag-erro'); item.querySelector('i').className = 'bi bi-x-circle-fill'; todosOk = false; }
-        else { item.classList.add('diag-neutro'); item.querySelector('i').className = 'bi bi-info-circle-fill'; }
-        item.querySelector('p').textContent = resultado.motivo;
+            let resultado;
+            try { resultado = await fn(); } catch (e) { resultado = { ok: false, motivo: `Erro inesperado: ${e.message}` }; }
+
+            item.classList.remove('diag-rodando');
+            if (resultado.ok === true) { item.classList.add('diag-ok'); item.querySelector('i').className = 'bi bi-check-circle-fill'; }
+            else if (resultado.ok === false) { item.classList.add('diag-erro'); item.querySelector('i').className = 'bi bi-x-circle-fill'; todosOk = false; }
+            else { item.classList.add('diag-neutro'); item.querySelector('i').className = 'bi bi-info-circle-fill'; }
+            item.querySelector('p').textContent = resultado.motivo;
+        }
+    } finally {
+        window.__auroraSuprimirSyncDiagnostico = false;
     }
 
     resumo.className = todosOk ? 'diag-resumo diag-ok' : 'diag-resumo diag-erro';
@@ -261,6 +270,7 @@ async function executarVerEstadoReset() {
             <div class="linha"><span>existe?</span><span>${meta ? 'sim' : 'não (nunca sincronizado, ou já foi apagado)'}</span></div>
             <div class="linha"><span>resetado</span><span>${nuvemFoiResetada ? 'true' : 'false'}</span></div>
             <div class="linha"><span>atualizadoEm</span><span>${formatarDataHoraDiag(timestampNuvem)}</span></div>
+            <div class="linha"><span>partes do backup</span><span>${meta && meta.partes ? meta.partes : '1 (ou desconhecido)'}</span></div>
             `}
 
             <div class="veredito ${erroNuvem ? 'alerta' : (resetPendente ? 'alerta' : 'ok')}">${decisao}</div>
@@ -274,23 +284,30 @@ async function executarVerEstadoReset() {
     }
 }
 
-/** Confere (via HEAD, sem baixar o arquivo inteiro) se um caminho realmente existe no servidor. */
-async function verificarArquivoExiste(caminho) {
+/** Confere (via HEAD, sem baixar o arquivo inteiro) se um caminho existe no servidor. */
+async function galeriaArquivoExiste(caminho) {
     try {
         const resposta = await fetch(`${caminho}?t=${Date.now()}`, { method: 'HEAD', cache: 'no-store' });
-        if (resposta.ok) return { ok: true };
-        if (resposta.status === 404) return { ok: false, motivo: 'arquivo não encontrado — confira o nome EXATO (maiúsculas/minúsculas importam) e a extensão' };
-        return { ok: false, motivo: `HTTP ${resposta.status}` };
+        return resposta.ok;
     } catch (err) {
-        return { ok: false, motivo: 'falha ao verificar (sem internet, ou aberto direto do arquivo em vez de um servidor)' };
+        return false;
     }
 }
 
-/**
- * Testa, um por um, cada item configurado na galeria (TOTAL_FOTOS_GALERIA
- * em js/config.js) e mostra exatamente qual arquivo existe ou não — em
- * vez de a galeria só "não mostrar nada" sem explicar o motivo.
- */
+/** Mesma lógica de descoberta usada em js/galeria.js — duplicada aqui só pra não precisar carregar o arquivo inteiro nesta página. */
+async function galeriaDescobrirItem(numero) {
+    const candidatos = [
+        ...GALERIA_EXTENSOES_FOTO.map(ext => ({ ext, tipo: 'foto' })),
+        ...GALERIA_EXTENSOES_VIDEO.map(ext => ({ ext, tipo: 'video' }))
+    ];
+    const resultados = await Promise.all(candidatos.map(async (c) => {
+        const caminho = `${PASTA_GALERIA}/galeria_${numero}.${c.ext}`;
+        const existe = await galeriaArquivoExiste(caminho);
+        return existe ? { caminho, tipo: c.tipo } : null;
+    }));
+    return resultados.find(r => r !== null) || null;
+}
+
 async function executarTesteGaleria() {
     const btn = document.getElementById('btnTestarGaleria');
     const painel = document.getElementById('diagGaleriaResultado');
@@ -298,44 +315,35 @@ async function executarTesteGaleria() {
     const textoOriginal = btn.innerHTML;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Testando...';
     painel.classList.remove('d-none');
-    painel.innerHTML = '<p class="text-white-50 mb-0">Testando cada item...</p>';
-
-    if (typeof TOTAL_FOTOS_GALERIA !== 'number' || TOTAL_FOTOS_GALERIA <= 0) {
-        painel.innerHTML = `
-            <div class="veredito alerta">TOTAL_FOTOS_GALERIA está em ${TOTAL_FOTOS_GALERIA} em js/config.js — é por isso que a galeria aparece vazia. Depois de colocar os arquivos na pasta assets/img/galeria/, esse número precisa ser atualizado para a quantidade total de itens.</div>
-        `;
-        btn.disabled = false;
-        btn.innerHTML = textoOriginal;
-        return;
-    }
+    painel.innerHTML = '<p class="text-white-50 mb-0">Procurando itens em assets/img/galeria/...</p>';
 
     const linhasHtml = [];
-    let totalOk = 0;
+    let numero = 1;
+    let lacunaAtual = 0;
+    let totalEncontrado = 0;
+    const LACUNA_PARA_PARAR = (typeof GALERIA_LACUNA_PARA_PARAR === 'number') ? GALERIA_LACUNA_PARA_PARAR : 6;
+    const MAX_NUMERO = (typeof GALERIA_MAX_NUMERO === 'number') ? GALERIA_MAX_NUMERO : 500;
 
-    for (let numero = 1; numero <= TOTAL_FOTOS_GALERIA; numero++) {
-        const ehVideo = ehVideoGaleria(numero);
-        const ehYoutube = ehYoutubeGaleria(numero);
-        const tipo = ehYoutube ? 'YouTube' : (ehVideo ? 'vídeo local' : 'foto');
-
-        if (ehYoutube) {
-            const bruto = (typeof YOUTUBE_GALERIA === 'object' && YOUTUBE_GALERIA[numero]) || '';
-            const id = extrairIdYoutube(bruto);
-            const ok = Boolean(id);
-            if (ok) totalOk++;
-            linhasHtml.push(`<div class="linha ${ok ? 'ok' : 'erro'}"><span>#${numero} (${tipo})</span><span>${ok ? `✓ ID: ${id}` : '✗ marcado como youtube mas SEM link em YOUTUBE_GALERIA'}</span></div>`);
+    while (numero <= MAX_NUMERO && lacunaAtual < LACUNA_PARA_PARAR) {
+        const encontrado = await galeriaDescobrirItem(numero);
+        if (encontrado) {
+            lacunaAtual = 0;
+            totalEncontrado++;
+            linhasHtml.push(`<div class="linha ok"><span>#${numero} (${encontrado.tipo})</span><span>✓ ${encontrado.caminho}</span></div>`);
         } else {
-            const caminho = getAssetGaleria(numero);
-            const resultado = await verificarArquivoExiste(caminho);
-            if (resultado.ok) totalOk++;
-            linhasHtml.push(`<div class="linha ${resultado.ok ? 'ok' : 'erro'}"><span>#${numero} (${tipo})</span><span>${resultado.ok ? `✓ ${caminho}` : `✗ ${caminho} — ${resultado.motivo}`}</span></div>`);
+            lacunaAtual++;
         }
+        numero++;
     }
 
-    const resumo = totalOk === TOTAL_FOTOS_GALERIA
-        ? { classe: 'ok', texto: `Todos os ${TOTAL_FOTOS_GALERIA} itens foram encontrados corretamente.` }
-        : { classe: 'alerta', texto: `${totalOk} de ${TOTAL_FOTOS_GALERIA} itens encontrados. Os marcados com ✗ acima não existem no caminho esperado — confira o nome exato do arquivo (minúsculo, sem espaços, "galeria_N.extensão") dentro de assets/img/galeria/. Atenção especial a fotos exportadas do iPhone: se o arquivo for .HEIC, ele precisa ser convertido para .jpg antes, porque a maioria dos navegadores não exibe HEIC diretamente.` };
+    let veredito;
+    if (totalEncontrado === 0) {
+        veredito = { classe: 'alerta', texto: `Nenhum item encontrado em assets/img/galeria/. Confira se os arquivos existem e se o nome está exatamente como "galeria_1.jpg", "galeria_2.mp4", etc. (minúsculo, sem espaços). Atenção especial a fotos do iPhone: se o arquivo for .HEIC, precisa ser convertido para .jpg antes, porque a maioria dos navegadores não exibe HEIC diretamente.` };
+    } else {
+        veredito = { classe: 'ok', texto: `${totalEncontrado} item(ns) encontrado(s) automaticamente (parou de procurar depois de ${LACUNA_PARA_PARAR} números seguidos sem nada — normal). Se algum item que você colocou não aparece na lista acima, confira o nome exato do arquivo.` };
+    }
 
-    painel.innerHTML = linhasHtml.join('') + `<div class="veredito ${resumo.classe}">${resumo.texto}</div>`;
+    painel.innerHTML = linhasHtml.join('') + `<div class="veredito ${veredito.classe}">${veredito.texto}</div>`;
 
     btn.disabled = false;
     btn.innerHTML = textoOriginal;
