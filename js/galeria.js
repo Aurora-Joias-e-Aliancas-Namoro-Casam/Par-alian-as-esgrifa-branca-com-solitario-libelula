@@ -56,18 +56,27 @@ async function montarGaleria() {
     const masonry = document.getElementById('galeriaMasonry');
     if (!masonry) return;
 
-    let numero = 1;
+    const TAMANHO_LOTE = 8; // testa vários números em paralelo por vez — bem mais rápido que um por um conforme a galeria cresce
+    let proximoNumero = 1;
     let lacunaAtual = 0;
 
-    while (numero <= GALERIA_MAX_NUMERO && lacunaAtual < GALERIA_LACUNA_PARA_PARAR) {
-        const encontrado = await galeriaDescobrirItem(numero);
-        if (encontrado) {
-            lacunaAtual = 0;
-            adicionarItemNaGrade(numero, encontrado.caminho, encontrado.tipo, masonry);
-        } else {
-            lacunaAtual++;
+    while (proximoNumero <= GALERIA_MAX_NUMERO && lacunaAtual < GALERIA_LACUNA_PARA_PARAR) {
+        const numerosDoLote = [];
+        for (let i = 0; i < TAMANHO_LOTE; i++) numerosDoLote.push(proximoNumero + i);
+
+        const resultados = await Promise.all(numerosDoLote.map(n => galeriaDescobrirItem(n)));
+
+        for (let i = 0; i < resultados.length; i++) {
+            if (resultados[i]) {
+                lacunaAtual = 0;
+                adicionarItemNaGrade(numerosDoLote[i], resultados[i].caminho, resultados[i].tipo, masonry);
+            } else {
+                lacunaAtual++;
+                if (lacunaAtual >= GALERIA_LACUNA_PARA_PARAR) break; // já sabe que vai parar — não precisa olhar o resto do lote
+            }
         }
-        numero++;
+
+        proximoNumero += TAMANHO_LOTE;
     }
 
     montarItensYoutube(masonry);

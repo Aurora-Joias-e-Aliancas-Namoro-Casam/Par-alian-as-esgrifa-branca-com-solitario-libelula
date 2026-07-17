@@ -324,16 +324,23 @@ async function executarTesteGaleria() {
     const LACUNA_PARA_PARAR = (typeof GALERIA_LACUNA_PARA_PARAR === 'number') ? GALERIA_LACUNA_PARA_PARAR : 6;
     const MAX_NUMERO = (typeof GALERIA_MAX_NUMERO === 'number') ? GALERIA_MAX_NUMERO : 500;
 
+    const TAMANHO_LOTE = 8;
     while (numero <= MAX_NUMERO && lacunaAtual < LACUNA_PARA_PARAR) {
-        const encontrado = await galeriaDescobrirItem(numero);
-        if (encontrado) {
-            lacunaAtual = 0;
-            totalEncontrado++;
-            linhasHtml.push(`<div class="linha ok"><span>#${numero} (${encontrado.tipo})</span><span>✓ ${encontrado.caminho}</span></div>`);
-        } else {
-            lacunaAtual++;
+        const numerosDoLote = [];
+        for (let i = 0; i < TAMANHO_LOTE; i++) numerosDoLote.push(numero + i);
+        const resultados = await Promise.all(numerosDoLote.map(n => galeriaDescobrirItem(n)));
+
+        for (let i = 0; i < resultados.length; i++) {
+            if (resultados[i]) {
+                lacunaAtual = 0;
+                totalEncontrado++;
+                linhasHtml.push(`<div class="linha ok"><span>#${numerosDoLote[i]} (${resultados[i].tipo})</span><span>✓ ${resultados[i].caminho}</span></div>`);
+            } else {
+                lacunaAtual++;
+                if (lacunaAtual >= LACUNA_PARA_PARAR) break;
+            }
         }
-        numero++;
+        numero += TAMANHO_LOTE;
     }
 
     let veredito;

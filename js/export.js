@@ -521,6 +521,18 @@ async function restaurarBackupDeArquivo(arquivo) {
     statusEl.textContent = 'Lendo arquivo de backup...';
     statusEl.className = 'save-status pending';
 
+    // CORREÇÃO (bug real: restaurar um backup com vários itens disparava um
+    // envio pra nuvem PARA CADA item restaurado — cada salvarMedia() conta
+    // como "mudança nova" e tenta sincronizar na hora. Isso desperdiçava
+    // banda (reenviando o backup inteiro várias vezes seguidas) e, pior,
+    // o location.reload() logo abaixo podia interromper um desses envios
+    // no meio, deixando a nuvem com dados incompletos. Suprime esses
+    // disparos durante a restauração (mesma proteção já usada quando a
+    // nuvem manda um backup pra este aparelho) — a sincronização de
+    // recarrega abaixo). A sincronização de verdade acontece uma vez só,
+    // de forma limpa, no próximo carregamento da página (via
+    // sincronizarNaAbertura, chamada assim que a página recarrega abaixo).
+    __auroraAplicandoBackupRemoto = true;
     try {
         const nome = (arquivo.name || '').toLowerCase();
         if (nome.endsWith('.json')) {
@@ -540,6 +552,8 @@ async function restaurarBackupDeArquivo(arquivo) {
         console.error('Falha ao restaurar backup', err);
         statusEl.textContent = 'Não foi possível ler esse arquivo de backup. Confira se é o arquivo .zip gerado por este site.';
         statusEl.className = 'save-status err';
+    } finally {
+        __auroraAplicandoBackupRemoto = false;
     }
 }
 
