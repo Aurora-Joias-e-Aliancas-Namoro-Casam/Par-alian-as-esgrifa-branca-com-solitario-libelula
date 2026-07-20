@@ -512,17 +512,12 @@
         </div>
     </div>
 
-    <!-- ===================== SENHA DO BOTÃO "RESETAR SITE" ===================== -->
-    <div id="senhaResetOverlay" class="senha-memorias-overlay d-none">
-        <div class="senha-memorias-box">
-            <i class="bi bi-shield-lock-fill" style="font-size: 1.8rem; color: var(--rosegold);"></i>
-            <h5 class="senha-memorias-titulo">Resetar o site</h5>
-            <p class="senha-memorias-sub">Essa ação apaga tudo (neste aparelho e no outro). Digite a senha para confirmar.</p>
-            <input type="password" inputmode="numeric" id="senhaResetInput" class="senha-memorias-input" placeholder="••••••••" maxlength="20" autocomplete="off">
-            <p id="senhaResetErro" class="save-status err d-none">Senha incorreta. Tente novamente.</p>
-            <div class="d-flex gap-2 mt-3">
-                <button id="btnSenhaResetCancelar" class="btn btn-outline-light rounded-pill fw-bold flex-fill">Cancelar</button>
-                <button id="btnSenhaResetEntrar" class="btn btn-rosegold rounded-pill fw-bold flex-fill">Confirmar</button>
+    <!-- ===================== CARREGANDO "NOSSA HISTÓRIA" (discreto) ===================== -->
+    <div id="romanceLoadingOverlay" class="romance-loading-overlay d-none">
+        <div class="romance-loading-box">
+            <p class="romance-loading-texto">preparando nossa história...</p>
+            <div class="romance-loading-barra-fundo">
+                <div id="romanceLoadingBarra" class="romance-loading-barra"></div>
             </div>
         </div>
     </div>
@@ -748,6 +743,13 @@
         <div id="romanceVideoWrap" class="mt-5 d-none romance-video-wrap reveal-up" style="max-width: 420px; margin: 0 auto;">
             <p class="romance-section-title">O momento em que você descobriu</p>
             <video id="romanceVideo" controls playsinline></video>
+            <div class="text-center mt-3">
+                <a id="btnBaixarVideoPedido" class="btn btn-outline-light btn-sm rounded-pill" download="video-do-pedido.mp4"><i class="bi bi-download me-1"></i>Baixar vídeo</a>
+            </div>
+        </div>
+
+        <div id="videoProcessoWrap" class="mt-3 d-none text-center reveal-up">
+            <a id="linkVideoProcesso" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-youtube me-1"></i>Ver todo o processo até o pedido</a>
         </div>
 
         <div id="romanceSignatureWrap" class="mt-5 d-none reveal-up" style="max-width: 420px; margin: 0 auto;">
@@ -885,10 +887,6 @@
                 <button id="btnRestaurarBackup" class="btn btn-outline-light btn-sm rounded-pill mt-2"><i class="bi bi-cloud-arrow-up-fill me-1"></i>Restaurar Backup</button>
                 <input type="file" id="inputRestaurarBackup" accept="application/zip,.zip,application/json,.json" class="d-none">
                 <p id="restaurarStatus" class="save-status"></p>
-            </div>
-
-            <div class="mt-3 text-center">
-                <button id="btnResetar" class="btn btn-outline-danger btn-sm rounded-pill mt-2">Resetar site</button>
             </div>
         </div>
     </div>

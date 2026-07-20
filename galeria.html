@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Nossa Galeria</title>
 <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -137,6 +138,9 @@
 
     <div class="galeria-lightbox" id="galeriaLightbox">
         <button class="galeria-lightbox-close" id="galeriaLightboxClose" aria-label="Fechar">&times;</button>
+        <a class="galeria-lightbox-download" id="galeriaLightboxDownload" aria-label="Baixar" download><i class="bi bi-download"></i></a>
+        <button class="galeria-lightbox-nav galeria-lightbox-prev d-none" id="galeriaLightboxPrev" aria-label="Anterior"><i class="bi bi-chevron-left"></i></button>
+        <button class="galeria-lightbox-nav galeria-lightbox-next d-none" id="galeriaLightboxNext" aria-label="Próxima"><i class="bi bi-chevron-right"></i></button>
         <div class="text-center">
             <img id="galeriaLightboxImg" src="" alt="Foto ampliada">
             <video id="galeriaLightboxVideo" class="d-none" controls playsinline></video>

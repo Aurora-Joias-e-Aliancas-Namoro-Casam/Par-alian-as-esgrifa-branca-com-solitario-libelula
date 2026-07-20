@@ -22,6 +22,11 @@ let __galeriaFotosCarregadas = 0;
 const GALERIA_MAX_NUMERO = 500;       // teto de segurança, nunca deve ser alcançado na prática
 const GALERIA_LACUNA_PARA_PARAR = 6;  // depois de 6 números seguidos sem nada, para de procurar
 
+// Lista ordenada de tudo que entrou na galeria (fotos, vídeos locais e do
+// YouTube), na mesma ordem em que aparecem na grade — usada para navegar
+// entre itens (anterior/próxima) dentro do lightbox.
+let __galeriaItens = [];
+
 /** Confere (via HEAD, sem baixar o arquivo inteiro) se um caminho existe no servidor. */
 async function galeriaArquivoExiste(caminho) {
     try {
@@ -38,9 +43,20 @@ async function galeriaArquivoExiste(caminho) {
  * existir, ou `null` se nenhuma existir.
  */
 async function galeriaDescobrirItem(numero) {
+    // Testa cada extensão tanto em minúsculo quanto em MAIÚSCULO — celular
+    // (principalmente iPhone) às vezes salva/exporta com extensão em
+    // maiúsculo (ex.: IMG.MOV), e servidores estáticos (GitHub Pages, etc.)
+    // costumam ser case-sensitive, então "galeria_2.mov" não bate com
+    // "galeria_2.MOV" se testarmos só uma forma.
     const candidatos = [
-        ...GALERIA_EXTENSOES_FOTO.map(ext => ({ ext, tipo: 'foto' })),
-        ...GALERIA_EXTENSOES_VIDEO.map(ext => ({ ext, tipo: 'video' }))
+        ...GALERIA_EXTENSOES_FOTO.flatMap(ext => ([
+            { ext, tipo: 'foto' },
+            { ext: ext.toUpperCase(), tipo: 'foto' }
+        ])),
+        ...GALERIA_EXTENSOES_VIDEO.flatMap(ext => ([
+            { ext, tipo: 'video' },
+            { ext: ext.toUpperCase(), tipo: 'video' }
+        ]))
     ];
 
     const resultados = await Promise.all(candidatos.map(async (c) => {
@@ -97,8 +113,27 @@ function adicionarItemNaGrade(numero, src, tipo, masonry) {
         video.playsInline = true;
         video.preload = 'metadata';
         video.src = `${src}#t=0.5`; // pede o frame de 0.5s como "capa" (evita quadro preto do início em alguns vídeos)
-        video.onloadedmetadata = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
-        video.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
+
+        // Proteção: alguns vídeos gravados direto do celular (metadata no
+        // fim do arquivo, codecs variados) não disparam onloadedmetadata de
+        // forma confiável em todo navegador — sem essa proteção, o item
+        // ficava preso invisível (opacity: 0) pra sempre, dando a
+        // impressão de que "o vídeo não carregou". revelarUmaVez() garante
+        // que o item aparece de qualquer forma depois de um tempo, mesmo
+        // sem o evento, e cancela o timeout se o evento realmente disparar.
+        let jaRevelado = false;
+        const revelarUmaVez = () => {
+            if (jaRevelado) return;
+            jaRevelado = true;
+            clearTimeout(timeoutRevelacao);
+            __galeriaFotosCarregadas++;
+            observarRevelacao(item);
+        };
+        const timeoutRevelacao = setTimeout(revelarUmaVez, 2500);
+
+        video.onloadedmetadata = revelarUmaVez;
+        video.onloadeddata = revelarUmaVez; // fallback extra — dispara em mais casos que onloadedmetadata
+        video.onerror = () => { clearTimeout(timeoutRevelacao); item.remove(); verificarSeGaleriaFicouVazia(); };
 
         const iconePlay = document.createElement('div');
         iconePlay.className = 'galeria-video-play';
@@ -124,7 +159,9 @@ function adicionarItemNaGrade(numero, src, tipo, masonry) {
         item.appendChild(cap);
     }
 
-    item.addEventListener('click', () => abrirLightbox(src, legenda, tipo));
+    const indice = __galeriaItens.length;
+    __galeriaItens.push({ src, legenda, tipo });
+    item.addEventListener('click', () => abrirLightbox(indice));
     masonry.appendChild(item);
 }
 
@@ -161,7 +198,9 @@ function montarItensYoutube(masonry) {
             item.appendChild(cap);
         }
 
-        item.addEventListener('click', () => abrirLightbox(idYoutube, legenda, 'youtube'));
+        const indice = __galeriaItens.length;
+        __galeriaItens.push({ src: idYoutube, legenda, tipo: 'youtube' });
+        item.addEventListener('click', () => abrirLightbox(indice));
         masonry.appendChild(item);
     });
 }
@@ -188,13 +227,22 @@ function observarRevelacao(item) {
     __galeriaObserver.observe(item);
 }
 
-function abrirLightbox(src, legenda, tipo) {
+let __galeriaIndiceAtual = 0;
+
+function abrirLightbox(indice) {
+    const item = __galeriaItens[indice];
+    if (!item) return;
+    __galeriaIndiceAtual = indice;
+
+    const { src, legenda, tipo } = item;
+
     const overlay = document.getElementById('galeriaLightbox');
     const img = document.getElementById('galeriaLightboxImg');
     const video = document.getElementById('galeriaLightboxVideo');
     const youtubeWrap = document.getElementById('galeriaLightboxYoutubeWrap');
     const youtube = document.getElementById('galeriaLightboxYoutube');
     const cap = document.getElementById('galeriaLightboxLegenda');
+    const download = document.getElementById('galeriaLightboxDownload');
 
     img.classList.add('d-none');
     video.classList.add('d-none');
@@ -208,18 +256,63 @@ function abrirLightbox(src, legenda, tipo) {
     if (tipo === 'youtube') {
         youtubeWrap.classList.remove('d-none');
         youtube.src = `https://www.youtube.com/embed/${src}?autoplay=1&rel=0&modestbranding=1`;
+        download.classList.add('d-none'); // vídeo do YouTube não dá pra baixar por um link direto
     } else if (tipo === 'video') {
         video.classList.remove('d-none');
         video.src = src;
         video.currentTime = 0;
         video.play().catch(() => { /* autoplay bloqueado é normal — a pessoa só toca em play */ });
+        download.classList.remove('d-none');
+        download.href = src;
+        download.download = src.split('/').pop();
     } else {
         img.classList.remove('d-none');
         img.src = src;
+        download.classList.remove('d-none');
+        download.href = src;
+        download.download = src.split('/').pop();
     }
 
     cap.textContent = legenda || '';
+    atualizarBotoesNavegacaoLightbox();
+    bloquearScrollFundo();
     overlay.classList.add('aberto');
+}
+
+function atualizarBotoesNavegacaoLightbox() {
+    const prev = document.getElementById('galeriaLightboxPrev');
+    const next = document.getElementById('galeriaLightboxNext');
+    const mostrarNav = __galeriaItens.length > 1;
+    if (prev) prev.classList.toggle('d-none', !mostrarNav);
+    if (next) next.classList.toggle('d-none', !mostrarNav);
+}
+
+function lightboxItemAnterior() {
+    if (__galeriaItens.length < 2) return;
+    const novoIndice = (__galeriaIndiceAtual - 1 + __galeriaItens.length) % __galeriaItens.length;
+    abrirLightbox(novoIndice);
+}
+
+function lightboxProximoItem() {
+    if (__galeriaItens.length < 2) return;
+    const novoIndice = (__galeriaIndiceAtual + 1) % __galeriaItens.length;
+    abrirLightbox(novoIndice);
+}
+
+// Impede que o conteúdo por trás role enquanto o lightbox está aberto —
+// trava tanto o scroll normal quanto o "bounce" do Safari/iOS, guardando a
+// posição atual para restaurar exatamente onde a pessoa estava ao fechar.
+let __galeriaScrollSalvo = 0;
+function bloquearScrollFundo() {
+    __galeriaScrollSalvo = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add('galeria-scroll-lock');
+    document.body.style.top = `-${__galeriaScrollSalvo}px`;
+}
+
+function desbloquearScrollFundo() {
+    document.documentElement.classList.remove('galeria-scroll-lock');
+    document.body.style.top = '';
+    window.scrollTo(0, __galeriaScrollSalvo);
 }
 
 function fecharLightbox() {
@@ -228,6 +321,7 @@ function fecharLightbox() {
     if (video) { video.pause(); }
     const youtube = document.getElementById('galeriaLightboxYoutube');
     if (youtube) { youtube.src = ''; } // para a reprodução do YouTube ao fechar
+    desbloquearScrollFundo();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -243,5 +337,29 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('galeriaLightbox').addEventListener('click', (evt) => {
         if (evt.target.id === 'galeriaLightbox') fecharLightbox();
     });
-    document.addEventListener('keydown', (evt) => { if (evt.key === 'Escape') fecharLightbox(); });
+    document.getElementById('galeriaLightboxPrev').addEventListener('click', (evt) => { evt.stopPropagation(); lightboxItemAnterior(); });
+    document.getElementById('galeriaLightboxNext').addEventListener('click', (evt) => { evt.stopPropagation(); lightboxProximoItem(); });
+
+    document.addEventListener('keydown', (evt) => {
+        const overlay = document.getElementById('galeriaLightbox');
+        if (!overlay.classList.contains('aberto')) return;
+        if (evt.key === 'Escape') fecharLightbox();
+        if (evt.key === 'ArrowLeft') lightboxItemAnterior();
+        if (evt.key === 'ArrowRight') lightboxProximoItem();
+    });
+
+    // Navegação por swipe (arrastar o dedo) — o gesto mais natural no celular.
+    let __swipeXInicial = null;
+    const overlay = document.getElementById('galeriaLightbox');
+    overlay.addEventListener('touchstart', (evt) => {
+        __swipeXInicial = evt.touches[0].clientX;
+    }, { passive: true });
+    overlay.addEventListener('touchend', (evt) => {
+        if (__swipeXInicial === null) return;
+        const deltaX = evt.changedTouches[0].clientX - __swipeXInicial;
+        __swipeXInicial = null;
+        const LIMIAR_SWIPE = 50; // px mínimos para contar como swipe (evita confundir com toque/scroll)
+        if (Math.abs(deltaX) < LIMIAR_SWIPE) return;
+        if (deltaX > 0) lightboxItemAnterior(); else lightboxProximoItem();
+    }, { passive: true });
 });

@@ -81,6 +81,28 @@
         <div id="diagGaleriaResultado" class="diag-estado-reset d-none"></div>
     </div>
 
+    <p class="diag-secao-titulo">Resetar o site</p>
+    <div class="text-center">
+        <p class="small text-white-50 mb-3">Apaga tudo — neste aparelho e no outro (vídeo, assinatura, mensagens, fotos, polaroid e progresso). Pede a senha de reset antes de qualquer coisa. Movido para cá (fora do site principal) para evitar toques acidentais.</p>
+        <button id="btnResetar" class="btn btn-outline-danger rounded-pill fw-bold px-4"><i class="bi bi-exclamation-triangle me-1"></i>Resetar site</button>
+        <p id="resetarStatus" class="save-status mt-2"></p>
+    </div>
+
+    <!-- ===================== SENHA DO BOTÃO "RESETAR SITE" ===================== -->
+    <div id="senhaResetOverlay" class="senha-memorias-overlay d-none">
+        <div class="senha-memorias-box">
+            <i class="bi bi-shield-lock-fill" style="font-size: 1.8rem; color: var(--rosegold);"></i>
+            <h5 class="senha-memorias-titulo">Resetar o site</h5>
+            <p class="senha-memorias-sub">Essa ação apaga tudo (neste aparelho e no outro). Digite a senha para confirmar.</p>
+            <input type="password" inputmode="numeric" id="senhaResetInput" class="senha-memorias-input" placeholder="••••••••" maxlength="20" autocomplete="off">
+            <p id="senhaResetErro" class="save-status err d-none">Senha incorreta. Tente novamente.</p>
+            <div class="d-flex gap-2 mt-3">
+                <button id="btnSenhaResetCancelar" class="btn btn-outline-light rounded-pill fw-bold flex-fill">Cancelar</button>
+                <button id="btnSenhaResetEntrar" class="btn btn-rosegold rounded-pill fw-bold flex-fill">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <a href="index.html" class="diag-voltar">← Voltar para o site</a>
 
     <script src="js/config.js"></script>

@@ -66,6 +66,36 @@ function syncEstaConfigurado() {
 }
 
 /**
+ * Hora "confiável" para checagens de data que não podem depender só do
+ * relógio do próprio aparelho (ex.: desbloqueio da cápsula do tempo) —
+ * sem isso, adiantar a data/hora do celular nas Configurações seria
+ * suficiente pra abrir a cápsula antes da hora. Lê o cabeçalho HTTP
+ * "Date" (todo servidor manda isso, não precisa de nenhuma rota
+ * especial) de uma chamada já usada no projeto. Se não houver internet,
+ * cai de volta pro relógio do aparelho (única opção possível offline —
+ * ver aviso sobre isso na resposta ao usuário: essa é uma proteção
+ * prática contra o golpe mais comum ("mudar a data do celular"), não uma
+ * garantia absoluta, já que o app roda 100% no navegador da pessoa.
+ */
+async function obterHoraConfiavel() {
+    if (!syncEstaConfigurado()) return new Date();
+    try {
+        const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/`, {
+            method: 'HEAD',
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        const cabecalhoData = resposta.headers.get('date');
+        if (cabecalhoData) {
+            const dataServidor = new Date(cabecalhoData);
+            if (!isNaN(dataServidor.getTime())) return dataServidor;
+        }
+    } catch (e) {
+        console.warn('Não consegui confirmar a hora do servidor (sem internet?) — usando o relógio do aparelho como alternativa.', e);
+    }
+    return new Date(); // alternativa offline — inevitável sem servidor próprio
+}
+
+/**
  * Validação básica de formato (não garante que a chave é válida no
  * servidor — só confere se "parece" uma chave anon do Supabase, que é
  * sempre um JWT com 3 partes separadas por ponto, começando com "eyJ").
@@ -279,15 +309,40 @@ async function apagarZipDaNuvem() {
  * e a outra não" — ou o reset é publicado, ou não é; nunca um meio-termo.
  * ---------------------------------------------------------------------- */
 
-/** Publica o reset diretamente no meta.json (sobrescreve), avisando qualquer outro aparelho a se limpar também. */
+/** Publica o reset diretamente no meta.json (sobrescreve), avisando qualquer outro aparelho a se limpar também.
+ *  Tenta várias vezes antes de desistir: essa é a escrita mais crítica de todo o fluxo de reset — se ela
+ *  falhar silenciosamente (rede instável, por exemplo), o outro aparelho nunca fica sabendo do reset. */
 async function publicarResetNaNuvem() {
     if (!syncEstaConfigurado()) return;
-    const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-meta.json`, {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'x-upsert': 'true' },
-        body: JSON.stringify({ atualizadoEm: Date.now(), resetado: true })
-    });
-    if (!resposta.ok) throw new Error(`Falha ao publicar o reset na nuvem (HTTP ${resposta.status})`);
+
+    const TENTATIVAS = 4;
+    let ultimoErro = null;
+
+    for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
+        try {
+            const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${EXPERIENCE_ID}-meta.json`, {
+                method: 'POST',
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'x-upsert': 'true' },
+                body: JSON.stringify({ atualizadoEm: Date.now(), resetado: true })
+            });
+            if (!resposta.ok) throw new Error(`Falha ao publicar o reset na nuvem (HTTP ${resposta.status})`);
+
+            // Confirma de verdade: relê o meta.json da nuvem e confere se o
+            // reset realmente "pegou", em vez de confiar só no HTTP 200 (o
+            // bucket pode aceitar a escrita e mesmo assim não refletir por
+            // alguma inconsistência momentânea).
+            const confirmado = await buscarMetaDaNuvem(EXPERIENCE_ID);
+            if (confirmado && confirmado.resetado === true) return; // sucesso confirmado
+
+            throw new Error('O reset foi enviado, mas a confirmação de leitura não mostrou "resetado: true".');
+        } catch (err) {
+            ultimoErro = err;
+            console.error(`publicarResetNaNuvem — tentativa ${tentativa}/${TENTATIVAS} falhou:`, err);
+            if (tentativa < TENTATIVAS) await new Promise(r => setTimeout(r, 800 * tentativa)); // espera crescente entre tentativas
+        }
+    }
+
+    throw ultimoErro || new Error('Falha desconhecida ao publicar o reset na nuvem.');
 }
 
 /** Limpeza local completa (IndexedDB + localStorage + sessionStorage + cache) — usada pelo reset manual e pelo reset remoto detectado. */
@@ -523,9 +578,12 @@ async function sincronizarNaAbertura() {
         } finally {
             __auroraAplicandoBackupRemoto = false;
         }
-    } else if (timestampLocal > 0 && timestampLocal >= timestampNuvem) {
+    } else if (!nuvemFoiResetada && timestampLocal > 0 && timestampLocal >= timestampNuvem) {
         // Este aparelho tem dados que a nuvem ainda não tem (ex.: primeira vez, ou sem internet antes) — envia agora.
         // Isso também é o que "tira" a marca de reset do meta.json quando este aparelho já está em dia com o reset.
+        // CORREÇÃO: exige "!nuvemFoiResetada" — sem isso, um aparelho cujo timestamp local já fosse >= ao do
+        // reset (por já ter "visto" esse reset antes) podia reenviar dados antigos por cima da marca de reset,
+        // ressuscitando informação que deveria ter sido apagada.
         try {
             await publicarComIndicadorVisivel();
         } catch (err) {

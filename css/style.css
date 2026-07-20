@@ -118,20 +118,24 @@ img { max-width: 100%; }
 .security-bar { font-size: 0.75rem; background-color: #f1f1f1; }
 
 /* ---------------- Telas de tela cheia (loja/checkout) ---------------- */
-.fullscreen-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--offwhite); z-index: 9999; overflow-y: auto; display: none; }
+.fullscreen-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--offwhite); z-index: 9999; overflow-y: auto; display: none; overscroll-behavior: contain; }
 
 /* ---------------- Overlay de suspense ----------------
    Usa dvh (dynamic viewport height) com fallback para vh: em navegadores
    móveis, a barra de endereço aparece/some e "100vh" tradicional deixa
-   sobras brancas embaixo — dvh acompanha o tamanho real visível. */
+   sobras brancas embaixo — dvh acompanha o tamanho real visível.
+   overscroll-behavior: contain evita o "scroll chaining": sem isso, ao
+   chegar no topo/fim do scroll interno deste overlay no iOS, o gesto de
+   arrastar "vaza" pro body por trás (efeito bounce do Safari), revelando
+   por uma fração de segundo o que estiver escondido atrás (ex.: a loja). */
 .suspense-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh;
     background-color: rgba(20, 20, 20, 0.97); z-index: 10000;
     display: none; align-items: center; justify-content: center; flex-direction: column;
-    backdrop-filter: blur(10px); overflow-y: auto;
+    backdrop-filter: blur(10px); overflow-y: auto; overscroll-behavior: contain;
 }
 
-.processing-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 20, 20, 0.97); z-index: 10600; display: none; align-items: center; justify-content: center; flex-direction: column; color: white; text-align: center; padding: 20px; }
+.processing-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 20, 20, 0.97); z-index: 10600; display: none; align-items: center; justify-content: center; flex-direction: column; color: white; text-align: center; padding: 20px; overscroll-behavior: contain; }
 .processing-steps { list-style: none; padding: 0; margin: 24px 0 0; text-align: left; max-width: 320px; }
 .processing-steps li { padding: 8px 0; opacity: 0.35; transition: opacity 0.3s ease; font-size: 0.95rem; }
 .processing-steps li.active { opacity: 1; font-weight: 600; }
@@ -169,7 +173,7 @@ img { max-width: 100%; }
 .text-shadow { text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
 .final-photo { max-height: 52vh; width: 100%; max-width: 420px; object-fit: cover; border: 4px solid var(--rosegold); border-radius: 12px; background-color: #eee; }
 
-.maintenance-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 10500; display: flex; align-items: center; justify-content: center; }
+.maintenance-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 10500; display: flex; align-items: center; justify-content: center; overscroll-behavior: contain; }
 .maintenance-box { background: white; border-radius: 16px; padding: 25px; max-width: 340px; margin: 0 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
 
 .signature-pad-wrap { background: white; border-radius: 16px; padding: 20px; width: 100%; max-width: 400px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
@@ -210,7 +214,7 @@ img { max-width: 100%; }
 .btn-link-muted { color: rgba(255,255,255,0.5); font-size: 0.8rem; background: none; border: none; text-decoration: underline; margin-top: 6px; }
 
 /* ---------------- Flashback cinematográfico ---------------- */
-.flashback-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; background: #0a0608; z-index: 10800; display: none; align-items: center; justify-content: center; overflow: hidden; }
+.flashback-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; background: #0a0608; z-index: 10800; display: none; align-items: center; justify-content: center; overflow: hidden; overscroll-behavior: contain; }
 .flashback-photo { position: absolute; width: 62vw; max-width: 300px; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.7); opacity: 0; filter: blur(6px); transform: scale(0.85); transition: opacity 0.28s ease, transform 0.55s ease, filter 0.45s ease; }
 .flashback-photo img, .flashback-photo .imagem-placeholder-vazio { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; border-radius: 8px; }
 .flashback-photo.fb-ativa { opacity: 1; filter: blur(0); transform: scale(1.04); }
@@ -303,7 +307,7 @@ img { max-width: 100%; }
 @keyframes vinhetaParticulaFlutuar { 0%, 100% { opacity: 0; transform: translateY(0); } 50% { opacity: 0.9; transform: translateY(-18px); } }
 
 /* ---------------- Popup de cupom falso ---------------- */
-.cupom-overlay { position: fixed; inset: 0; z-index: 10400; background: rgba(20,20,20,0.55); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.cupom-overlay { position: fixed; inset: 0; z-index: 10400; background: rgba(20,20,20,0.55); display: flex; align-items: center; justify-content: center; padding: 20px; overscroll-behavior: contain; }
 .cupom-box { background: white; border-radius: 18px; padding: 30px 24px 24px; max-width: 340px; width: 100%; text-align: center; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.35); animation: fadeUp 0.5s ease forwards; }
 .cupom-close { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 1.4rem; line-height: 1; color: #999; }
 .cupom-icon { width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 12px; background: rgba(183,110,121,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--rosegold); }
@@ -315,6 +319,15 @@ img { max-width: 100%; }
 
 /* ---------------- Nossa história: fundo, título, contador vivo ---------------- */
 .romance-page { display: none; position: relative; overflow: hidden; min-height: 100vh; min-height: 100dvh; width: 100%; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); color: white; padding: 50px 20px 60px; }
+
+/* Tela de carregamento discreta enquanto "Nossa História" busca vídeo,
+   assinatura, timeline, cápsula do tempo etc. no IndexedDB — some sozinha
+   assim que tudo estiver pronto (ver goToRomancePage em js/romance.js). */
+.romance-loading-overlay { position: fixed; inset: 0; z-index: 10900; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); display: flex; align-items: center; justify-content: center; overscroll-behavior: contain; transition: opacity 0.3s ease; }
+.romance-loading-box { width: min(78vw, 260px); text-align: center; }
+.romance-loading-texto { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1rem; color: rgba(240,217,221,0.75); margin-bottom: 14px; }
+.romance-loading-barra-fundo { width: 100%; height: 3px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
+.romance-loading-barra { height: 100%; width: 6%; background: var(--rosegold); border-radius: 3px; transition: width 0.35s ease; }
 .romance-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 2.6rem; font-weight: 600; }
 .romance-divider { width: 60px; height: 1px; background: var(--rosegold); margin: 22px auto; position: relative; }
 .romance-divider::before { content: '♥'; position: absolute; top: -9px; left: 50%; transform: translateX(-50%); color: var(--rosegold); font-size: 0.8rem; background: transparent; }
@@ -377,7 +390,7 @@ img { max-width: 100%; }
 .ama-card p { font-size: 0.78rem; color: #f0d9dd; margin: 0; line-height: 1.45; }
 
 /* ---------------- Proteção por senha da área de memórias (item 8 do prompt) ---------------- */
-.senha-memorias-overlay { position: fixed; inset: 0; z-index: 12000; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.senha-memorias-overlay { position: fixed; inset: 0; z-index: 12000; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); display: flex; align-items: center; justify-content: center; padding: 24px; overscroll-behavior: contain; }
 .senha-memorias-box { max-width: 320px; width: 100%; text-align: center; color: white; animation: fadeUp 0.5s ease forwards; }
 .senha-memorias-titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.6rem; font-weight: 600; margin: 12px 0 4px; }
 .senha-memorias-sub { font-size: 0.85rem; color: rgba(255,255,255,0.65); margin-bottom: 18px; }
@@ -412,7 +425,7 @@ img { max-width: 100%; }
 .quiz-reacao.visivel { opacity: 1; }
 
 /* ---------------- Mensagem para o futuro ---------------- */
-.futuro-overlay { position: fixed; inset: 0; z-index: 10450; background: rgba(20,20,20,0.65); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.futuro-overlay { position: fixed; inset: 0; z-index: 10450; background: rgba(20,20,20,0.65); display: flex; align-items: center; justify-content: center; padding: 20px; overscroll-behavior: contain; }
 .futuro-box { background: white; border-radius: 18px; padding: 26px 22px; max-width: 380px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.35); max-height: 90vh; overflow-y: auto; }
 .futuro-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 600; text-align: center; margin-bottom: 6px; }
 .futuro-sub { font-size: 0.85rem; color: #5a5048; text-align: center; margin-bottom: 14px; }
@@ -458,11 +471,19 @@ img { max-width: 100%; }
 .lembrancas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
 .lembranca-item { border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); aspect-ratio: 3 / 4; cursor: pointer; padding: 0; }
 .lembranca-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.lembranca-lightbox { position: fixed; inset: 0; z-index: 10460; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.lembranca-lightbox { position: fixed; inset: 0; z-index: 10460; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 24px; overscroll-behavior: contain; }
 .lembranca-lightbox img { max-width: 100%; max-height: 88vh; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
 .lembranca-lightbox-close { position: absolute; top: 18px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; line-height: 1; z-index: 2; }
 .lightbox-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.14); border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; z-index: 2; }
 .lightbox-nav-btn:active { background: rgba(255,255,255,0.28); }
+
+/* Bloqueio de scroll genérico (reaproveitado pelo lightbox de lembranças e
+   por qualquer outro overlay de tela cheia do site principal) — mesma
+   técnica usada em galeria.html: trava overflow + "congela" o body na
+   posição atual via position:fixed, o jeito mais confiável de impedir
+   scroll (inclusive o bounce do iOS) atrás de um overlay. */
+html.aurora-scroll-lock, html.aurora-scroll-lock body { overflow: hidden !important; height: 100% !important; overscroll-behavior: none; }
+html.aurora-scroll-lock body { position: fixed; left: 0; right: 0; width: 100%; touch-action: none; }
 .lightbox-nav-prev { left: 12px; }
 .lightbox-nav-next { right: 12px; }
 
@@ -532,7 +553,7 @@ img { max-width: 100%; }
 /* ============================================================================
    MODAL DA CÂMERA — nova etapa antes de gerar a Polaroid (item 5 do prompt)
    ============================================================================ */
-.polaroid-camera-modal { position: fixed; inset: 0; z-index: 3000; background: rgba(10,6,8,0.92); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.polaroid-camera-modal { position: fixed; inset: 0; z-index: 3000; background: rgba(10,6,8,0.92); display: flex; align-items: center; justify-content: center; padding: 20px; overscroll-behavior: contain; }
 .polaroid-camera-card { position: relative; width: 100%; max-width: 380px; background: #1c1216; border-radius: 16px; padding: 22px 18px 26px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
 .polaroid-camera-titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; color: #f0d9dd; margin-bottom: 14px; }
 .polaroid-camera-close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.6rem; line-height: 1; cursor: pointer; }
@@ -603,7 +624,7 @@ html.galeria-html { background-color: #1c1014; }
 
 .galeria-vazio { text-align: center; color: rgba(240,217,221,0.5); font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.1rem; padding: 60px 20px; }
 
-.galeria-lightbox { position: fixed; inset: 0; z-index: 5000; background: rgba(10,6,8,0.94); display: none; align-items: center; justify-content: center; padding: 24px; }
+.galeria-lightbox { position: fixed; inset: 0; z-index: 5000; background: rgba(10,6,8,0.94); display: none; align-items: center; justify-content: center; padding: 24px; overscroll-behavior: contain; }
 .galeria-lightbox.aberto { display: flex; animation: fadeUp 0.25s ease; }
 .galeria-lightbox img { max-width: 100%; max-height: 82vh; border-radius: 6px; box-shadow: 0 24px 60px rgba(0,0,0,0.6); background: #fff; padding: 10px 10px 26px; }
 .galeria-lightbox video { max-width: 100%; max-height: 82vh; border-radius: 6px; box-shadow: 0 24px 60px rgba(0,0,0,0.6); background: #000; }
@@ -612,6 +633,27 @@ html.galeria-html { background-color: #1c1014; }
 .galeria-video-play-youtube i { background: rgba(0,0,0,0.55); color: #FF0000; }
 .galeria-lightbox .galeria-legenda { font-family: 'Courier New', Courier, monospace; font-size: 0.8rem; color: #444; text-align: center; margin-top: -20px; }
 .galeria-lightbox-close { position: absolute; top: 18px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 2rem; line-height: 1; cursor: pointer; }
+.galeria-lightbox-download { position: absolute; top: 22px; right: 68px; color: rgba(255,255,255,0.75); font-size: 1.3rem; z-index: 5001; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; transition: color 0.2s ease; }
+.galeria-lightbox-download:hover { color: #fff; }
+
+/* Botões de navegação (anterior/próxima) do lightbox da galeria */
+.galeria-lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.85); width: 44px; height: 44px; border-radius: 50%; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s ease, color 0.2s ease; z-index: 5001; }
+.galeria-lightbox-nav:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.galeria-lightbox-prev { left: 12px; }
+.galeria-lightbox-next { right: 12px; }
+@media (max-width: 560px) { .galeria-lightbox-prev { left: 6px; } .galeria-lightbox-next { right: 6px; } .galeria-lightbox-nav { width: 38px; height: 38px; font-size: 1.2rem; } }
+
+/* Reforço defensivo: caso o CSS do Bootstrap não carregue por algum motivo
+   (ex.: falha de rede no CDN), a galeria não pode depender só dele para
+   esconder/mostrar elementos do lightbox — daí essas classes utilitárias
+   mínimas ficarem redefinidas aqui também. */
+.d-none { display: none !important; }
+.m-0 { margin: 0 !important; }
+
+/* Bloqueia o scroll do conteúdo por trás enquanto o lightbox está aberto
+   (aplicado no <html> pelo JS ao abrir/fechar o lightbox). */
+html.galeria-scroll-lock, html.galeria-scroll-lock body { overflow: hidden !important; height: 100% !important; overscroll-behavior: none; }
+html.galeria-scroll-lock body { position: fixed; left: 0; right: 0; width: 100%; touch-action: none; }
 
 @media (prefers-reduced-motion: reduce) { .galeria-item, .galeria-lightbox { transition: none !important; animation: none !important; } }
 

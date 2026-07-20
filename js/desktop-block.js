@@ -18,8 +18,42 @@ function ehDispositivoMovel() {
     return semHover && ponteiroGrosso && larguraRazoavel;
 }
 
+/**
+ * BYPASS PRA TESTES NO COMPUTADOR — digite a sequência abaixo em qualquer
+ * lugar da página (não precisa clicar em nada primeiro) para liberar o
+ * site no desktop. Fica lembrado neste navegador (localStorage), então só
+ * precisa digitar uma vez por computador/navegador. Continua escutando
+ * mesmo com a tela de bloqueio visível, porque o listener é registrado no
+ * "document", não em algo dentro do body (que é apagado ao bloquear).
+ */
+const CHAVE_BYPASS_DESKTOP = 'aurora_bypass_desktop_teste';
+const SEQUENCIA_BYPASS_DESKTOP = 'abrirauroradesktop'; // digite isso (rápido, tudo minúsculo) pra liberar o desktop
+
+function bypassDesktopAtivo() {
+    try { return localStorage.getItem(CHAVE_BYPASS_DESKTOP) === '1'; } catch (e) { return false; }
+}
+
+function iniciarEscutaBypassDesktop() {
+    if (window.__aurora_escutandoBypassDesktop) return; // evita registrar o listener duas vezes
+    window.__aurora_escutandoBypassDesktop = true;
+
+    let buffer = '';
+    document.addEventListener('keydown', (evt) => {
+        if (evt.key.length !== 1) return; // ignora Shift, Enter, setas etc.
+        buffer = (buffer + evt.key.toLowerCase()).slice(-SEQUENCIA_BYPASS_DESKTOP.length);
+        if (buffer === SEQUENCIA_BYPASS_DESKTOP) {
+            try {
+                // Alterna: se já estava liberado, digitar de novo BLOQUEIA de novo (útil pra não deixar destravado num PC compartilhado).
+                localStorage.setItem(CHAVE_BYPASS_DESKTOP, bypassDesktopAtivo() ? '0' : '1');
+            } catch (e) { /* ignora se o storage estiver bloqueado */ }
+            location.reload();
+        }
+    });
+}
+
 function iniciarBloqueioDesktop() {
-    if (ehDispositivoMovel()) return; // segue normalmente
+    iniciarEscutaBypassDesktop(); // escuta sempre — tanto liberado quanto bloqueado
+    if (ehDispositivoMovel() || bypassDesktopAtivo()) return; // segue normalmente
 
     const overlay = document.createElement('div');
     overlay.id = 'desktopBlockOverlay';

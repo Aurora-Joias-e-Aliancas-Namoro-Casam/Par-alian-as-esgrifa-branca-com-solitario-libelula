@@ -296,9 +296,11 @@ async function galeriaArquivoExiste(caminho) {
 
 /** Mesma lógica de descoberta usada em js/galeria.js — duplicada aqui só pra não precisar carregar o arquivo inteiro nesta página. */
 async function galeriaDescobrirItem(numero) {
+    // Testa maiúsculo e minúsculo (iPhone às vezes exporta extensão em
+    // maiúsculo, e servidores estáticos costumam ser case-sensitive).
     const candidatos = [
-        ...GALERIA_EXTENSOES_FOTO.map(ext => ({ ext, tipo: 'foto' })),
-        ...GALERIA_EXTENSOES_VIDEO.map(ext => ({ ext, tipo: 'video' }))
+        ...GALERIA_EXTENSOES_FOTO.flatMap(ext => ([{ ext, tipo: 'foto' }, { ext: ext.toUpperCase(), tipo: 'foto' }])),
+        ...GALERIA_EXTENSOES_VIDEO.flatMap(ext => ([{ ext, tipo: 'video' }, { ext: ext.toUpperCase(), tipo: 'video' }]))
     ];
     const resultados = await Promise.all(candidatos.map(async (c) => {
         const caminho = `${PASTA_GALERIA}/galeria_${numero}.${c.ext}`;
@@ -356,11 +358,98 @@ async function executarTesteGaleria() {
     btn.innerHTML = textoOriginal;
 }
 
+/**
+ * SENHA DO RESET (proteção contra toque acidental — ver SENHA_RESET_SITE em
+ * js/config.js). Movido de js/export.js + index.html para cá a pedido do
+ * usuário, para tirar o botão do site principal (a Poloni nunca vê essa
+ * página). Mesma proteção por senha de antes, sem nenhuma mudança de
+ * comportamento nesse quesito.
+ */
+function solicitarSenhaReset() {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('senhaResetOverlay');
+        const input = document.getElementById('senhaResetInput');
+        const erro = document.getElementById('senhaResetErro');
+        if (!overlay || !input) { resolve(false); return; }
+
+        overlay.classList.remove('d-none');
+        erro.classList.add('d-none');
+        input.value = '';
+        setTimeout(() => input.focus(), 300);
+
+        function fechar(resultado) {
+            overlay.classList.add('d-none');
+            document.getElementById('btnSenhaResetEntrar').onclick = null;
+            document.getElementById('btnSenhaResetCancelar').onclick = null;
+            input.onkeydown = null;
+            resolve(resultado);
+        }
+
+        function tentarConfirmar() {
+            const senhaDigitada = (input.value || '').trim();
+            if (senhaDigitada === SENHA_RESET_SITE) {
+                fechar(true);
+            } else {
+                erro.classList.remove('d-none');
+                input.value = '';
+                input.focus();
+                overlay.querySelector('.senha-memorias-box').classList.remove('senha-shake');
+                void overlay.offsetWidth; // força reflow para reiniciar a animação de "errado"
+                overlay.querySelector('.senha-memorias-box').classList.add('senha-shake');
+            }
+        }
+
+        document.getElementById('btnSenhaResetEntrar').onclick = tentarConfirmar;
+        document.getElementById('btnSenhaResetCancelar').onclick = () => fechar(false);
+        input.onkeydown = (evt) => { if (evt.key === 'Enter') tentarConfirmar(); };
+    });
+}
+
+async function executarReset() {
+    const senhaOk = await solicitarSenhaReset();
+    if (!senhaOk) return;
+
+    if (!confirm('Isso vai apagar TUDO o que foi salvo — neste aparelho e no outro (vídeo, assinatura, mensagens, fotos, polaroid e progresso). Essa ação não pode ser desfeita. Continuar?')) return;
+
+    const botao = document.getElementById('btnResetar');
+    const status = document.getElementById('resetarStatus');
+    if (botao) { botao.disabled = true; botao.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetando...'; }
+    if (status) { status.textContent = 'Publicando o reset na nuvem (pode levar alguns segundos — tenta de novo automaticamente se a rede falhar)...'; status.className = 'save-status'; }
+
+    // 1) Nuvem (fonte oficial entre aparelhos) — a parte CRÍTICA é
+    //    sobrescrever o meta.json com a marca de reset (ver
+    //    publicarResetNaNuvem em js/sync.js, que agora tenta várias vezes e
+    //    CONFIRMA lendo de volta antes de considerar sucesso): é isso que
+    //    qualquer outro aparelho confere ao abrir o link, pra saber que
+    //    precisa se limpar também. Apagar o .zip antigo é só limpeza, não
+    //    crítico, por isso roda em paralelo sem bloquear.
+    try { await apagarZipDaNuvem(); } catch (e) { console.error('Falha ao apagar o zip antigo na nuvem (não crítico)', e); }
+
+    try {
+        await publicarResetNaNuvem();
+        if (status) { status.textContent = 'Reset confirmado na nuvem. Limpando este aparelho...'; status.className = 'save-status ok'; }
+    } catch (e) {
+        console.error('Falha ao publicar o reset na nuvem', e);
+        if (status) {
+            status.textContent = 'Não consegui confirmar o reset na nuvem depois de várias tentativas (sem internet agora?). NADA foi apagado ainda — verifique a conexão e toque em "Resetar site" de novo. Resetar só localmente, sem a nuvem confirmar, é o que fazia o outro aparelho continuar com os dados antigos.';
+            status.className = 'save-status err';
+        }
+        if (botao) { botao.disabled = false; botao.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Resetar site'; }
+        return; // não limpa local nem recarrega — evita a experiência "resetou aqui mas não na nuvem"
+    }
+
+    // 2) Só chega aqui se a nuvem CONFIRMOU o reset — agora sim, limpa o armazenamento local (IndexedDB + localStorage + sessionStorage + cache).
+    await limparArmazenamentoLocal();
+
+    location.reload();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRodarDiagnostico').addEventListener('click', executarDiagnosticoCompleto);
     document.getElementById('btnTestarNuvem').addEventListener('click', executarTesteNuvem);
     document.getElementById('btnTestarMediaReal').addEventListener('click', executarTesteMediaReal);
     document.getElementById('btnVerEstadoReset').addEventListener('click', executarVerEstadoReset);
     document.getElementById('btnTestarGaleria').addEventListener('click', executarTesteGaleria);
+    document.getElementById('btnResetar').addEventListener('click', executarReset);
     executarDiagnosticoCompleto();
 });

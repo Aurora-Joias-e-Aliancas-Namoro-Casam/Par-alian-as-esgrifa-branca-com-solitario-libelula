@@ -402,6 +402,27 @@ function textoCapsulaDoTempo() {
     return `Se você está lendo isso, já faz um ano que eu te pedi em namoro. [Escreva aqui o que você quer dizer para vocês dois daqui a um ano — o que mudou, o que continua igual, uma promessa, uma lembrança de hoje.]`;
 }
 
+/* ID do vídeo do YouTube com a mensagem em vídeo pra cápsula do tempo (o
+ * que você falar "sobre o que espera pro ano que vem"). Cole só o ID (o
+ * trecho depois de "v=" no link do YouTube), não a URL inteira.
+ * Ex.: em "https://youtube.com/watch?v=abc123XYZ" o ID é "abc123XYZ".
+ * Deixe em branco ('') se não quiser esse botão — ele só aparece se tiver
+ * algo aqui. IMPORTANTE (leia a explicação sobre segredo/segurança na
+ * resposta do chat): como este é um site estático sem servidor próprio,
+ * esse ID viaja dentro do arquivo js/config.js mesmo estando em branco até
+ * você preencher — ele só é inserido na página (e some do código-fonte
+ * "à vista") no momento em que a cápsula é realmente desbloqueada, mas
+ * alguém tecnicamente capaz de abrir este arquivo ainda conseguiria lê-lo
+ * antes da data. A trava por hora do servidor (ver obterHoraConfiavel em
+ * js/sync.js) cobre o golpe mais comum, que é só adiantar a data do
+ * celular. */
+const CAPSULA_YOUTUBE_ID = '';
+
+/* Link do YouTube com o vídeo mostrando todo o processo até o pedido
+ * (o "making of"). Cole a URL completa aqui quando publicar o vídeo — o
+ * botão só aparece na página se este campo não estiver vazio. */
+const VIDEO_PROCESSO_YOUTUBE_URL = '';
+
 /* ----------------------------------------------------------------------
    EASTER EGG — brincadeira do sobrenome
    ---------------------------------------------------------------------- */

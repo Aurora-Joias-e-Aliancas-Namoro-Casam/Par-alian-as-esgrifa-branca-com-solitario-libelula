@@ -79,7 +79,9 @@ Tudo em **`js/config.js`**:
 - `COISAS_QUE_ELA_AMA` (pequena seção com coisas que ela ama, na página de memórias)
 - `CARTA_USAR_TEXTO_TESTE` (liga/desliga o texto de teste da carta final)
 - `SENHA_AREA_MEMORIAS` (senha que protege a área de memórias após o pedido)
-- `SENHA_RESET_SITE` (senha exigida pelo botão "Resetar site" — ver seção própria abaixo)
+- `SENHA_RESET_SITE` (senha exigida pelo botão "Resetar site", agora em `diagnostico.html` — ver seção própria abaixo)
+- `CAPSULA_YOUTUBE_ID` (opcional: ID do vídeo do YouTube com a mensagem em vídeo da cápsula do tempo)
+- `VIDEO_PROCESSO_YOUTUBE_URL` (opcional: link do YouTube com o vídeo do processo até o pedido — mostra um botão perto do vídeo do pedido, na página final)
 - `EXPERIENCE_ID` (identificador fixo usado pela sincronização entre aparelhos — troque só se for reaproveitar o projeto para outro casal)
 
 Pequenos easter eggs da história de vocês foram espalhados discretamente
@@ -163,20 +165,22 @@ aviso estiver visível, senão o envio pode ser interrompido pelo sistema
 
 ## Reset do site (com senha + sincroniza entre aparelhos)
 
-O botão "Resetar site" (no fim da página "Nossa História") agora:
+O botão "Resetar site" fica em `diagnostico.html` (fora do site principal,
+pra evitar toque acidental — mesma senha de antes) e agora:
 1. **Pede uma senha** (`SENHA_RESET_SITE` em `js/config.js`, padrão
-   `13046700`) antes de fazer qualquer coisa — protege contra um toque
-   acidental, inclusive da própria Poloni curiosa. Ver nota de segurança
-   acima sobre os limites dessa proteção.
-2. Apaga tudo: nuvem (backup + marcador), IndexedDB, localStorage,
-   sessionStorage e cache do navegador.
-3. **Avisa o outro aparelho.** Antes disso, resetar em um celular não
-   resetava o outro — o outro aparelho ainda tinha os dados salvos
-   localmente e, ao abrir o link, "ressuscitava" tudo de volta pra nuvem
-   sem saber que houve um reset. Agora, ao resetar, um pequeno marcador é
-   publicado na nuvem (`${EXPERIENCE_ID}-reset.json`); qualquer aparelho
-   que abrir o link depois confere esse marcador antes de mais nada e se
-   limpa também, se for o caso. Ver `verificarResetRemoto()` em `js/sync.js`.
+   `13046700`) antes de fazer qualquer coisa. Ver nota de segurança acima
+   sobre os limites dessa proteção.
+2. **Publica o reset na nuvem primeiro, com várias tentativas e
+   confirmação de leitura** (`publicarResetNaNuvem()` em `js/sync.js`) —
+   só depois disso confirmar de verdade é que o aparelho local é limpo
+   (IndexedDB, localStorage, sessionStorage e cache). Se a nuvem não
+   confirmar (sem internet, por exemplo), NADA é apagado ainda, e a tela
+   mostra pra tentar de novo — assim não existe mais o estado confuso de
+   "resetei aqui mas o outro aparelho continua com os dados antigos".
+3. **Avisa o outro aparelho.** Um marcador é publicado no `meta.json` da
+   nuvem; qualquer aparelho que abrir o link depois confere esse marcador
+   antes de mais nada e se limpa também, se for o caso. Ver
+   `sincronizarNaAbertura()` em `js/sync.js`.
 
 ## Rever a lojinha (sem afetar nada)
 
@@ -202,25 +206,32 @@ quando, principalmente logo depois do pedido — é a única cópia que fica
 
 Álbum permanente, feito para crescer com o tempo — sem limite de itens.
 Página própria em `galeria.html`, aberta pelo botão "Ver nossa galeria"
-logo abaixo de "Nossos Momentos" na página de memórias. Aceita três tipos
-de item, todos configurados em `js/config.js`:
+logo abaixo de "Nossos Momentos" na página de memórias. Descoberta
+**automática**: nenhuma lista de números pra manter atualizada — o site
+testa sozinho, a partir de `galeria_1`, `galeria_2`... até parar de achar
+arquivos. Três tipos de item, todos na mesma pasta:
 
 - **Foto** (padrão): salve em `assets/img/galeria/` como `galeria_1.jpg`,
-  `galeria_2.jpg`... Nenhuma configuração extra necessária.
-- **Vídeo local**: mesma pasta, ex. `galeria_3.mp4`. Marque o número em
-  `TIPO_GALERIA` como `'video'` (ex.: `3: 'video'`). Aparece na grade com
-  um ícone de play por cima da capa.
+  `galeria_2.jpg`... (extensões aceitas em `GALERIA_EXTENSOES_FOTO`, em
+  `js/config.js`). Nenhuma configuração extra necessária.
+- **Vídeo local**: mesma pasta, mesma numeração, só troca a extensão —
+  ex. `galeria_3.mp4` (extensões aceitas em `GALERIA_EXTENSOES_VIDEO`). O
+  site reconhece pela extensão automaticamente (inclusive em MAIÚSCULO,
+  ex. `.MOV`/`.MP4`, comum em export de iPhone) — não precisa marcar nada
+  em lugar nenhum. Aparece na grade com um ícone de play por cima da capa.
 - **Vídeo do YouTube** (ótimo para vídeos grandes, sem precisar do
-  arquivo): marque o número em `TIPO_GALERIA` como `'youtube'` e cole o
-  link (ou só o ID) em `YOUTUBE_GALERIA`. Roda embutido dentro do site,
-  sem levar a pessoa pro app do YouTube. Recomendo subir como "Não
-  listado" no YouTube, assim só quem tem o link acessa.
+  arquivo): adicione uma entrada em `GALERIA_YOUTUBE` (em `js/config.js`)
+  com o link (ou só o ID). Roda embutido dentro do site, sem levar a
+  pessoa pro app do YouTube. Recomendo subir como "Não listado" no
+  YouTube, assim só quem tem o link acessa.
 
-Em todos os casos, atualize `TOTAL_FOTOS_GALERIA` para o total de itens
-que existem agora (fotos + vídeos juntos), e nenhum outro arquivo do
-projeto precisa ser tocado. Legendas são opcionais e funcionam igual para
-qualquer tipo (`GALERIA_LEGENDAS`). Passo a passo completo também
-disponível em `assets/img/galeria/LEIA-ME.md`.
+No lightbox (ao abrir uma foto/vídeo): dá pra navegar entre os itens com
+os botões `‹ ›`, setas do teclado ou arrastando o dedo (swipe), o fundo da
+página fica travado (sem rolar por trás) enquanto está aberto, e tem um
+botão de download (exceto para itens do YouTube, que abrem direto no
+player embutido). Legendas são opcionais e funcionam igual para qualquer
+tipo (`GALERIA_LEGENDAS`). Passo a passo completo também disponível em
+`assets/img/galeria/LEIA-ME.md`.
 
 ## Contrato de namoro — até 5 regras
 
@@ -292,3 +303,28 @@ tipo. Botões "Backup da Nossa História" (baixa) e "Restaurar Backup"
 Computadores veem uma tela com QR Code apontando para o próprio link, em
 vez do site — garante que a experiência sempre aconteça no celular. Ver
 `js/desktop-block.js`.
+
+**Testar no computador:** digite `abrirauroradesktop` em qualquer lugar da
+página (não precisa clicar em nada antes) para liberar o site nesse
+navegador — fica lembrado (localStorage), então só precisa digitar uma vez
+por computador. Digite a mesma sequência de novo para bloquear de volta
+(útil em computador compartilhado).
+
+## Cápsula do tempo ("carta para o futuro")
+
+Uma carta que só abre sozinha 1 ano depois do pedido (`CAPSULA_DIAS_PARA_DESBLOQUEIO`
+em `js/config.js`), na página final. Opcionalmente, um botão "Ver o
+vídeo" aparece dentro da carta levando a um vídeo do YouTube — preencha
+`CAPSULA_YOUTUBE_ID` (só o ID, não a URL inteira) quando gravar.
+
+A checagem de desbloqueio usa a **hora do servidor** (não a do aparelho —
+ver `obterHoraConfiavel()` em `js/sync.js`), justamente para que adiantar
+a data/hora do celular não abra a carta antes da hora. **Importante ser
+honesto sobre o limite disso**: como é um site estático, sem servidor ou
+login por trás, essa proteção cobre bem o golpe mais comum (mudar a data
+do aparelho) e impede abrir o console do navegador e forçar a revelação
+direto, mas não impede alguém tecnicamente capaz de abrir os arquivos-
+fonte do site (`js/config.js`) de ler o texto antes da data — isso é uma
+limitação de qualquer site que roda 100% no navegador, sem exceção.
+
+

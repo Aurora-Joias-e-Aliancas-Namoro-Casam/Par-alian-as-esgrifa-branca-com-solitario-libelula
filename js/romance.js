@@ -253,7 +253,10 @@ async function prepararCapsulaDoTempo() {
     if (!dataAlvo) { wrap.classList.add('d-none'); return; }
     wrap.classList.remove('d-none');
 
-    const agora = new Date();
+    // Hora do servidor, não do aparelho — ver obterHoraConfiavel em
+    // js/sync.js: evita que adiantar a data do celular abra a cápsula
+    // antes da hora.
+    const agora = await obterHoraConfiavel();
     const bloqueada = document.getElementById('capsulaBloqueada');
     const desbloqueada = document.getElementById('capsulaDesbloqueada');
 
@@ -267,16 +270,64 @@ async function prepararCapsulaDoTempo() {
     }
 }
 
-function iniciarEnvelopeCapsula() {
+/**
+ * CORREÇÃO DE SEGURANÇA: esta função revela o texto da carta (e o botão do
+ * vídeo, se houver) — antes, ela confiava cegamente em quem a chamava
+ * (só era chamada a partir do branch já "desbloqueado" de
+ * prepararCapsulaDoTempo). Isso significa que alguém abrindo o console do
+ * navegador e digitando "iniciarEnvelopeCapsula()" diretamente conseguia
+ * pular a checagem de data inteira. Agora a própria função reconfere a
+ * data (com a hora do servidor) antes de mostrar qualquer coisa — mesmo
+ * chamada "na unha" pelo console, ela se recusa a abrir antes da hora.
+ * Aviso importante (sem prometer o que este site não pode cumprir): isso
+ * cobre bem o golpe mais comum (mudar a data/hora do aparelho) e impede
+ * abrir o console e pular direto pra função de revelar. Mas como é um
+ * site estático, sem servidor/autenticação por trás, alguém tecnicamente
+ * capaz de abrir os arquivos-fonte (js/config.js) ainda consegue ler o
+ * texto e o ID do vídeo antes da data — isso é uma limitação de QUALQUER
+ * site que roda só no navegador, não uma falha específica deste código.
+ */
+async function iniciarEnvelopeCapsula() {
     const envelope = document.getElementById('capsulaEnvelope');
     const hint = document.getElementById('capsulaHint');
     const textoEl = document.getElementById('capsulaTexto');
     const assinaturaEl = document.getElementById('capsulaAssinatura');
     if (!envelope || envelope.dataset.iniciado === '1') return;
+
+    // CORREÇÃO DE SEGURANÇA (achada testando de verdade, simulando alguém
+    // chamando esta função pelo console do navegador): a checagem NUNCA
+    // pode confiar no parâmetro "dataAlvoConhecida" recebido de fora —
+    // ele existe só como otimização (evita recalcular quando quem chamou,
+    // aqui dentro do próprio arquivo, já sabe a data). Se essa validação
+    // usasse o valor recebido, bastava chamar
+    // "iniciarEnvelopeCapsula(new Date(0))" no console pra passar uma
+    // data forjada lá do passado e abrir a carta na hora. Por isso a
+    // linha abaixo IGNORA por completo o parâmetro na hora de validar e
+    // recalcula a data real (mesma fonte usada em prepararCapsulaDoTempo).
+    const dataAlvoReal = await calcularDataDesbloqueioCapsula();
+    const agora = await obterHoraConfiavel();
+    if (!dataAlvoReal || agora < dataAlvoReal) return; // recusa revelar — reconfirmação real, não decorativa
+
     envelope.dataset.iniciado = '1';
 
     textoEl.textContent = textoCapsulaDoTempo();
     assinaturaEl.textContent = `Com amor, ${NOME_DELE}.`;
+
+    // Botão do vídeo do YouTube com a mensagem em vídeo — só existe no DOM
+    // a partir daqui (desbloqueio real confirmado), e só se um ID tiver
+    // sido preenchido em CAPSULA_YOUTUBE_ID (js/config.js).
+    if (CAPSULA_YOUTUBE_ID) {
+        const cartaPaper = envelope.querySelector('.letter-paper');
+        if (cartaPaper && !cartaPaper.querySelector('.btn-capsula-video')) {
+            const btnVideo = document.createElement('a');
+            btnVideo.href = `https://www.youtube.com/watch?v=${CAPSULA_YOUTUBE_ID}`;
+            btnVideo.target = '_blank';
+            btnVideo.rel = 'noopener noreferrer';
+            btnVideo.className = 'btn btn-rosegold btn-sm rounded-pill fw-bold mt-3 btn-capsula-video';
+            btnVideo.innerHTML = '<i class="bi bi-youtube me-1"></i>Ver o vídeo';
+            cartaPaper.appendChild(btnVideo);
+        }
+    }
 
     let jaAbriu = false;
     envelope.addEventListener('click', () => {
@@ -420,11 +471,27 @@ async function renderizarLembrancas() {
 let lightboxItensAtuais = [];
 let lightboxIndiceAtual = 0;
 
+// Mesma técnica usada em galeria.html: trava o scroll do fundo (inclusive o
+// "bounce" do iOS) enquanto o lightbox está aberto, restaurando a posição
+// exata de onde a pessoa estava ao fechar.
+let __lembrancaScrollSalvo = 0;
+function bloquearScrollFundoLembranca() {
+    __lembrancaScrollSalvo = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add('aurora-scroll-lock');
+    document.body.style.top = `-${__lembrancaScrollSalvo}px`;
+}
+function desbloquearScrollFundoLembranca() {
+    document.documentElement.classList.remove('aurora-scroll-lock');
+    document.body.style.top = '';
+    window.scrollTo(0, __lembrancaScrollSalvo);
+}
+
 function abrirLightboxGaleria(itens, indiceInicial) {
     if (!itens || !itens.length) return;
     lightboxItensAtuais = itens;
     lightboxIndiceAtual = indiceInicial || 0;
     atualizarImagemLightbox();
+    bloquearScrollFundoLembranca();
     document.getElementById('lembrancaLightbox').classList.remove('d-none');
 }
 
@@ -437,12 +504,59 @@ function atualizarImagemLightbox() {
 
 function lightboxFotoAnterior() { lightboxIndiceAtual = (lightboxIndiceAtual - 1 + lightboxItensAtuais.length) % lightboxItensAtuais.length; atualizarImagemLightbox(); }
 function lightboxProximaFoto() { lightboxIndiceAtual = (lightboxIndiceAtual + 1) % lightboxItensAtuais.length; atualizarImagemLightbox(); }
-function fecharLembrancaAmpliada() { document.getElementById('lembrancaLightbox').classList.add('d-none'); document.getElementById('lembrancaLightboxImg').src = ''; lightboxItensAtuais = []; }
+function fecharLembrancaAmpliada() {
+    document.getElementById('lembrancaLightbox').classList.add('d-none');
+    document.getElementById('lembrancaLightboxImg').src = '';
+    lightboxItensAtuais = [];
+    desbloquearScrollFundoLembranca();
+}
 
 /* ---------------- Navegação para "Nossa História" ---------------- */
 function pausarMusicaFundoImediatamente() {
     const audio = document.getElementById('musicaFundo');
     if (audio && !audio.paused) audio.pause();
+}
+
+/**
+ * Tela de carregamento discreta de "Nossa História" — mostrada assim que a
+ * página começa a montar (vídeo do pedido, assinatura, timeline, cápsula do
+ * tempo, lembranças, mensagens pro futuro etc. — várias leituras no
+ * IndexedDB) e escondida assim que tudo estiver pronto.
+ */
+function mostrarLoadingRomance() {
+    const overlay = document.getElementById('romanceLoadingOverlay');
+    const barra = document.getElementById('romanceLoadingBarra');
+    if (barra) barra.style.width = '6%';
+    if (overlay) { overlay.style.opacity = '1'; overlay.classList.remove('d-none'); }
+    bloquearScrollFundoLembranca(); // mesma trava usada no lightbox — consistente em todo o site
+}
+
+function esconderLoadingRomance() {
+    const overlay = document.getElementById('romanceLoadingOverlay');
+    desbloquearScrollFundoLembranca();
+    if (!overlay) return;
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.classList.add('d-none'), 300);
+}
+
+/**
+ * Roda várias tarefas (promises) em PARALELO e avança a barra conforme cada
+ * uma termina — dá um retrato real do progresso, em vez de uma barra
+ * "fake" que só finge andar. Uma falha isolada não trava as demais.
+ */
+async function executarComBarraDeProgresso(tarefas) {
+    const barra = document.getElementById('romanceLoadingBarra');
+    const total = tarefas.length || 1;
+    let concluidas = 0;
+    const marcarProgresso = () => {
+        concluidas++;
+        if (barra) barra.style.width = `${Math.max(6, Math.round((concluidas / total) * 100))}%`;
+    };
+    await Promise.all(tarefas.map(tarefa =>
+        Promise.resolve(tarefa)
+            .then(marcarProgresso)
+            .catch(err => { console.error('Falha ao carregar um item de Nossa História:', err); marcarProgresso(); })
+    ));
 }
 
 async function goToRomancePage() {
@@ -453,48 +567,81 @@ async function goToRomancePage() {
     document.getElementById('romancePage').style.display = 'block';
     definirFundoBody(CORES_FUNDO.escuro);
     window.scrollTo(0, 0);
+    mostrarLoadingRomance();
 
     document.getElementById('heroSubRomanceTexto').textContent = TEXTOS.heroSubRomance;
     document.getElementById('encerramentoRomanceTexto').textContent = TEXTOS.encerramentoRomance;
 
     pausarMusicaFundoImediatamente();
     iniciarPlaylistDaGente();
-    await prepararContrato();
-    await iniciarContadorVivo();
+
+    // Rápidas e sem leitura pesada no banco — chamadas direto, sem entrar na barra de progresso.
     iniciarQuiz();
     renderizarTimeline();
     iniciarGaleriaMomentos();
-    renderizarLembrancas();
-    renderizarMensagensFuturo();
-    await prepararCapsulaDoTempo();
     exibirEasterEggSobrenome();
     renderizarCoisasQueElaAma();
 
-    const dataPedidoIso = await obterConfiguracao('aurora_data_pedido');
-    if (dataPedidoIso) {
-        document.getElementById('dataPedidoTexto').textContent = `Nosso pedido: ${formatarDataPedidoComHora(dataPedidoIso)}`;
-        const elTimeline = document.getElementById('dataPedidoTimeline');
-        if (elTimeline) elTimeline.textContent = formatarDataPedido(dataPedidoIso);
-
-        const dias = Math.max(0, Math.floor((Date.now() - new Date(dataPedidoIso).getTime()) / 86400000));
-        document.getElementById('counterText').textContent = dias === 0 ? 'hoje é o nosso primeiro dia' : `${dias} dia${dias === 1 ? '' : 's'} desde que topamos essa juntos`;
-
-        const localData = document.getElementById('contratoLocalData');
-        if (localData) localData.textContent = `Nuporanga - SP, ${formatarDataPedido(dataPedidoIso)}.`;
+    if (typeof VIDEO_PROCESSO_YOUTUBE_URL !== 'undefined' && VIDEO_PROCESSO_YOUTUBE_URL) {
+        const linkProcesso = document.getElementById('linkVideoProcesso');
+        const wrapProcesso = document.getElementById('videoProcessoWrap');
+        if (linkProcesso && wrapProcesso) {
+            linkProcesso.href = VIDEO_PROCESSO_YOUTUBE_URL;
+            wrapProcesso.classList.remove('d-none');
+        }
     }
 
-    const video = await obterMedia('video_pedido');
-    if (video && video.blob) {
-        document.getElementById('romanceVideo').src = URL.createObjectURL(video.blob);
-        document.getElementById('romanceVideoWrap').classList.remove('d-none');
-    }
+    /* CORREÇÃO DE VELOCIDADE (carregamento lento com muita coisa salva e
+     * vídeo longo): antes, cada leitura no IndexedDB abaixo rodava uma de
+     * cada vez (await em sequência) — o tempo total era a SOMA de todas.
+     * Agora rodam em PARALELO (Promise.all): o tempo total passa a ser o
+     * da mais lenta (normalmente o próprio vídeo do pedido), não a soma de
+     * todas as outras leituras pequenas. localStorage NÃO é uma opção
+     * viável aqui: tem limite de ~5–10MB e é síncrono (travaria a aba
+     * inteira ao tentar guardar um vídeo de dezenas de MB) — o IndexedDB
+     * (assíncrono, sem esse limite) já é a ferramenta certa; o ganho real
+     * está em paralelizar as leituras, não em trocar de tecnologia. */
+    const tarefas = [
+        prepararContrato(),
+        iniciarContadorVivo(),
+        renderizarLembrancas(),
+        renderizarMensagensFuturo(),
+        prepararCapsulaDoTempo(),
 
-    const assinatura = await obterMedia('assinatura');
-    if (assinatura && assinatura.texto) {
-        document.getElementById('romanceSignatureImg').src = assinatura.texto;
-        document.getElementById('contratoSignatureImg').src = assinatura.texto;
-        document.getElementById('romanceSignatureWrap').classList.remove('d-none');
-    }
+        obterConfiguracao('aurora_data_pedido').then(dataPedidoIso => {
+            if (!dataPedidoIso) return;
+            document.getElementById('dataPedidoTexto').textContent = `Nosso pedido: ${formatarDataPedidoComHora(dataPedidoIso)}`;
+            const elTimeline = document.getElementById('dataPedidoTimeline');
+            if (elTimeline) elTimeline.textContent = formatarDataPedido(dataPedidoIso);
+
+            const dias = Math.max(0, Math.floor((Date.now() - new Date(dataPedidoIso).getTime()) / 86400000));
+            document.getElementById('counterText').textContent = dias === 0 ? 'hoje é o nosso primeiro dia' : `${dias} dia${dias === 1 ? '' : 's'} desde que topamos essa juntos`;
+
+            const localData = document.getElementById('contratoLocalData');
+            if (localData) localData.textContent = `Nuporanga - SP, ${formatarDataPedido(dataPedidoIso)}.`;
+        }),
+
+        obterMedia('video_pedido').then(video => {
+            if (video && video.blob) {
+                const url = URL.createObjectURL(video.blob);
+                document.getElementById('romanceVideo').src = url;
+                document.getElementById('romanceVideoWrap').classList.remove('d-none');
+                const btnBaixar = document.getElementById('btnBaixarVideoPedido');
+                if (btnBaixar) btnBaixar.href = url; // mesmo blob já carregado — download não refaz nenhuma leitura
+            }
+        }),
+
+        obterMedia('assinatura').then(assinatura => {
+            if (assinatura && assinatura.texto) {
+                document.getElementById('romanceSignatureImg').src = assinatura.texto;
+                document.getElementById('contratoSignatureImg').src = assinatura.texto;
+                document.getElementById('romanceSignatureWrap').classList.remove('d-none');
+            }
+        })
+    ];
+
+    await executarComBarraDeProgresso(tarefas);
+    esconderLoadingRomance();
 }
 
 /* ----------------------------------------------------------------------
