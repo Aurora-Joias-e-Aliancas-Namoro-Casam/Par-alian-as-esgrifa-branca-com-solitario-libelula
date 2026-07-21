@@ -581,7 +581,7 @@ async function goToRomancePage() {
     iniciarGaleriaMomentos();
     exibirEasterEggSobrenome();
     renderizarCoisasQueElaAma();
-    renderizarNossosBichos();
+    renderizarSeusBichos();
 
     if (typeof VIDEO_PROCESSO_YOUTUBE_URL !== 'undefined' && VIDEO_PROCESSO_YOUTUBE_URL) {
         const linkProcesso = document.getElementById('linkVideoProcesso');
@@ -713,25 +713,55 @@ function renderizarCoisasQueElaAma() {
     });
 }
 
-/* ---------------- "Nossos bichos" ---------------- */
-function renderizarNossosBichos() {
-    const grid = document.getElementById('nossosBichosGrid');
+/* ---------------- "Seus bichos" ---------------- */
+async function renderizarSeusBichos() {
+    const grid = document.getElementById('seusBichosGrid');
     const memoria = document.getElementById('bichosEmMemoria');
+    const slinkyBox = document.getElementById('bichoSlinkyDestaque');
+    const slinkyTexto = document.getElementById('bichoSlinkyTexto');
     if (!grid) return;
 
-    if (Array.isArray(NOSSOS_BICHOS)) {
+    // Lista combinada (atuais + em memória, incluindo o Slinky) na mesma
+    // ordem em que os cartões aparecem na tela — clicar em qualquer nome
+    // abre a foto dele e dá pra navegar pros outros a partir dali.
+    const todosOsBichos = [...(SEUS_BICHOS || []), ...(BICHOS_EM_MEMORIA || [])];
+    // resolverFotoPlaceholder testa cada extensão aceita (EXTENSOES_FOTO_ACEITAS,
+    // em js/config.js) até achar o arquivo de verdade — por isso é assíncrona.
+    const todasAsFotos = await Promise.all(todosOsBichos.map(b => resolverFotoPlaceholder(b.foto)));
+
+    if (Array.isArray(SEUS_BICHOS)) {
         grid.innerHTML = '';
-        NOSSOS_BICHOS.forEach(bicho => {
+        SEUS_BICHOS.forEach((bicho, i) => {
             const card = document.createElement('div');
             card.className = 'bicho-card';
             card.innerHTML = `<span class="bicho-emoji">${bicho.emoji}</span><span class="bicho-nome">${bicho.nome}</span>`;
+            card.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, i));
             grid.appendChild(card);
         });
     }
 
-    if (memoria && Array.isArray(BICHOS_EM_MEMORIA) && BICHOS_EM_MEMORIA.length) {
-        const nomes = BICHOS_EM_MEMORIA.map(b => `${b.nome} ${b.emoji}`).join(', ');
-        memoria.textContent = `E no coração, pra sempre: ${nomes}.`;
+    if (Array.isArray(BICHOS_EM_MEMORIA)) {
+        const slinky = BICHOS_EM_MEMORIA.find(b => b.destaque);
+        const indiceSlinky = todosOsBichos.indexOf(slinky);
+        if (slinky && slinkyBox && slinkyTexto) {
+            slinkyTexto.textContent = slinky.textoEspecial || '';
+            slinkyBox.classList.remove('d-none');
+            slinkyBox.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, indiceSlinky));
+        }
+
+        // Os demais "em memória" (sem o Slinky, que já ganhou o bloco de
+        // destaque acima, pra não repetir o nome dele duas vezes) também
+        // abrem foto ao tocar no nome.
+        const outrosEmMemoria = BICHOS_EM_MEMORIA.filter(b => !b.destaque);
+        if (memoria && outrosEmMemoria.length) {
+            memoria.innerHTML = 'E no coração, pra sempre: ' + outrosEmMemoria.map(b => {
+                const indice = todosOsBichos.indexOf(b);
+                return `<span class="bicho-memoria-nome" data-indice="${indice}">${b.nome} ${b.emoji}</span>`;
+            }).join(', ') + '.';
+            memoria.querySelectorAll('.bicho-memoria-nome').forEach(span => {
+                span.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, Number(span.dataset.indice)));
+            });
+        }
     }
 }
 

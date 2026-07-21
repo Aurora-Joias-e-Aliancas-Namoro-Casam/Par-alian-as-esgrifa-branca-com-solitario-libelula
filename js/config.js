@@ -107,6 +107,24 @@ const PLACEHOLDERS = {
     imagem_momento_3: { arquivo: 'momento-3.jpg', tipo: 'imagem', descricao: 'Foto solta na "mesa de fotos"' },
     imagem_momento_4: { arquivo: 'momento-4.jpg', tipo: 'imagem', descricao: 'Foto solta na "mesa de fotos"' },
 
+    // ---- Seus bichos (clique no nome de cada um abre a foto) ----
+    // "arquivoBase" (sem extensão) em vez de "arquivo": aceita qualquer
+    // extensão de foto listada em EXTENSOES_FOTO_ACEITAS, então tanto faz
+    // salvar como .jpg, .jpeg, .png ou .webp — não precisa editar nada
+    // aqui além de colocar o arquivo na pasta (ver resolverFotoPlaceholder).
+    bicho_koda: { arquivoBase: 'bicho-koda', tipo: 'imagem', descricao: 'Koda' },
+    bicho_xixico: { arquivoBase: 'bicho-xixico', tipo: 'imagem', descricao: 'Xixico' },
+    bicho_kovu: { arquivoBase: 'bicho-kovu', tipo: 'imagem', descricao: 'Kovu' },
+    bicho_yuk: { arquivoBase: 'bicho-yuk', tipo: 'imagem', descricao: 'Yuk' },
+    bicho_ahadi: { arquivoBase: 'bicho-ahadi', tipo: 'imagem', descricao: 'Ahadi' },
+    bicho_shury: { arquivoBase: 'bicho-shury', tipo: 'imagem', descricao: 'Shury' },
+    bicho_sol: { arquivoBase: 'bicho-sol', tipo: 'imagem', descricao: 'Sol' },
+    bicho_lua: { arquivoBase: 'bicho-lua', tipo: 'imagem', descricao: 'Lua' },
+    bicho_negao: { arquivoBase: 'bicho-negao', tipo: 'imagem', descricao: 'Negão (em memória)' },
+    bicho_slinky: { arquivoBase: 'bicho-slinky', tipo: 'imagem', descricao: 'Slinky (em memória)' },
+    bicho_tommy: { arquivoBase: 'bicho-tommy', tipo: 'imagem', descricao: 'Tommy (em memória)' },
+    bicho_anne: { arquivoBase: 'bicho-anne', tipo: 'imagem', descricao: 'Anne (em memória)' },
+
     // ---- Áudio ----
     audio_nossa_musica: { arquivo: 'nossa-musica.mp3', tipo: 'audio', descricao: 'A trilha que toca ao abrir a carta final (ex: Um Dia Te Levo Comigo)' },
     audio_playlist_1: { arquivo: 'playlist-1.mp3', tipo: 'audio', descricao: 'Faixa 1 da playlist do casal' },
@@ -124,6 +142,40 @@ function getAsset(id) {
     if (!item) { console.warn(`Placeholder desconhecido: ${id}`); return ''; }
     const pasta = item.tipo === 'imagem' ? 'assets/img' : (item.tipo === 'video' ? 'assets/video' : 'assets/audio');
     return `${pasta}/${item.arquivo}`;
+}
+
+/**
+ * Resolve a foto de um placeholder "por nome" (arquivoBase, sem extensão
+ * fixa) — testa cada extensão em EXTENSOES_FOTO_ACEITAS, em minúsculo e
+ * MAIÚSCULO, até achar um arquivo que exista de verdade em assets/img/.
+ * Usada hoje pelas fotos de "Seus bichos" (ver PLACEHOLDERS acima).
+ * Se nada for encontrado, devolve um SVG de espaço reservado (com a
+ * legenda do item) em vez de quebrar como imagem ausente.
+ */
+const __cacheResolverFotoPlaceholder = {};
+async function resolverFotoPlaceholder(id) {
+    if (id in __cacheResolverFotoPlaceholder) return __cacheResolverFotoPlaceholder[id];
+
+    const item = PLACEHOLDERS[id];
+    if (!item || !item.arquivoBase) {
+        console.warn(`resolverFotoPlaceholder: placeholder "${id}" não tem arquivoBase configurado.`);
+        return gerarSvgPlaceholderComLegenda(item ? item.descricao : id);
+    }
+
+    const candidatos = EXTENSOES_FOTO_ACEITAS.flatMap(ext => [ext, ext.toUpperCase()]);
+    for (const ext of candidatos) {
+        const caminho = `assets/img/${item.arquivoBase}.${ext}`;
+        if (await arquivoExisteNoServidor(caminho)) {
+            __cacheResolverFotoPlaceholder[id] = caminho;
+            return caminho;
+        }
+    }
+
+    // Nenhuma extensão encontrada — provavelmente a foto ainda não foi
+    // adicionada na pasta. Não guarda esse "não encontrado" no cache
+    // (diferente do sucesso), assim, se a foto for adicionada depois sem
+    // recarregar a página, uma nova tentativa ainda pode encontrar.
+    return gerarSvgPlaceholderComLegenda(item.descricao);
 }
 
 /* ----------------------------------------------------------------------
@@ -200,7 +252,14 @@ function extrairIdYoutube(valor) {
 }
 
 /* Extensões aceitas para descoberta automática — ver montarGaleria() em js/galeria.js. */
-const GALERIA_EXTENSOES_FOTO = ['jpg', 'jpeg', 'png', 'webp'];
+/* Extensões de foto aceitas em qualquer lugar do site que resolve uma
+ * imagem "por nome", sem precisar dizer a extensão exata em config.js —
+ * hoje usada pela galeria (galeria.html) e pelas fotos de "Seus bichos".
+ * Adicione aqui se precisar aceitar outro formato de foto no futuro
+ * (o teste também é sempre insensível a maiúscula/minúscula, então
+ * ".JPG" e ".jpg" funcionam do mesmo jeito). */
+const EXTENSOES_FOTO_ACEITAS = ['jpg', 'jpeg', 'png', 'webp'];
+const GALERIA_EXTENSOES_FOTO = EXTENSOES_FOTO_ACEITAS;
 const GALERIA_EXTENSOES_VIDEO = ['mp4', 'mov', 'webm'];
 
 /* ----------------------------------------------------------------------
@@ -258,24 +317,29 @@ const TIMELINE_MARCOS = [
    ---------------------------------------------------------------------- */
 const PERGUNTAS_SUSPENSE = [
     {
-        texto: `Antes de continuarmos: você acha que já rimos o suficiente hoje, ou ainda cabe mais uma risadinha?`,
-        sim: `Sempre cabe mais uma`,
-        nao: `Nunca é suficiente`
+        texto: `Confessa uma coisa: quantas vezes por dia você pensa em girassol, sem eu nem perguntar?`,
+        sim: `Mais vezes do que eu admito`,
+        nao: `Perdi a conta há muito tempo`
     },
     {
-        texto: `Se eu pedir pra andar de mãos dadas com você pelo resto da tarde, você reclama?`,
-        sim: `Nem um pouquinho`,
-        nao: `Jamais reclamaria`
+        texto: `Se eu falar que hoje é dia de hambúrguer do Grill com picles, você larga tudo e vem correndo?`,
+        sim: `Em dois segundos`,
+        nao: `Nem preciso pensar`
     },
     {
-        texto: `O Kovu topa dividir o sofá com a gente enquanto você conta pra mim como foi seu dia?`,
-        sim: `Claro que topa`,
-        nao: `Com certeza topa`
+        texto: `O Kovu jura que é neutro, mas a gente sabe muito bem que ele torce mais por você. Isso te incomoda?`,
+        sim: `De jeito nenhum, eu mereço`,
+        nao: `Ele só tem bom gosto`
     },
     {
-        texto: `Você promete não fazer bico se eu roubar uma batata frita do seu prato de novo?`,
-        sim: `Prometo (mas cobro depois)`,
-        nao: `Tá bom, prometo`
+        texto: `Se eu aparecer contando que arrumei uma viagem pra um lugar que você nunca foi, você já começa a fazer a mala na cabeça?`,
+        sim: `Já tô fazendo a lista`,
+        nao: `Nem preciso pensar duas vezes`
+    },
+    {
+        texto: `Você promete continuar sendo esse silêncio bonito, até decidir que eu mereço ouvir tudo?`,
+        sim: `Prometo, mas só com você`,
+        nao: `Isso nunca vai mudar`
     },
     {
         texto: `Última: você topa continuar escolhendo a gente, todos os dias, mesmo nos dias difíceis?`,
@@ -387,13 +451,23 @@ const OPCOES_REGRAS_CONTRATO = [
 ];
 
 /* ----------------------------------------------------------------------
-   CARTA FINAL — 1 Coríntios 13 (adaptação de domínio público)
+   CARTA FINAL — tema do universo, escrita na sua voz
    ----------------------------------------------------------------------
    Cada ocorrência de {AMOR} vira, com uma transição suave, o nome dela.
+   O verso de fechamento é original (não é de nenhum poeta e não usa
+   trecho de nenhuma música com direito autoral): se você quiser usar a
+   frase exata de "Um Dia Te Levo Comigo" ali no lugar, cole ela mesmo,
+   direto nesta função, no lugar da última frase.
    ---------------------------------------------------------------------- */
 function textoVersiculoBase() {
     if (CARTA_USAR_TEXTO_TESTE) return TEXTO_CARTA_TESTE;
-    return "O {AMOR} é paciente, o {AMOR} é benigno; não é invejoso, não se vangloria, não se ensoberbece. Não se conduz com indecência, não busca os seus próprios interesses, não se irrita, não guarda mágoa. Não se alegra com a injustiça, mas se alegra com a verdade. Tudo sofre, tudo crê, tudo espera, tudo suporta.";
+    return `O universo é tão grande que a luz de algumas estrelas leva milhões de anos pra chegar até nós, e mesmo assim, quando olhamos pro céu à noite, temos a sorte de ver elas brilhando bem ali. É mais ou menos assim que eu sinto esse meu amor por você, {AMOR}: levou bilhões de anos de poeira virando estrela, estrela virando planeta, planeta virando esse pedacinho de mundo onde a gente por fim se encontrou, e mesmo assim valeu cada segundo de espera.
+
+Você é como um girassol, vive virada pro que te ilumina. E desde que te conheci, virei eu esse lugar pra onde você se vira todos os dias.
+
+Não sei dizer direito onde o tempo começa nem onde ele termina, mas sei que em qualquer ponto dele, em qualquer versão possível desse universo inteiro, eu escolheria de novo ficar do seu lado, {AMOR}. Nem distância, nem os anos que ainda vamos viver juntos, mudam isso.
+
+Pra selar, um verso que não peguei emprestado de nenhum poeta, porque nenhum poeta te conhece como eu conheço: você carrega o dia inteiro guardado nos olhos, e a noite inteira guardada no sorriso.`;
 }
 
 /* ----------------------------------------------------------------------
@@ -415,7 +489,7 @@ const TEXTO_CARTA_TESTE = `[CARTA_TESTE] Este é um texto provisório só para t
 /* ----------------------------------------------------------------------
    CÁPSULA DO TEMPO — carta que se abre sozinha 1 ano após o pedido
    ---------------------------------------------------------------------- */
-const CAPSULA_DIAS_PARA_DESBLOQUEIO = 0;
+const CAPSULA_DIAS_PARA_DESBLOQUEIO = 365;
 function textoCapsulaDoTempo() {
     return `Se você está lendo isso, já faz um ano que eu te pedi em namoro.
 
@@ -463,36 +537,43 @@ const TEXTO_EASTER_EGG_SOBRENOME = `Aviso nada oficial: a partir de hoje você d
    Edite livremente; cada item vira um pequeno cartão na seção.
    ---------------------------------------------------------------------- */
 const COISAS_QUE_ELA_AMA = [
-    { icon: 'bi-flower1', texto: 'Girassóis, sempre.' },
-    { icon: 'bi-cup-straw', texto: 'Hambúrguer do Grill, com picles, sem discussão (se deixar, ela come todo dia).' },
-    { icon: 'bi-egg-fried', texto: 'Arroz, feijão preto, batata frita e rúcula: o prato perfeito.' },
-    { icon: 'bi-heart-fill', texto: 'KitKat, Kinder Ovo e Ovomaltine em qualquer forma possível.' },
-    { icon: 'bi-bag-fill', texto: 'Pringles, Doritos, Cheetos requeijão e Fandangos, pra quando bate a vontade de salgadinho.' },
-    { icon: 'bi-tree-fill', texto: 'Campo aberto, mato e bicho. Só troca por um shopping, e olhe lá.' },
-    { icon: 'bi-gift-fill', texto: 'O aniversário dela é sagrado, é o dia dela e ponto final.' },
-    { icon: 'bi-chat-heart-fill', texto: 'É caladinha até ganhar confiança. Depois disso, não para de falar.' },
-    { icon: 'bi-paw', texto: 'Koda, Xixico, Kovu, Yuk, Ahadi, Shury, Sol e Lua. E no coração, pra sempre, Negão, Slinky, Tommy e Anne.' }
+    { icon: 'bi-flower1', texto: 'Girassol. Não é só gostar, é amor mesmo, e eu reparei nisso desde muito cedo.' },
+    { icon: 'bi-cup-straw', texto: 'Hambúrguer do Grill, com picles, sem exceção. Se deixasse, você comia isso todo santo dia.' },
+    { icon: 'bi-egg-fried', texto: 'Arroz, feijão preto, batata frita e rúcula. Simples assim, e é o seu favorito.' },
+    { icon: 'bi-heart-fill', texto: 'KitKat, Kinder Ovo e Ovomaltine em qualquer versão que existir.' },
+    { icon: 'bi-bag-fill', texto: 'Pringles, Doritos, Cheetos requeijão e Fandangos, pra quando bate aquela vontade de salgadinho.' },
+    { icon: 'bi-tree-fill', texto: 'Mato e bicho, sempre. Um lugar calmo, sem muita gente, é onde você relaxa de verdade.' },
+    { icon: 'bi-bag-heart-fill', texto: 'E ao mesmo tempo ama um shopping, e conhecer lugar novo, tipo achar uma hamburgueria diferente por aí.' },
+    { icon: 'bi-airplane-fill', texto: 'Viajar. Conhecer lugar que você nunca viu é uma das coisas que mais te deixam animada, eu percebo no seu jeito de falar.' },
+    { icon: 'bi-gift-fill', texto: 'Seu aniversário é sagrado. É o seu dia, e ponto final, e eu levo isso a sério.' },
+    { icon: 'bi-chat-heart-fill', texto: 'É caladinha até ganhar confiança, e quando ganha, não para mais de falar. Eu amo quando você fala demais comigo.' }
 ];
 
 /* ----------------------------------------------------------------------
-   NOSSOS BICHOS — pequena seção logo abaixo de "Coisas que a Poloni ama"
+   SEUS BICHOS — pequena seção logo abaixo de "Coisas que você gosta".
+   São seus, não nossos (ainda não moram juntos), por isso o texto trata
+   como "seus bichos", não "nossos bichos". Toque no nome de qualquer um
+   pra abrir a foto dele (usa o mesmo visor de foto do resto do site).
    ---------------------------------------------------------------------- */
-const NOSSOS_BICHOS = [
-    { nome: 'Koda', emoji: '🐶' },
-    { nome: 'Xixico', emoji: '🐶' },
-    { nome: 'Kovu', emoji: '🐶' },
-    { nome: 'Yuk', emoji: '🐱' },
-    { nome: 'Ahadi', emoji: '🐱' },
-    { nome: 'Shury', emoji: '🐱' },
-    { nome: 'Sol', emoji: '🦜' },
-    { nome: 'Lua', emoji: '🦜' }
+const SEUS_BICHOS = [
+    { nome: 'Koda', emoji: '🐶', foto: 'bicho_koda' },
+    { nome: 'Xixico', emoji: '🐶', foto: 'bicho_xixico' },
+    { nome: 'Kovu', emoji: '🐶', foto: 'bicho_kovu' },
+    { nome: 'Yuk', emoji: '🐱', foto: 'bicho_yuk' },
+    { nome: 'Ahadi', emoji: '🐱', foto: 'bicho_ahadi' },
+    { nome: 'Shury', emoji: '🐱', foto: 'bicho_shury' },
+    { nome: 'Sol', emoji: '🦜', foto: 'bicho_sol' },
+    { nome: 'Lua', emoji: '🦜', foto: 'bicho_lua' }
 ];
 
 const BICHOS_EM_MEMORIA = [
-    { nome: 'Negão', emoji: '🐶' },
-    { nome: 'Slinky', emoji: '🐶' },
-    { nome: 'Tommy', emoji: '🦜' },
-    { nome: 'Anne', emoji: '🦜' }
+    { nome: 'Negão', emoji: '🐶', foto: 'bicho_negao' },
+    {
+        nome: 'Slinky', emoji: '🐶', foto: 'bicho_slinky', destaque: true,
+        textoEspecial: 'Confesso que não cheguei a te conhecer direito, Slinky, mas sei o quanto você ajudou ela em uma fase difícil, e isso te tornou especial pra mim também, mesmo à distância. Obrigado por ter cuidado dela antes de mim.'
+    },
+    { nome: 'Tommy', emoji: '🦜', foto: 'bicho_tommy' },
+    { nome: 'Anne', emoji: '🦜', foto: 'bicho_anne' }
 ];
 
 /* ----------------------------------------------------------------------

@@ -4,6 +4,20 @@
  * ============================================================================
  */
 
+/**
+ * Testa (via HEAD request) se um arquivo existe de verdade em
+ * /assets — genérico, sem ligação com nenhuma feature específica.
+ * Usada por resolverFotoPlaceholder() (js/config.js), entre outras.
+ */
+async function arquivoExisteNoServidor(caminho) {
+    try {
+        const resposta = await fetch(caminho, { method: 'HEAD', cache: 'no-store' });
+        return resposta.ok;
+    } catch (e) {
+        return false;
+    }
+}
+
 /* ---------------- Substituição segura de imagens (placeholders) ---------------- */
 /**
  * Aplica getAsset() a uma <img> e prepara um "onerror" elegante: se o

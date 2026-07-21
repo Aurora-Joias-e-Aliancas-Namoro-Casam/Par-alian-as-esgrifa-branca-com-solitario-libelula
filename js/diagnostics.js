@@ -444,6 +444,56 @@ async function executarReset() {
     location.reload();
 }
 
+async function executarTesteCapsula() {
+    const botao = document.getElementById('btnTestarCapsula');
+    const resultado = document.getElementById('capsulaTesteResultado');
+    if (botao) { botao.disabled = true; botao.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Calculando...'; }
+    resultado.innerHTML = '';
+
+    try {
+        const dataPedidoIso = await obterConfiguracao('aurora_data_pedido');
+        if (!dataPedidoIso) {
+            resultado.innerHTML = `<div class="diag-resumo diag-pending">Ainda não existe uma data de pedido salva neste aparelho, então não dá pra calcular o desbloqueio ainda. Faça o pedido primeiro (ou pelo menos chegue até essa etapa) e teste de novo.</div>`;
+            return;
+        }
+
+        const dataAlvo = new Date(dataPedidoIso);
+        dataAlvo.setDate(dataAlvo.getDate() + CAPSULA_DIAS_PARA_DESBLOQUEIO);
+        const agora = await obterHoraConfiavel(); // mesma fonte de hora usada na checagem real (servidor, não o aparelho)
+        const desbloqueada = agora >= dataAlvo;
+        const diasRestantes = Math.max(0, Math.ceil((dataAlvo - agora) / 86400000));
+
+        const fmt = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        let html = `<div class="diag-resumo ${desbloqueada ? 'diag-ok' : 'diag-pending'}">
+            ${desbloqueada ? 'Já passou da data — a cápsula abriria normalmente hoje.' : `Ainda faltam ${diasRestantes} dia${diasRestantes === 1 ? '' : 's'} pra cápsula abrir de verdade.`}
+        </div>
+        <div class="diag-item diag-ok mb-2">
+            <i class="bi bi-calendar-event"></i>
+            <div><strong>Datas calculadas</strong><p>Pedido: ${fmt(new Date(dataPedidoIso))} · Desbloqueio: ${fmt(dataAlvo)} (${CAPSULA_DIAS_PARA_DESBLOQUEIO} dias depois) · Hora do servidor agora: ${agora.toLocaleString('pt-BR')}</p></div>
+        </div>`;
+
+        // Prévia do texto — mesmo texto que vai aparecer de verdade, com o nome dela já trocado.
+        const textoPreview = (typeof textoCapsulaDoTempo === 'function' ? textoCapsulaDoTempo() : '(textoCapsulaDoTempo não encontrada)').replace(/\n/g, '<br>');
+        html += `<div class="diag-item diag-ok mb-2" style="text-align:left;">
+            <i class="bi bi-envelope-paper"></i>
+            <div><strong>Prévia do texto da carta</strong><p style="color:#f0d9dd; font-style: italic;">${textoPreview}</p><p>Assinatura: Com amor, ${NOME_DELE}.</p></div>
+        </div>`;
+
+        if (typeof CAPSULA_YOUTUBE_ID !== 'undefined' && CAPSULA_YOUTUBE_ID) {
+            html += `<div class="diag-item diag-ok"><i class="bi bi-youtube"></i><div><strong>Botão do vídeo</strong><p>Vai aparecer, apontando para: https://www.youtube.com/watch?v=${CAPSULA_YOUTUBE_ID}</p></div></div>`;
+        } else {
+            html += `<div class="diag-item diag-pending"><i class="bi bi-youtube"></i><div><strong>Botão do vídeo</strong><p>CAPSULA_YOUTUBE_ID ainda está vazio em js/config.js, então esse botão não vai aparecer.</p></div></div>`;
+        }
+
+        resultado.innerHTML = html;
+    } catch (e) {
+        resultado.innerHTML = `<div class="diag-resumo diag-erro">Deu erro tentando calcular: ${e.message}</div>`;
+    } finally {
+        if (botao) { botao.disabled = false; botao.innerHTML = '<i class="bi bi-envelope-paper me-1"></i>Ver prévia da cápsula'; }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRodarDiagnostico').addEventListener('click', executarDiagnosticoCompleto);
     document.getElementById('btnTestarNuvem').addEventListener('click', executarTesteNuvem);
@@ -451,5 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnVerEstadoReset').addEventListener('click', executarVerEstadoReset);
     document.getElementById('btnTestarGaleria').addEventListener('click', executarTesteGaleria);
     document.getElementById('btnResetar').addEventListener('click', executarReset);
+    document.getElementById('btnTestarCapsula').addEventListener('click', executarTesteCapsula);
     executarDiagnosticoCompleto();
 });
