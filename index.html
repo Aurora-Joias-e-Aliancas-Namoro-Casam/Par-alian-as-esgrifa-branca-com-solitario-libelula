@@ -25,12 +25,12 @@
          app, evitando que um envio agendado seja interrompido no meio. -->
     <div id="auroraSyncBanner" class="aurora-sync-banner d-none">
         <span class="spinner-border spinner-border-sm me-2"></span>
-        Salvando na nuvem — não feche o app nem tranque a tela ainda...
+        Salvando na nuvem, não feche o app nem tranque a tela ainda...
     </div>
 
     <!-- ===================== MODO VISUALIZAÇÃO DA LOJINHA (rever, sem afetar o banco) ===================== -->
     <div id="modoVisualizacaoBarra" class="modo-visualizacao-barra d-none">
-        <span><i class="bi bi-eye-fill me-1"></i>Só revendo — nada aqui é salvo</span>
+        <span><i class="bi bi-eye-fill me-1"></i>Só revendo, nada aqui é salvo</span>
         <button id="btnVoltarDaLoja" class="btn btn-rosegold btn-sm rounded-pill fw-bold">Voltar para nossa história</button>
     </div>
 
@@ -243,7 +243,7 @@
                     <svg class="loja-girassol-discreto" viewBox="0 0 200 200" aria-hidden="true"><use href="#girassolIlustracao"></use></svg>
                     <p class="about-eyebrow">Nossa história</p>
                     <h4>Feita à mão, pensada para durar</h4>
-                    <p>Desde 2009, a <span class="js-marca-loja">Aryah Joias</span> trabalha com prata 950 e design autoral, unindo tradição joalheira e acabamento artesanal em cada peça. Cada aliança carrega um pouco desse cuidado — e a intenção de acompanhar histórias importantes por muitos anos.</p>
+                    <p>Desde 2009, a <span class="js-marca-loja">Aryah Joias</span> trabalha com prata 950 e design autoral, unindo tradição joalheira e acabamento artesanal em cada peça. Cada aliança carrega um pouco desse cuidado, e a intenção de acompanhar histórias importantes por muitos anos.</p>
                     <div class="about-badges">
                         <div class="about-badge"><i class="bi bi-gem"></i><span>Design autoral</span></div>
                         <div class="about-badge"><i class="bi bi-award"></i><span>Garantia vitalícia</span></div>
@@ -450,7 +450,7 @@
                     <p id="saveStatus" class="save-status"></p>
                     <div id="videoGrandeAviso" class="video-grande-aviso d-none">
                         <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                        Esse vídeo ficou grande demais pra sincronizar automaticamente com a nuvem (o plano gratuito aceita até 50MB por arquivo). <strong>Uma cópia já foi baixada no seu celular.</strong> Suba esse arquivo no YouTube (pode ser como "Não listado") e cole o link na seção <strong>"Vídeo do nosso pedido"</strong> na página final — assim ele aparece certinho em qualquer aparelho, sem depender do envio automático.
+                        Esse vídeo ficou grande demais pra sincronizar automaticamente com a nuvem (o plano gratuito aceita até 50MB por arquivo). <strong>Uma cópia já foi baixada no seu celular.</strong> Suba esse arquivo no YouTube (pode ser como "Não listado") e cole o link na seção <strong>"Vídeo do nosso pedido"</strong> na página final, assim ele aparece certinho em qualquer aparelho, sem depender do envio automático.
                     </div>
                     <div id="videoActions" class="d-none mt-2 d-flex flex-column gap-2">
                         <button id="btnRegravar" class="btn btn-light border rounded-pill btn-sm fw-bold">Regravar</button>
@@ -690,6 +690,12 @@
         </div>
 
         <div class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
+            <p class="romance-section-title"><i class="bi bi-paw me-2"></i>Nossos bichos</p>
+            <div class="bichos-grid" id="nossosBichosGrid"></div>
+            <p class="bichos-memoria" id="bichosEmMemoria"></p>
+        </div>
+
+        <div class="mt-5 reveal-up" style="max-width: 440px; margin: 0 auto;">
             <p class="romance-section-title">Nossa playlist</p>
             <div class="playlist-card">
                 <p class="playlist-track-title" id="playlistTitulo"></p>
@@ -793,7 +799,7 @@
                     <p class="contract-kicker">Instrumento Particular</p>
                     <h2 class="contract-title">Contrato de Adesão ao Namoro</h2>
                     <div class="romance-divider"></div>
-                    <p class="contract-intro">As partes abaixo identificadas resolvem celebrar o presente Contrato de Namoro, comprometendo-se, de livre e espontânea vontade — e de um bocado de paixão — a cumprir integralmente as cláusulas personalizadas descritas a seguir, escolhidas a dedo por <span class="js-nome"></span>.</p>
+                    <p class="contract-intro">As partes abaixo identificadas resolvem celebrar o presente Contrato de Namoro, comprometendo-se, de livre e espontânea vontade (e de um bocado de paixão), a cumprir integralmente as cláusulas personalizadas descritas a seguir, escolhidas a dedo por <span class="js-nome"></span>.</p>
                     <p class="contract-parties"><strong>CONTRATANTE:</strong> <span class="js-nome-dele"></span><br><strong>CONTRATADA:</strong> <span class="js-nome"></span><br>doravante denominados, em conjunto, "as Partes Apaixonadas".</p>
                     <ol class="contract-articles" id="contractArticlesList"></ol>
                     <p class="contract-closing">E por estarem justas e apaixonadas, as Partes firmam o presente instrumento, em caráter irrevogável (do coração), para que produza os seus efeitos afetivos.</p>
@@ -841,13 +847,14 @@
             <p class="romance-section-title">O que eu sinto por você</p>
 
             <!--
-                Escreva aqui, direto no HTML, o que você quiser dizer pra ela.
-                Pode ser um texto de qualquer tamanho — quebras de linha e
-                parágrafos funcionam normalmente. Não precisa mexer em mais
-                nada além do texto abaixo (dentro das tags <p>).
+                Esse é um rascunho pra você editar do seu jeito, direto aqui no
+                HTML (procure por "O que eu sinto por você" se quiser achar
+                rápido de novo). Pode trocar por qualquer tamanho de texto,
+                quebras de linha e parágrafos funcionam normalmente.
             -->
             <p class="sentimentos-texto">
-                Escreva aqui o que sente por ela — edite este texto direto no arquivo index.html, procurando por "O que eu sinto por você".
+                Não sei explicar direito o que você fez comigo. Só sei que antes de você meus dias tinham uma forma, e depois de você essa forma mudou pra melhor, sem eu nem perceber quando isso aconteceu. Você trouxe leveza pra coisa que eu nem sabia que estava pesada. Trouxe risada fácil, trouxe colo, trouxe aquele silêncio seu que eu aprendi a entender como carinho, e trouxe também essa versão de mim que fala demais quando o assunto é você.<br><br>
+                Se um dia você perguntar de novo se eu te amo muito, a resposta continua a mesma de sempre: sim, tal qual o Chaves ama sanduíche de presunto. Só que hoje eu queria dizer mais que isso. Eu te amo do jeito que se ama o que a gente não troca por nada, do jeito que se escolhe todo santo dia, mesmo sem precisar escolher de novo.
             </p>
         </div>
 
@@ -869,7 +876,7 @@
 
             <div id="polaroidSalvaWrap" class="polaroid-salva-wrap d-none">
                 <img src="" alt="Nossa polaroid">
-                <p class="polaroid-salva-legenda">Sua polaroid — salva e sincronizada</p>
+                <p class="polaroid-salva-legenda">Sua polaroid, salva e sincronizada</p>
             </div>
 
             <div id="lembreteBackup" class="lembrete-backup-card d-none">

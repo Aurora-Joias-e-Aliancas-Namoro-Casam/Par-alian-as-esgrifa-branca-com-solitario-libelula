@@ -98,6 +98,7 @@ const PLACEHOLDERS = {
     imagem_timeline_4: { arquivo: 'timeline-4.jpg', tipo: 'imagem', descricao: 'Timeline — o dia do atoleiro na estrada de terra' },
     imagem_timeline_5: { arquivo: 'timeline-5.jpg', tipo: 'imagem', descricao: 'Timeline — despedida do Slinky / acolhimento da família dela' },
     imagem_timeline_6: { arquivo: 'timeline-6.jpg', tipo: 'imagem', descricao: 'Timeline — 14/06, o "eu te amo" depois da Brooks' },
+    imagem_timeline_7: { arquivo: 'timeline-7.jpg', tipo: 'imagem', descricao: 'Timeline — 20/07, apresentação pros avós em Santa Rosa de Viterbo, Parque Curupira e o balanço em Sales de Oliveira' },
     imagem_timeline_hoje: { arquivo: 'timeline-hoje.jpg', tipo: 'imagem', descricao: 'Timeline — foto de hoje, marcando o dia do pedido' },
 
     // ---- Nossos momentos (mesa de fotos) ----
@@ -208,37 +209,42 @@ const GALERIA_EXTENSOES_VIDEO = ['mp4', 'mov', 'webm'];
 const TIMELINE_MARCOS = [
     {
         data: 'Antes de tudo',
-        texto: `A primeira vez que eu vi você foi dias antes de te conhecer de verdade. Você caminhava com a Vitória e eu falei pra ela, sem pensar duas vezes: "sua amiga de cabelo loiro é muito linda". Fiquei com vergonha demais até de te adicionar no Instagram — no fim foi você quem me adicionou.`,
+        texto: `A primeira vez que eu vi você foi dias antes de te conhecer de verdade. Você caminhava com a Vitória e eu falei pra ela, sem pensar duas vezes: "sua amiga de cabelo loiro é muito linda". Fiquei com vergonha demais até de te adicionar no Instagram, no fim foi você quem me adicionou.`,
         foto: 'imagem_timeline_1'
     },
     {
         data: '11 de maio',
-        texto: `Nos encontramos na faculdade. A Vitória pediu carona e você veio junto. Conversamos muito, nos demos incrivelmente bem — e mesmo assim, por um tempo, ficou só nisso. Continuei te dando carona nos dias seguintes e um dia até "esqueci" seu power bank comigo só pra ter desculpa de te chamar.`,
+        texto: `Nos encontramos na faculdade. A Vitória pediu carona e você veio junto. Conversamos muito, nos demos incrivelmente bem, e mesmo assim, por um tempo, ficou só nisso. Continuei te dando carona nos dias seguintes e um dia até "esqueci" seu power bank comigo só pra ter desculpa de te chamar.`,
         foto: 'imagem_timeline_2'
     },
     {
         data: '30 de maio',
-        texto: `Nosso primeiro encontro. Colina, em Orlândia, 20h30 — que na prática viraram quase 22h, porque alguém demorou uma eternidade pra ficar pronta. Valeu cada segundo de espera. Ficamos horas no carro conversando, e quando eu já ia desistir de ter coragem, você perguntou: "e o nosso beijo, nada?". Foi ali que tudo se encaixou.`,
+        texto: `Nosso primeiro encontro. Colina, em Orlândia, 20h30 que na prática viraram quase 22h, porque alguém demorou uma eternidade pra ficar pronta. Valeu cada segundo de espera. Ficamos horas no carro conversando, e quando eu já ia desistir de ter coragem, você perguntou: "e o nosso beijo, nada?". Foi ali que tudo se encaixou.`,
         foto: 'imagem_timeline_3'
     },
     {
         data: 'Uma estrada de terra',
-        texto: `Fomos parar numa estrada de terra e o carro atolou de vez. Eu me sujei inteiro de barro, perdi o triângulo tentando tirar o carro do buraco — e mesmo assim rimos do começo ao fim. Prova de que qualquer perrengue com você vira boa lembrança.`,
+        texto: `Fomos parar numa estrada de terra e o carro atolou de vez. Eu me sujei inteiro de barro, perdi o triângulo tentando tirar o carro do buraco, e mesmo assim rimos do começo ao fim. Prova de que qualquer perrengue com você vira boa lembrança.`,
         foto: 'imagem_timeline_4'
     },
     {
         data: 'Um momento difícil',
-        texto: `Também vivemos dias difíceis. Levei o Slinky ao veterinário com você e, pouco depois, tivemos que nos despedir dele. Fiquei do seu lado o tempo todo — e foi aí que também conheci sua família de verdade: busquei seu pai no trabalho, conversei com sua mãe, conheci seu irmão. Mesmo num momento triste, me senti acolhido por todos vocês.`,
+        texto: `Também vivemos dias difíceis. Levei o Slinky ao veterinário com você e, pouco depois, tivemos que nos despedir dele. Fiquei do seu lado o tempo todo, e foi aí que também conheci sua família de verdade: busquei seu pai no trabalho, conversei com sua mãe, conheci seu irmão. Mesmo num momento triste, me senti acolhido por todos vocês.`,
         foto: 'imagem_timeline_5'
     },
     {
         data: '14 de junho',
-        texto: `Nossa data. Estávamos no carro depois de sair da Brooks quando eu disse, pela primeira vez, "eu te amo" — e você respondeu do mesmo jeito. Foi o dia em que aquilo que a gente já sentia se tornou oficial. Foi por essa época que "Um Dia Te Levo Comigo" virou a nossa música.`,
+        texto: `Nossa data. Estávamos no carro depois de sair da Brooks quando eu disse, pela primeira vez, "eu te amo", e você respondeu do mesmo jeito. Foi o dia em que aquilo que a gente já sentia se tornou oficial. Foi por essa época que "Um Dia Te Levo Comigo" virou a nossa música.`,
         foto: 'imagem_timeline_6'
     },
     {
+        data: '20 de julho',
+        texto: `Te levei pra conhecer meus avós, em Santa Rosa de Viterbo. Depois passeamos no Parque Curupira, em Ribeirão Preto, e no fim do dia sentamos num balanço em Sales de Oliveira, só a gente. Percebi no seu jeito que você achou que eu ia te pedir em namoro ali. Eu também queria, mais do que qualquer coisa, só que as alianças ainda nem tinham chegado. Guardei aquela vontade pra esse dia aqui. Valeu a pena esperar.`,
+        foto: 'imagem_timeline_7'
+    },
+    {
         data: null,
-        texto: `E hoje: mesmo com pouco tempo juntos, parece que a gente se conhece há anos. Tenho certeza absoluta de que encontrei o amor da minha vida — e de que foi Deus quem colocou você no meu caminho. Ainda não sei se esse pedido vai dar certo, mas de uma coisa eu tenho certeza: eu te amo mais do que consigo colocar em palavras.`,
+        texto: `E hoje: mesmo com pouco tempo juntos, parece que a gente se conhece há anos. Tenho certeza absoluta de que encontrei o amor da minha vida, e de que foi Deus quem colocou você no meu caminho. Ainda não sei se esse pedido vai dar certo, mas de uma coisa eu tenho certeza: eu te amo mais do que consigo colocar em palavras.`,
         foto: 'imagem_timeline_hoje',
         ehPedido: true
     }
@@ -275,6 +281,11 @@ const PERGUNTAS_SUSPENSE = [
         texto: `Última: você topa continuar escolhendo a gente, todos os dias, mesmo nos dias difíceis?`,
         sim: `Topo de olhos fechados`,
         nao: `Sim, sempre`
+    },
+    {
+        texto: `Repete comigo, do nosso jeito: eu te amo muito, tal qual o Chaves ama sanduíche de presunto. É verdade ou é verdade?`,
+        sim: `É a mais pura verdade`,
+        nao: `Verdade, sempre foi`
     }
 ];
 
@@ -297,7 +308,7 @@ const QUIZ_PERGUNTAS = [
         opcoes: ['Jorge & Mateus e Zé Neto & Cristiano', 'Henrique & Juliano', 'Marília Mendonça (só)', 'Nenhuma das anteriores'],
         certa: 0,
         certoMsg: 'Isso mesmo! Já sei até cantar junto 🎶',
-        erradoMsg: 'Jorge & Mateus e Zé Neto & Cristiano — já tá tocando na nossa cabeça, né?'
+        erradoMsg: 'Jorge & Mateus e Zé Neto & Cristiano, já tá tocando na nossa cabeça, né?'
     },
     {
         pergunta: 'Qual cachorro está com a gente hoje, esperando carinho?',
@@ -310,15 +321,22 @@ const QUIZ_PERGUNTAS = [
         pergunta: 'O que a Poloni definitivamente NÃO come?',
         opcoes: ['Carne', 'Girassol (a planta, relaxa)', 'Chocolate', 'Batata frita'],
         certa: 0,
-        certoMsg: 'Certíssimo — vegetariana com muito orgulho 🌱',
-        erradoMsg: 'Ela é ovolactovegetariana — carne está fora de cogitação 🌱'
+        certoMsg: 'Certíssimo, vegetariana com muito orgulho 🌱',
+        erradoMsg: 'Ela é ovolactovegetariana, carne está fora de cogitação 🌱'
     },
     {
         pergunta: 'Onde foi o nosso primeiro encontro de verdade?',
         opcoes: ['Colina, em Orlândia', 'Praia', 'Shopping', 'Uma festa'],
         certa: 0,
-        certoMsg: 'Colina, 30 de maio — inesquecível 💛',
-        erradoMsg: 'Foi no Colina, em Orlândia, dia 30/05 — o dia em que tudo se encaixou.'
+        certoMsg: 'Colina, 30 de maio. Inesquecível 💛',
+        erradoMsg: 'Foi no Colina, em Orlândia, dia 30/05, o dia em que tudo se encaixou.'
+    },
+    {
+        pergunta: 'Quantos bichos a Poloni tem hoje, contando cachorro, gato e calopsita?',
+        opcoes: ['5', '6', '8', '10'],
+        certa: 2,
+        certoMsg: 'Isso mesmo, 8! Koda, Xixico, Kovu, Yuk, Ahadi, Shury, Sol e Lua 🐾',
+        erradoMsg: 'São 8: Koda, Xixico e Kovu (cachorros), Yuk, Ahadi e Shury (gatos), Sol e Lua (calopsistas) 🐾'
     }
 ];
 
@@ -329,7 +347,7 @@ const PLAYLIST_FAIXAS = [
     {
         titulo: 'Um Dia Te Levo Comigo',
         artista: 'Nossa música',
-        motivo: 'Virou a nossa música por volta do dia 14/06 — o dia do nosso "eu te amo" depois da Brooks.',
+        motivo: 'Virou a nossa música por volta do dia 14/06, o dia do nosso "eu te amo" depois da Brooks.',
         src: 'audio_nossa_musica'
     },
     {
@@ -356,15 +374,15 @@ const PLAYLIST_FAIXAS = [
    REGRAS DO "CONTRATO DE NAMORO"
    ---------------------------------------------------------------------- */
 const OPCOES_REGRAS_CONTRATO = [
-    { id: 'girassol', icon: 'bi-flower1', label: 'Sempre ter um girassol por perto', artigo: 'Fica decretado que jamais faltará um girassol por perto — seja na varanda, na mesa ou apenas guardado em uma lembrança.' },
+    { id: 'girassol', icon: 'bi-flower1', label: 'Sempre ter um girassol por perto', artigo: 'Fica decretado que jamais faltará um girassol por perto, seja na varanda, na mesa ou apenas guardado em uma lembrança.' },
     { id: 'batata', icon: 'bi-basket2', label: 'Dividir a última batata frita', artigo: 'Fica estabelecido o compartilhamento voluntário de qualquer petisco, sendo o mínimo aceitável oferecer pelo menos a última batata frita antes de terminar o prato sozinho(a).' },
     { id: 'kovu', icon: 'bi-paw', label: 'Levar o Kovu pra passear junto', artigo: 'O Kovu tem direito garantido a passeios em dupla sempre que a agenda permitir, sem necessidade de justificativa prévia.' },
     { id: 'maos_dadas', icon: 'bi-hand-index-thumb', label: 'Andar sempre de mãos dadas', artigo: 'As mãos dadas são cláusula obrigatória em qualquer caminhada, trajeto de carro ou fila de cinema.' },
-    { id: 'praia', icon: 'bi-sun', label: 'Realizar o sonho de ir à praia juntos', artigo: 'Fica registrado o compromisso de, assim que possível, realizar juntos o sonho da praia — com direito a pôr do sol e os pés na areia.' },
+    { id: 'praia', icon: 'bi-sun', label: 'Realizar o sonho de ir à praia juntos', artigo: 'Fica registrado o compromisso de, assim que possível, realizar juntos o sonho da praia, com direito a pôr do sol e os pés na areia.' },
     { id: 'musica_sertaneja', icon: 'bi-music-note-beamed', label: 'Cantar Jorge & Mateus no volume máximo', artigo: 'Fica autorizado, e incentivado, cantar Jorge & Mateus e Zé Neto & Cristiano no volume máximo durante qualquer viagem de carro.' },
     { id: 'bomdia', icon: 'bi-sunrise-fill', label: 'Mandar mensagem de bom dia', artigo: 'As mensagens de bom dia constituem cláusula pétrea deste contrato, não podendo ser suprimidas nem mesmo por emenda constitucional do sono.' },
     { id: 'conchinha', icon: 'bi-moon-stars-fill', label: 'Dormir de conchinha sempre que possível', artigo: 'O cobertor será dividido de forma equânime, ficando garantida a posição de conchinha sempre que possível.' },
-    { id: 'filmes', icon: 'bi-film', label: 'Assistir filmes de terror/comédia juntos', artigo: 'Ficam instituídas as maratonas de filmes em conjunto, com direito a pipoca e comentários espontâneos sobre a trama — igualzinho ao dia de Todo Mundo em Pânico 6.' },
+    { id: 'filmes', icon: 'bi-film', label: 'Assistir filmes de terror/comédia juntos', artigo: 'Ficam instituídas as maratonas de filmes em conjunto, com direito a pipoca e comentários espontâneos sobre a trama, igualzinho ao dia de Todo Mundo em Pânico 6.' },
     { id: 'sonhos', icon: 'bi-stars', label: 'Apoiar os sonhos um do outro', artigo: 'É dever de ambas as Partes apoiar incondicionalmente os sonhos, planos e ideias malucas uma da outra.' }
 ];
 
@@ -399,7 +417,17 @@ const TEXTO_CARTA_TESTE = `[CARTA_TESTE] Este é um texto provisório só para t
    ---------------------------------------------------------------------- */
 const CAPSULA_DIAS_PARA_DESBLOQUEIO = 365;
 function textoCapsulaDoTempo() {
-    return `Se você está lendo isso, já faz um ano que eu te pedi em namoro. [Escreva aqui o que você quer dizer para vocês dois daqui a um ano — o que mudou, o que continua igual, uma promessa, uma lembrança de hoje.]`;
+    return `Se você está lendo isso, já faz um ano que eu te pedi em namoro.
+
+Um ano é pouco tempo pro tanto que eu sinto, mas foi tempo suficiente pra eu ter certeza de uma coisa: não existe versão de mim que não escolheria você de novo, sabendo de tudo o que a gente ia viver. Lembro de cada detalhe daquele dia. Lembro do medo, da vontade de que desse tudo certo, e de como, no fim, nada mais importou além do seu sim.
+
+Se hoje a gente discutiu por bobagem, se a rotina engoliu um pouco da leveza, ou se esse ano trouxe coisas que a gente nem imaginava, quero que você leia isso e lembre do começo. Do quanto eu quis isso. Do quanto ainda quero.
+
+Amor não é o dia do pedido. É todos os dias comuns depois dele, os que ninguém filma e ninguém guarda em cápsula nenhuma. É acordar do seu lado achando normal, quando na verdade é a maior sorte que eu já tive.
+
+E sim, continua tal qual o Chaves ama sanduíche de presunto. Isso nunca vai mudar.
+
+Com tudo o que eu sou,`;
 }
 
 /* ID do vídeo do YouTube com a mensagem em vídeo pra cápsula do tempo (o
@@ -426,7 +454,7 @@ const VIDEO_PROCESSO_YOUTUBE_URL = '';
 /* ----------------------------------------------------------------------
    EASTER EGG — brincadeira do sobrenome
    ---------------------------------------------------------------------- */
-const TEXTO_EASTER_EGG_SOBRENOME = `Aviso nada oficial: a partir de hoje você deixa de ser "do Vale" — e não, isso não tem nada a ver com "não vale a pena". Muito pelo contrário: agora você vale um "Schmeisk" inteiro. 💍`;
+const TEXTO_EASTER_EGG_SOBRENOME = `Aviso nada oficial: a partir de hoje você deixa de ser "do Vale", e não, isso não tem nada a ver com "não vale a pena". Muito pelo contrário: agora você vale um "Schmeisk" inteiro. 💍`;
 
 /* ----------------------------------------------------------------------
    "COISAS QUE A POLONI AMA" — pequena seção da página de memórias
@@ -436,11 +464,35 @@ const TEXTO_EASTER_EGG_SOBRENOME = `Aviso nada oficial: a partir de hoje você d
    ---------------------------------------------------------------------- */
 const COISAS_QUE_ELA_AMA = [
     { icon: 'bi-flower1', texto: 'Girassóis, sempre.' },
-    { icon: 'bi-cup-straw', texto: 'Hambúrguer do Grill, com picles — sem discussão.' },
+    { icon: 'bi-cup-straw', texto: 'Hambúrguer do Grill, com picles, sem discussão (se deixar, ela come todo dia).' },
     { icon: 'bi-egg-fried', texto: 'Arroz, feijão preto, batata frita e rúcula: o prato perfeito.' },
     { icon: 'bi-heart-fill', texto: 'KitKat, Kinder Ovo e Ovomaltine em qualquer forma possível.' },
-    { icon: 'bi-tree-fill', texto: 'Lugares calmos, campo aberto e um bom silêncio.' },
-    { icon: 'bi-paw', texto: 'Koda, Xixico, Kovu, Yuk, Ahadi, Shury, Sol e Lua — e, no coração, Negão, Slinky, Tommy e Anne.' }
+    { icon: 'bi-bag-fill', texto: 'Pringles, Doritos, Cheetos requeijão e Fandangos, pra quando bate a vontade de salgadinho.' },
+    { icon: 'bi-tree-fill', texto: 'Campo aberto, mato e bicho. Só troca por um shopping, e olhe lá.' },
+    { icon: 'bi-gift-fill', texto: 'O aniversário dela é sagrado, é o dia dela e ponto final.' },
+    { icon: 'bi-chat-heart-fill', texto: 'É caladinha até ganhar confiança. Depois disso, não para de falar.' },
+    { icon: 'bi-paw', texto: 'Koda, Xixico, Kovu, Yuk, Ahadi, Shury, Sol e Lua. E no coração, pra sempre, Negão, Slinky, Tommy e Anne.' }
+];
+
+/* ----------------------------------------------------------------------
+   NOSSOS BICHOS — pequena seção logo abaixo de "Coisas que a Poloni ama"
+   ---------------------------------------------------------------------- */
+const NOSSOS_BICHOS = [
+    { nome: 'Koda', emoji: '🐶' },
+    { nome: 'Xixico', emoji: '🐶' },
+    { nome: 'Kovu', emoji: '🐶' },
+    { nome: 'Yuk', emoji: '🐱' },
+    { nome: 'Ahadi', emoji: '🐱' },
+    { nome: 'Shury', emoji: '🐱' },
+    { nome: 'Sol', emoji: '🦜' },
+    { nome: 'Lua', emoji: '🦜' }
+];
+
+const BICHOS_EM_MEMORIA = [
+    { nome: 'Negão', emoji: '🐶' },
+    { nome: 'Slinky', emoji: '🐶' },
+    { nome: 'Tommy', emoji: '🦜' },
+    { nome: 'Anne', emoji: '🦜' }
 ];
 
 /* ----------------------------------------------------------------------
@@ -473,7 +525,7 @@ const SENHA_RESET_SITE = '13046700';
    ---------------------------------------------------------------------- */
 const TEXTOS = {
     heroTituloRomance: 'Nossa Trajetória',
-    heroSubRomance: `tudo que você acabou de passar era só uma desculpa boba pra chegar até aqui. Não tinha aliança nenhuma no correio — a única coisa que eu queria entregar era isso: tudo o que a gente construiu até hoje, contado do meu jeito.`,
+    heroSubRomance: `tudo que você acabou de passar era só uma desculpa boba pra chegar até aqui. Não tinha aliança nenhuma no correio, a única coisa que eu queria entregar era isso: tudo o que a gente construiu até hoje, contado do meu jeito.`,
     encerramentoRomance: `obrigado por topar essa vida comigo, dia após dia. Isso aqui é só um jeito diferente de dizer o que eu já sinto todos os dias: eu escolho você.`,
     digitacaoSuspense: `Cada uma dessas fotos guarda um pedaço da gente. E o pedido que você acabou de "fazer" também guarda um segredo...`,
     assinaturaCartaFinal: `Assim eu quero te amar, ${NOME_DELA}.`,

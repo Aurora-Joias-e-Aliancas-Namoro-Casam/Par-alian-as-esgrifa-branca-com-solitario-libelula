@@ -581,6 +581,7 @@ async function goToRomancePage() {
     iniciarGaleriaMomentos();
     exibirEasterEggSobrenome();
     renderizarCoisasQueElaAma();
+    renderizarNossosBichos();
 
     if (typeof VIDEO_PROCESSO_YOUTUBE_URL !== 'undefined' && VIDEO_PROCESSO_YOUTUBE_URL) {
         const linkProcesso = document.getElementById('linkVideoProcesso');
@@ -710,6 +711,28 @@ function renderizarCoisasQueElaAma() {
         card.innerHTML = `<i class="bi ${item.icon}"></i><p>${item.texto}</p>`;
         grid.appendChild(card);
     });
+}
+
+/* ---------------- "Nossos bichos" ---------------- */
+function renderizarNossosBichos() {
+    const grid = document.getElementById('nossosBichosGrid');
+    const memoria = document.getElementById('bichosEmMemoria');
+    if (!grid) return;
+
+    if (Array.isArray(NOSSOS_BICHOS)) {
+        grid.innerHTML = '';
+        NOSSOS_BICHOS.forEach(bicho => {
+            const card = document.createElement('div');
+            card.className = 'bicho-card';
+            card.innerHTML = `<span class="bicho-emoji">${bicho.emoji}</span><span class="bicho-nome">${bicho.nome}</span>`;
+            grid.appendChild(card);
+        });
+    }
+
+    if (memoria && Array.isArray(BICHOS_EM_MEMORIA) && BICHOS_EM_MEMORIA.length) {
+        const nomes = BICHOS_EM_MEMORIA.map(b => `${b.nome} ${b.emoji}`).join(', ');
+        memoria.textContent = `E no coração, pra sempre: ${nomes}.`;
+    }
 }
 
 /* ---------------- Easter egg do sobrenome ---------------- */

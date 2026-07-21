@@ -389,6 +389,16 @@ img { max-width: 100%; }
 .ama-card i { font-size: 1.3rem; color: var(--rosegold); display: block; margin-bottom: 8px; }
 .ama-card p { font-size: 0.78rem; color: #f0d9dd; margin: 0; line-height: 1.45; }
 
+/* Nossos bichos: cartõezinhos discretos, com fundo levemente esverdeado
+   (bem sutil) pra remeter a "campo aberto", sem sair da paleta rosé do
+   resto do site. */
+.bichos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.bicho-card { background: linear-gradient(160deg, rgba(122,144,101,0.12), rgba(255,255,255,0.05)); border: 1px solid rgba(183,110,121,0.3); border-radius: 14px; padding: 12px 6px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bicho-emoji { font-size: 1.5rem; line-height: 1; }
+.bicho-nome { font-size: 0.72rem; color: #f0d9dd; }
+.bichos-memoria { text-align: center; font-size: 0.78rem; color: rgba(240,217,221,0.65); font-style: italic; margin-top: 14px; margin-bottom: 0; }
+@media (max-width: 380px) { .bichos-grid { grid-template-columns: repeat(3, 1fr); } }
+
 /* ---------------- Proteção por senha da área de memórias (item 8 do prompt) ---------------- */
 .senha-memorias-overlay { position: fixed; inset: 0; z-index: 12000; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); display: flex; align-items: center; justify-content: center; padding: 24px; overscroll-behavior: contain; }
 .senha-memorias-box { max-width: 320px; width: 100%; text-align: center; color: white; animation: fadeUp 0.5s ease forwards; }
