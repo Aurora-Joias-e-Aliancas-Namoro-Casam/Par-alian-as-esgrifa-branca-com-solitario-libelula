@@ -197,6 +197,64 @@ function preencherValoresPadraoPedido() {
 }
 
 /* ---------------- Inicialização da tela de loja ---------------- */
+/**
+ * Easter eggs da loja: 5 toques no mesmo elemento (dentro de uma janela
+ * curta de tempo, pra não contar cliques espalhados ao longo do dia)
+ * revelam uma mensagem escondida. Mecanismo genérico e reutilizável —
+ * qualquer elemento pode virar um easter egg novo só adicionando uma
+ * entrada em LOJA_EASTER_EGGS (js/config.js) com o mesmo id do elemento.
+ */
+function iniciarEasterEggsLoja() {
+    if (typeof LOJA_EASTER_EGGS !== 'object' || !LOJA_EASTER_EGGS) return;
+    const JANELA_ENTRE_CLIQUES_MS = 1800; // clique demorado demais reinicia a contagem
+    const CLIQUES_NECESSARIOS = 5;
+
+    Object.keys(LOJA_EASTER_EGGS).forEach(id => {
+        const elemento = document.getElementById(id);
+        if (!elemento) return;
+
+        let contador = 0;
+        let ultimoCliqueEm = 0;
+
+        elemento.addEventListener('click', () => {
+            const agora = Date.now();
+            if (agora - ultimoCliqueEm > JANELA_ENTRE_CLIQUES_MS) contador = 0;
+            ultimoCliqueEm = agora;
+            contador++;
+
+            if (contador >= CLIQUES_NECESSARIOS) {
+                contador = 0;
+                abrirLojaEasterEgg(id);
+            }
+        });
+    });
+
+    document.getElementById('btnFecharLojaEasterEgg').addEventListener('click', () => {
+        document.getElementById('lojaEasterEggOverlay').classList.add('d-none');
+    });
+    document.getElementById('lojaEasterEggOverlay').addEventListener('click', (evt) => {
+        if (evt.target.id === 'lojaEasterEggOverlay') evt.target.classList.add('d-none');
+    });
+}
+
+function abrirLojaEasterEgg(id) {
+    const dado = LOJA_EASTER_EGGS[id];
+    if (!dado) return;
+    document.getElementById('lojaEasterEggTitulo').textContent = dado.titulo || 'Você achou um segredo';
+    document.getElementById('lojaEasterEggTexto').textContent = dado.texto || '';
+    document.getElementById('lojaEasterEggOverlay').classList.remove('d-none');
+
+    // Marca esse easter egg como encontrado (salvo localmente) — usado só
+    // pra, futuramente, dar algum retorno visual de "quantos você já achou".
+    try {
+        const encontrados = JSON.parse(localStorage.getItem('aurora_easter_eggs_encontrados') || '[]');
+        if (!encontrados.includes(id)) {
+            encontrados.push(id);
+            localStorage.setItem('aurora_easter_eggs_encontrados', JSON.stringify(encontrados));
+        }
+    } catch (e) { /* localStorage indisponível — não é crítico, só não conta pro contador visual */ }
+}
+
 function iniciarLoja() {
     carregarImagensLoja();
     iniciarCarrosselPromocional();
@@ -204,6 +262,7 @@ function iniciarLoja() {
     iniciarVinheta();
     iniciarCupomFalso();
     preencherValoresPadraoPedido();
+    iniciarEasterEggsLoja();
 
     document.getElementById('btnFecharCupom').addEventListener('click', fecharCupomFalso);
     document.getElementById('btnFecharCupomBtn').addEventListener('click', fecharCupomFalso);

@@ -56,28 +56,85 @@ async function iniciarContadorVivo() {
 }
 
 /* ---------------- Timeline ---------------- */
+/* ---------------- "Nosso céu" (timeline em forma de constelação) ----------------
+ * Mesma fonte de dados de sempre (TIMELINE_MARCOS, em js/config.js) — só
+ * muda a apresentação: em vez de uma lista, cada marco vira uma estrela
+ * numa constelação. Tocar na estrela abre um modal com a foto e o texto
+ * daquele momento (mesmo conteúdo de antes, só que revelado sob demanda).
+ */
 function renderizarTimeline() {
-    const container = document.getElementById('timelineLista');
-    if (!container) return;
-    container.innerHTML = '';
+    const constelacao = document.getElementById('ceuConstelacao');
+    const fundo = document.getElementById('ceuFundoEstrelas');
+    if (!constelacao) return;
+    constelacao.innerHTML = '<span id="dataPedidoTimeline" class="d-none"></span>';
 
-    TIMELINE_MARCOS.forEach(marco => {
-        const item = document.createElement('div');
-        item.className = 'timeline-item';
-        const dataHtml = marco.ehPedido ? '<strong id="dataPedidoTimeline">[Hoje]</strong>' : `<strong>${marco.data}</strong>`;
-        item.innerHTML = `
-            <div class="timeline-item-inner">
-                <img class="timeline-thumb" alt="Foto do momento">
-                <div>${dataHtml}<p class="small mb-0 mt-1">${marco.texto}</p></div>
-            </div>`;
-        container.appendChild(item);
-        aplicarImagemPlaceholder(item.querySelector('.timeline-thumb'), marco.foto, 'Foto do momento');
+    // Estrelinhas de fundo, só decorativas (não clicáveis) — geradas uma
+    // vez, posição e tamanho aleatórios, pra dar o clima de céu de verdade.
+    if (fundo && !fundo.dataset.gerado) {
+        fundo.dataset.gerado = '1';
+        const TOTAL_ESTRELAS_FUNDO = 45;
+        for (let i = 0; i < TOTAL_ESTRELAS_FUNDO; i++) {
+            const estrela = document.createElement('span');
+            estrela.className = 'ceu-estrela-fundo';
+            estrela.style.left = `${Math.random() * 100}%`;
+            estrela.style.top = `${Math.random() * 100}%`;
+            const tamanho = 1 + Math.random() * 1.6;
+            estrela.style.width = `${tamanho}px`;
+            estrela.style.height = `${tamanho}px`;
+            estrela.style.animationDelay = `${Math.random() * 4}s`;
+            fundo.appendChild(estrela);
+        }
+    }
 
-        item.querySelector('.timeline-thumb').addEventListener('click', () => {
-            const todasFotos = TIMELINE_MARCOS.map(m => getAsset(m.foto));
-            abrirLightboxGaleria(todasFotos, TIMELINE_MARCOS.indexOf(marco));
-        });
+    // Zigue-zague descendo a tela — dá o efeito de constelação sem
+    // depender de coordenadas fixas (funciona com qualquer quantidade de
+    // marcos, caso a timeline cresça no futuro).
+    const PADRAO_X = [22, 68, 32, 74, 26, 64]; // posições em % alternando pros dois lados, repete se precisar
+    const ESPACO_VERTICAL_PX = 92; // distância entre uma estrela e a próxima, descendo a tela
+    TIMELINE_MARCOS.forEach((marco, i) => {
+        const estrela = document.createElement('button');
+        estrela.type = 'button';
+        estrela.className = 'ceu-estrela' + (marco.ehPedido ? ' ceu-estrela-pedido' : '');
+        estrela.style.left = `${PADRAO_X[i % PADRAO_X.length]}%`;
+        estrela.style.top = `${i * ESPACO_VERTICAL_PX + 30}px`;
+        estrela.innerHTML = `<span class="ceu-estrela-brilho"></span><span class="ceu-estrela-label">${marco.ehPedido ? 'Hoje' : (marco.data || '')}</span>`;
+        estrela.addEventListener('click', () => abrirEstrelaModal(i));
+        constelacao.appendChild(estrela);
     });
+
+    // A altura do céu precisa acompanhar quantos marcos existem — cresce
+    // sozinho se a timeline ganhar mais itens no futuro, sem cortar
+    // nenhuma estrela nem sobrar espaço vazio demais.
+    const container = document.getElementById('ceuEstreladoContainer');
+    if (container) container.style.minHeight = `${TIMELINE_MARCOS.length * ESPACO_VERTICAL_PX + 100}px`;
+}
+
+function iniciarFechamentoEstrelaModal() {
+    const overlay = document.getElementById('estrelaModalOverlay');
+    const fechar = document.getElementById('btnFecharEstrelaModal');
+    if (!overlay || overlay.dataset.iniciado === '1') return;
+    overlay.dataset.iniciado = '1';
+    fechar.addEventListener('click', () => overlay.classList.add('d-none'));
+    overlay.addEventListener('click', (evt) => { if (evt.target === overlay) overlay.classList.add('d-none'); });
+}
+
+function abrirEstrelaModal(indice) {
+    const marco = TIMELINE_MARCOS[indice];
+    if (!marco) return;
+    const overlay = document.getElementById('estrelaModalOverlay');
+    const foto = document.getElementById('estrelaModalFoto');
+    const dataEl = document.getElementById('estrelaModalData');
+    const textoEl = document.getElementById('estrelaModalTexto');
+
+    aplicarImagemPlaceholder(foto, marco.foto, 'Foto do momento');
+    dataEl.textContent = marco.ehPedido ? (document.getElementById('dataPedidoTimeline')?.textContent || 'Hoje') : (marco.data || '');
+    textoEl.textContent = marco.texto || '';
+    overlay.classList.remove('d-none');
+
+    foto.onclick = () => {
+        const todasFotos = TIMELINE_MARCOS.map(m => getAsset(m.foto));
+        abrirLightboxGaleria(todasFotos, indice);
+    };
 }
 
 /* ---------------- "Nossos momentos" (mesa de fotos) ---------------- */
@@ -334,6 +391,12 @@ async function iniciarEnvelopeCapsula() {
         if (jaAbriu) return; jaAbriu = true;
         hint.classList.remove('visivel');
         envelope.classList.add('aberto');
+
+        const btnVela = document.getElementById('btnModoVelaCapsula');
+        if (btnVela) {
+            btnVela.classList.remove('d-none');
+            btnVela.onclick = () => abrirModoVela('Um ano depois', textoEl.innerHTML, assinaturaEl.textContent);
+        }
     });
 
     requestAnimationFrame(() => { envelope.classList.add('envelope-visivel'); setTimeout(() => hint.classList.add('visivel'), 500); });
@@ -456,15 +519,39 @@ async function renderizarLembrancas() {
 
     lista.forEach(item => {
         const url = URL.createObjectURL(item.blob);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'lembranca-item-wrap';
+
         const botao = document.createElement('button');
         botao.type = 'button';
         botao.className = 'lembranca-item';
         botao.innerHTML = `<img src="${url}" alt="Print de uma conversa antiga">`;
-        grid.appendChild(botao);
+
+        const btnExcluir = document.createElement('button');
+        btnExcluir.type = 'button';
+        btnExcluir.className = 'lembranca-item-excluir';
+        btnExcluir.setAttribute('aria-label', 'Remover esta foto');
+        btnExcluir.innerHTML = '<i class="bi bi-trash3-fill"></i>';
+        btnExcluir.addEventListener('click', async (evt) => {
+            evt.stopPropagation(); // não abre o lightbox ao clicar no "x"
+            if (!confirm('Remover esta foto das lembranças? Essa ação não pode ser desfeita, e também remove ela do outro aparelho na próxima sincronização.')) return;
+            btnExcluir.disabled = true;
+            const ok = await excluirMedia(item.id); // já marca a atualização local e agenda o envio pra nuvem
+            if (ok) {
+                renderizarLembrancas();
+            } else {
+                btnExcluir.disabled = false;
+                alert('Não consegui remover essa foto agora. Tenta de novo em instantes.');
+            }
+        });
+
+        wrapper.appendChild(botao);
+        wrapper.appendChild(btnExcluir);
+        grid.appendChild(wrapper);
     });
 
     const urlsLembrancas = Array.from(grid.querySelectorAll('img')).map(img => img.src);
-    Array.from(grid.children).forEach((botao, i) => botao.addEventListener('click', () => abrirLightboxGaleria(urlsLembrancas, i)));
+    grid.querySelectorAll('.lembranca-item').forEach((botao, i) => botao.addEventListener('click', () => abrirLightboxGaleria(urlsLembrancas, i)));
 }
 
 /* ---------------- Lightbox reutilizável ---------------- */
@@ -578,10 +665,14 @@ async function goToRomancePage() {
     // Rápidas e sem leitura pesada no banco — chamadas direto, sem entrar na barra de progresso.
     iniciarQuiz();
     renderizarTimeline();
+    iniciarFechamentoEstrelaModal();
     iniciarGaleriaMomentos();
     exibirEasterEggSobrenome();
     renderizarCoisasQueElaAma();
     renderizarSeusBichos();
+    renderizarMapaDaRelacao();
+    iniciarCartaDiscussao();
+    iniciarAdjetivosParaEla();
 
     if (typeof VIDEO_PROCESSO_YOUTUBE_URL !== 'undefined' && VIDEO_PROCESSO_YOUTUBE_URL) {
         const linkProcesso = document.getElementById('linkVideoProcesso');
@@ -608,6 +699,8 @@ async function goToRomancePage() {
         renderizarLembrancas(),
         renderizarMensagensFuturo(),
         prepararCapsulaDoTempo(),
+        verificarEspecialAniversario(),
+        iniciarMomentoLento(),
 
         obterConfiguracao('aurora_data_pedido').then(dataPedidoIso => {
             if (!dataPedidoIso) return;
@@ -700,7 +793,123 @@ function solicitarSenhaMemorias() {
     });
 }
 
-/* ---------------- "Coisas que a Poloni ama" ---------------- */
+/* ---------------- "Um instante em câmera lenta" ---------------- */
+async function iniciarMomentoLento() {
+    const wrap = document.getElementById('momentoLentoWrap');
+    const video = document.getElementById('momentoLentoVideo');
+    const fraseEl = document.getElementById('momentoLentoFrase');
+    if (!wrap || !video) return;
+
+    const caminho = await resolverVideoPorBase(MOMENTO_LENTO_ARQUIVO_BASE);
+    if (!caminho) return; // vídeo ainda não foi colocado na pasta — seção continua escondida (d-none), sem quebrar nada
+
+    video.src = caminho;
+    video.playbackRate = MOMENTO_LENTO_VELOCIDADE;
+    video.addEventListener('loadedmetadata', () => { video.playbackRate = MOMENTO_LENTO_VELOCIDADE; }); // alguns navegadores resetam a velocidade ao trocar de src
+    video.play().catch(() => { /* autoplay mudo costuma ser permitido, mas por segurança não travamos nada se falhar */ });
+    wrap.classList.remove('d-none');
+
+    if (Array.isArray(MOMENTO_LENTO_FRASES) && MOMENTO_LENTO_FRASES.length) {
+        let indice = 0;
+        const TEMPO_POR_FRASE_MS = 4200;
+        const mostrarFrase = () => {
+            fraseEl.classList.remove('visivel');
+            setTimeout(() => {
+                fraseEl.textContent = MOMENTO_LENTO_FRASES[indice % MOMENTO_LENTO_FRASES.length];
+                fraseEl.classList.add('visivel');
+                indice++;
+            }, 350);
+        };
+        mostrarFrase();
+        setInterval(mostrarFrase, TEMPO_POR_FRASE_MS);
+    }
+}
+
+/* ---------------- Especial de 8 de agosto (aniversário) ---------------- */
+async function verificarEspecialAniversario() {
+    const bloco = document.getElementById('aniversarioBloco');
+    if (!bloco) return;
+
+    // Hora do servidor (mesma fonte usada na cápsula do tempo, ver
+    // obterHoraConfiavel em js/sync.js) — assim, mudar a data do celular
+    // não faz esse bloco aparecer fora do dia certo.
+    const agora = await obterHoraConfiavel();
+    const ehHoje = agora.getDate() === ANIVERSARIO_DIA && (agora.getMonth() + 1) === ANIVERSARIO_MES;
+    if (!ehHoje) return;
+
+    document.getElementById('aniversarioTexto').textContent = textoAniversario();
+    bloco.classList.remove('d-none');
+}
+
+/* ---------------- "Se um dia estiver triste, lembre-se disso" ---------------- */
+let __adjetivosOrdem = [];
+function iniciarAdjetivosParaEla() {
+    const card = document.getElementById('adjetivoCard');
+    const botao = document.getElementById('btnAdjetivoMaisUm');
+    if (!card || !Array.isArray(ADJETIVOS_PARA_ELA) || !ADJETIVOS_PARA_ELA.length) return;
+
+    function embaralharNovoBaralho() {
+        __adjetivosOrdem = ADJETIVOS_PARA_ELA.map((_, i) => i);
+        for (let i = __adjetivosOrdem.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [__adjetivosOrdem[i], __adjetivosOrdem[j]] = [__adjetivosOrdem[j], __adjetivosOrdem[i]];
+        }
+    }
+
+    function mostrarProximaCarta() {
+        if (!__adjetivosOrdem.length) embaralharNovoBaralho(); // esgotou o baralho — embaralha de novo, sem repetir a mesma logo em seguida
+        const indice = __adjetivosOrdem.pop();
+        const item = ADJETIVOS_PARA_ELA[indice];
+
+        card.classList.remove('adjetivo-card-visivel');
+        setTimeout(() => {
+            document.getElementById('adjetivoPalavra').textContent = item.adjetivo;
+            document.getElementById('adjetivoMotivo').textContent = item.motivo;
+            card.classList.add('adjetivo-card-visivel');
+        }, 220);
+    }
+
+    embaralharNovoBaralho();
+    mostrarProximaCarta();
+    botao.addEventListener('click', mostrarProximaCarta);
+    card.addEventListener('click', mostrarProximaCarta);
+}
+
+/* ---------------- "Se um dia a gente discutir, leia isso" ---------------- */
+function iniciarCartaDiscussao() {
+    const botao = document.getElementById('btnCartaDiscussao');
+    const overlay = document.getElementById('cartaDiscussaoOverlay');
+    const fechar = document.getElementById('btnFecharCartaDiscussao');
+    if (!botao || !overlay) return;
+
+    botao.addEventListener('click', () => {
+        document.getElementById('cartaDiscussaoTexto').textContent = textoCartaDiscussao();
+        document.getElementById('cartaDiscussaoAssinatura').textContent = NOME_DELE + '.';
+        overlay.classList.remove('d-none');
+    });
+    fechar.addEventListener('click', () => overlay.classList.add('d-none'));
+    overlay.addEventListener('click', (evt) => { if (evt.target === overlay) overlay.classList.add('d-none'); });
+}
+
+/* ---------------- "Nosso mapa" ---------------- */
+function renderizarMapaDaRelacao() {
+    const grid = document.getElementById('mapaTrilhaGrid');
+    if (!grid || !Array.isArray(MAPA_LUGARES)) return;
+    grid.innerHTML = '';
+    MAPA_LUGARES.forEach(lugar => {
+        const card = document.createElement('div');
+        card.className = 'mapa-card' + (lugar.futuro ? ' mapa-card-futuro' : '');
+        card.innerHTML = `
+            <div class="mapa-pin"><i class="bi ${lugar.icon || 'bi-geo-alt-fill'}"></i></div>
+            <div class="mapa-linha"></div>
+            <div class="mapa-conteudo">
+                <p class="mapa-nome">${lugar.nome}</p>
+                <p class="mapa-cidade">${lugar.cidade || ''}</p>
+                <p class="mapa-texto">${lugar.texto || ''}</p>
+            </div>`;
+        grid.appendChild(card);
+    });
+}
 function renderizarCoisasQueElaAma() {
     const grid = document.getElementById('coisasQueElaAmaGrid');
     if (!grid || !Array.isArray(COISAS_QUE_ELA_AMA)) return;

@@ -524,6 +524,14 @@ function iniciarCartaFinal() {
                     // "Continuar" fique visível na tela assim que aparecer,
                     // em vez de exigir rolagem manual até bem mais abaixo.
                     setTimeout(() => continuarWrap.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+
+                    // Modo vela só aparece depois que a carta terminou de se
+                    // revelar por completo — não faz sentido oferecer antes disso.
+                    const btnVela = document.getElementById('btnModoVelaCarta');
+                    if (btnVela) {
+                        btnVela.classList.remove('d-none');
+                        btnVela.onclick = () => abrirModoVela(letterEyebrow.textContent, letterTextEl.innerHTML, letterSignoff.textContent);
+                    }
                 }, 700);
             }, tempoTotalTrocas);
         }, 1200);

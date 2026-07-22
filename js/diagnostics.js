@@ -494,6 +494,75 @@ async function executarTesteCapsula() {
     }
 }
 
+/**
+ * Troca o vídeo do pedido salvo — protegido pela mesma senha do reset
+ * (SENHA_RESET_SITE, em js/config.js), já que é uma ação sensível e
+ * irreversível se feita sem querer. Antes de sobrescrever, oferece pra
+ * baixar uma cópia do vídeo atual (backup de segurança), caso o vídeo
+ * errado seja escolhido por engano.
+ */
+function iniciarTrocaDeVideo() {
+    const botao = document.getElementById('btnTrocarVideoPedido');
+    const input = document.getElementById('inputTrocarVideoPedido');
+    const status = document.getElementById('trocarVideoStatus');
+    if (!botao || !input) return;
+
+    botao.addEventListener('click', async () => {
+        const senhaOk = await solicitarSenhaReset();
+        if (!senhaOk) return;
+        input.value = '';
+        input.click();
+    });
+
+    input.addEventListener('change', async () => {
+        const arquivo = input.files && input.files[0];
+        if (!arquivo) return;
+
+        if (!confirm('Isso substitui o vídeo do pedido atual (em todos os aparelhos, na próxima sincronização). Quer baixar uma cópia do vídeo atual antes de trocar, por segurança?')) {
+            // Ela escolheu não baixar backup — ainda assim confirma a troca em si.
+            if (!confirm('Ok, sem backup. Confirma a troca do vídeo mesmo assim?')) return;
+        } else {
+            status.textContent = 'Baixando cópia de segurança do vídeo atual...';
+            status.className = 'save-status';
+            try {
+                const videoAtual = await obterMedia('video_pedido');
+                if (videoAtual && videoAtual.blob) {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(videoAtual.blob);
+                    a.download = 'video-pedido-backup-antes-da-troca.mp4';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    await new Promise(r => setTimeout(r, 400)); // dá um instante pro download iniciar antes de seguir
+                } else {
+                    status.textContent = 'Não havia vídeo salvo ainda pra fazer backup, seguindo com a troca...';
+                }
+            } catch (e) {
+                console.error('Falha ao baixar backup do vídeo atual:', e);
+            }
+        }
+
+        botao.disabled = true;
+        status.textContent = 'Salvando o novo vídeo (isso pode levar um instante, dependendo do tamanho)...';
+        status.className = 'save-status';
+
+        try {
+            const ok = await salvarMedia({ id: 'video_pedido', tipo: 'video_pedido', blob: arquivo, mimeType: arquivo.type || 'video/mp4' });
+            if (ok) {
+                status.textContent = 'Vídeo trocado com sucesso! Já foi salvo e vai sincronizar com o outro aparelho.';
+                status.className = 'save-status ok';
+            } else {
+                status.textContent = 'Não consegui confirmar que o vídeo foi salvo direito. Tente de novo.';
+                status.className = 'save-status err';
+            }
+        } catch (e) {
+            console.error('Falha ao salvar o novo vídeo do pedido:', e);
+            status.textContent = 'Deu erro salvando o vídeo: ' + e.message;
+            status.className = 'save-status err';
+        } finally {
+            botao.disabled = false;
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnRodarDiagnostico').addEventListener('click', executarDiagnosticoCompleto);
     document.getElementById('btnTestarNuvem').addEventListener('click', executarTesteNuvem);
@@ -502,5 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnTestarGaleria').addEventListener('click', executarTesteGaleria);
     document.getElementById('btnResetar').addEventListener('click', executarReset);
     document.getElementById('btnTestarCapsula').addEventListener('click', executarTesteCapsula);
+    iniciarTrocaDeVideo();
     executarDiagnosticoCompleto();
 });

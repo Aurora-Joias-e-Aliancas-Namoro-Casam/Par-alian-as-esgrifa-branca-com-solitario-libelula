@@ -577,6 +577,136 @@ const BICHOS_EM_MEMORIA = [
 ];
 
 /* ----------------------------------------------------------------------
+   "SE UM DIA A GENTE DISCUTIR, LEIA ISSO" — uma carta escondida (link
+   discreto no rodapé da página de memórias) escrita pensando num dia
+   ruim, não num dia bom. Edite à vontade.
+   ---------------------------------------------------------------------- */
+function textoCartaDiscussao() {
+    return `Se você está lendo isso agora, provavelmente hoje não foi um dia fácil entre a gente. Só queria lembrar de uma coisa antes de qualquer outra: discutir não significa que a gente errou em se escolher, significa só que a gente é gente, com dia ruim, cansaço e orgulho às vezes maior do que deveria.
+
+Nada do que a gente discute hoje apaga o que a gente construiu até aqui. Continua valendo tudo: o Colina, a estrada de terra, o balanço em Sales de Oliveira, cada risada boba, cada silêncio que virou carinho.
+
+Se puder, respira, volta e conversa comigo de novo. E se ainda não conseguir, tudo bem, eu espero. Só não esquece que eu escolhi você antes de qualquer briga, e vou continuar escolhendo depois dela.
+
+Com amor, mesmo nos dias difíceis,`;
+}
+
+/* ----------------------------------------------------------------------
+   CÂMERA LENTA DE UM MOMENTO — um vídeo curto, tocado bem devagar e em
+   loop, com frases surgindo por cima aos poucos. Coloque o vídeo em
+   assets/video/ com o nome abaixo (qualquer extensão de
+   GALERIA_EXTENSOES_VIDEO serve: .mp4, .mov, .webm). Enquanto o arquivo
+   não existir, essa seção inteira fica escondida sozinha — sem quebrar
+   nada nem mostrar um vídeo vazio.
+   ---------------------------------------------------------------------- */
+const MOMENTO_LENTO_ARQUIVO_BASE = 'momento-camera-lenta';
+const MOMENTO_LENTO_VELOCIDADE = 0.45; // 1 = velocidade normal, quanto menor, mais lento
+const MOMENTO_LENTO_FRASES = [
+    'Esse instante não durou nem três segundos.',
+    'Mas eu quis guardar ele pra sempre, bem devagar.',
+    'Às vezes o amor cabe inteiro num segundo esticado.'
+];
+
+/* ----------------------------------------------------------------------
+   ESPECIAL DE 8 DE AGOSTO — aniversário dela. Toda vez que o site for
+   aberto no dia 8 de agosto (checando pela hora do servidor, igual à
+   cápsula do tempo — ver js/sync.js), essa seção aparece na página de
+   memórias, acima de tudo o mais, com uma mensagem só desse dia.
+   ---------------------------------------------------------------------- */
+const ANIVERSARIO_DIA = 8;
+const ANIVERSARIO_MES = 8; // agosto
+function textoAniversario() {
+    return `Hoje é um dia diferente de todos os outros: é o seu dia.
+
+Espero que 8 de agosto sempre te encontre cercada de girassol, do jeito que você merece, rodeada por quem te ama de verdade, e com a vida te tratando tão bem quanto você trata todo mundo ao seu redor.
+
+Que esse novo ano te traga viagem nova, foto nova, bicho novo pra cuidar, e principalmente, muita saúde e paz. E que em algum lugar desse ano que começa hoje, a gente colecione mais um monte de lugares novos juntos.
+
+Feliz aniversário, meu amor. Hoje o mundo gira um pouco mais em volta de você, e eu não podia estar mais feliz de fazer parte disso.`;
+}
+
+/* ----------------------------------------------------------------------
+   "SE UM DIA ESTIVER TRISTE, LEMBRE-SE DISSO" — um baralho de cartas, uma
+   por vez, cada uma com um adjetivo + o motivo específico (não genérico)
+   pelo qual você pensa isso dela. Fácil de editar: só adicionar/remover
+   objetos dessa lista.
+   ---------------------------------------------------------------------- */
+const ADJETIVOS_PARA_ELA = [
+    { adjetivo: 'Linda', motivo: 'principalmente quando nem percebe que está sendo observada, sem arrumar nada, do jeito mais natural do mundo.' },
+    { adjetivo: 'Inteligente', motivo: 'do jeito que resolve as coisas sem precisar de ajuda de ninguém, mesmo quando finge que precisa só pra me ter por perto.' },
+    { adjetivo: 'Forte', motivo: 'porque mesmo em dia difícil, você segue cuidando de nove bichos, de você mesma e ainda sobra carinho pra mim.' },
+    { adjetivo: 'Engraçada', motivo: 'sem nem tentar. Você me faz rir só de contar como foi seu dia.' },
+    { adjetivo: 'Especial', motivo: 'porque nunca conheci alguém que trata tão bem quem ama e tão bem os bichos que cruzam o seu caminho.' },
+    { adjetivo: 'Magnífica', motivo: 'sim, magnífica mesmo. Existem pessoas boas, e existe você, que é diferente de todas elas.' },
+    { adjetivo: 'Corajosa', motivo: 'porque abriu esse seu silêncio todo pra mim, mesmo sabendo que isso não é fácil pra você.' },
+    { adjetivo: 'Amada', motivo: 'mais do que você imagina, mais do que eu consigo colocar em palavras, todos os dias, sem exceção.' }
+];
+
+/* ----------------------------------------------------------------------
+   EASTER EGGS DA LOJA — 5 toques no mesmo elemento revelam uma mensagem
+   escondida. Cada chave abaixo corresponde ao id de um elemento clicável
+   em index.html (ver iniciarEasterEggsLoja em js/store.js).
+   ---------------------------------------------------------------------- */
+const LOJA_EASTER_EGGS = {
+    imagemPrincipalProduto: {
+        titulo: 'Achou 👀',
+        texto: `Já que você reparou tanto nessa foto, deixa eu confessar uma coisa: essa aliança não é de mentirinha. Ela é de verdade, e já foi escolhida. Só falta chegar até você.`
+    },
+    reviewGabrielClicavel: {
+        titulo: 'Sobre o "Gabriel P." aqui de cima',
+        texto: `Pois é, sou eu mesmo, deixando review antes até de fazer o pedido de verdade. Se essa review de 5 estrelas já falava sério sobre uma aliança que ainda nem tinha chegado, imagina o quanto eu falo sério sobre você.`
+    },
+    lojaLogoClicavel: {
+        titulo: 'A Aryah nem existe',
+        texto: `Confesso: essa loja inteira é de mentira, criada só pra te trazer até aqui sem estragar a surpresa. A única coisa 100% real nessa história toda é o quanto eu te amo.`
+    }
+};
+
+/**
+ * Igual a resolverFotoPlaceholder, mas para um vídeo estático em
+ * assets/video/ (não gravado pelo usuário, um arquivo que você mesmo
+ * coloca na pasta) — testa cada extensão de GALERIA_EXTENSOES_VIDEO,
+ * maiúscula e minúscula, e devolve null se nada for encontrado (quem
+ * chamar decide o que fazer nesse caso, ex.: esconder a seção toda).
+ */
+const __cacheResolverVideoPorBase = {};
+async function resolverVideoPorBase(arquivoBase) {
+    if (!arquivoBase) return null;
+    if (arquivoBase in __cacheResolverVideoPorBase) return __cacheResolverVideoPorBase[arquivoBase];
+
+    const candidatos = GALERIA_EXTENSOES_VIDEO.flatMap(ext => [ext, ext.toUpperCase()]);
+    for (const ext of candidatos) {
+        const caminho = `assets/video/${arquivoBase}.${ext}`;
+        if (await arquivoExisteNoServidor(caminho)) {
+            __cacheResolverVideoPorBase[arquivoBase] = caminho;
+            return caminho;
+        }
+    }
+    return null; // não guarda no cache — se o arquivo for adicionado depois, uma nova tentativa pode encontrar
+}
+
+/* ----------------------------------------------------------------------
+   MAPA DA RELAÇÃO — lugares que a gente já foi juntos, na ordem em que
+   você quiser mostrar. Fácil de editar: só adicionar/remover objetos
+   dessa lista. Nada mais no código precisa mudar.
+   - nome: título do lugar
+   - cidade: aparece embaixo do nome, menor
+   - texto: uma frase curta sobre o que esse lugar significa
+   - icon: qualquer ícone do Bootstrap Icons (ex.: 'bi-heart-fill'),
+     pode repetir entre lugares, sem problema
+   - futuro: true deixa o card com visual de "ainda vamos viver isso"
+     (usado no card de próximo destino, mas pode usar em qualquer outro)
+   ---------------------------------------------------------------------- */
+const MAPA_LUGARES = [
+    { nome: 'Colina', cidade: 'Orlândia', texto: 'Onde tudo começou de verdade, no nosso primeiro encontro.', icon: 'bi-cup-hot-fill' },
+    { nome: 'Uma estrada de terra', cidade: 'Entre um lugar e outro', texto: 'Onde o carro atolou e a gente riu horas, mesmo enlameado até o pescoço.', icon: 'bi-signpost-2-fill' },
+    { nome: 'Santa Rosa de Viterbo', cidade: 'Casa dos meus avós', texto: 'Onde te apresentei pra minha família.', icon: 'bi-house-heart-fill' },
+    { nome: 'Parque Curupira', cidade: 'Ribeirão Preto', texto: 'Um passeio tranquilo, só a gente, sem pressa nenhuma.', icon: 'bi-tree-fill' },
+    { nome: 'Um balanço', cidade: 'Sales de Oliveira', texto: 'Onde a gente sentou no fim daquele dia e o tempo pareceu parar um pouco.', icon: 'bi-flower1' },
+    { nome: 'Próximo destino', cidade: 'A definir, com você', texto: 'Ainda temos o mundo inteiro pra conhecer juntos.', icon: 'bi-airplane-fill', futuro: true }
+];
+
+/* ----------------------------------------------------------------------
    PROTEÇÃO POR SENHA DA ÁREA DE MEMÓRIAS (item 8 do prompt — IMPLEMENTADO
    POR ÚLTIMO, depois de todas as demais correções e melhorias)
    ----------------------------------------------------------------------

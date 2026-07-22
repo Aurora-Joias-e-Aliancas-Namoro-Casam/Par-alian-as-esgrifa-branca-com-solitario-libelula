@@ -269,6 +269,36 @@ img { max-width: 100%; }
 .letter-paper::before { content: ''; position: absolute; inset: 6px; border: 1px solid #e3d5ba; pointer-events: none; }
 .letter-eyebrow { font-family: 'Jost', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--rosegold-dark); text-align: center; margin-bottom: 10px; opacity: 0; transition: opacity 0.8s ease; }
 .letter-eyebrow.visivel { opacity: 1; }
+
+/* Botão discreto pra entrar no modo vela, some até a carta estar aberta (ver JS) */
+.btn-modo-vela { margin-top: 14px; background: none; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.75); font-size: 0.75rem; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+.btn-modo-vela:active { background: rgba(255,255,255,0.08); }
+
+/* ----------------------------------------------------------------------
+   MODO "LUZ DE VELA" — escurece tudo ao redor e ilumina só o papel, como
+   se estivesse sendo lido à luz de uma vela de verdade. As duas divs de
+   "chama" são só glows radiais que tremem em CSS puro (sem imagem, sem
+   canvas) — leve o bastante pra rodar bem em qualquer celular.
+   ---------------------------------------------------------------------- */
+.modo-vela-overlay { position: fixed; inset: 0; z-index: 12500; background: #050303; display: flex; align-items: center; justify-content: center; padding: 28px 22px; overflow-y: auto; overscroll-behavior: contain; animation: modoVelaAcender 1.1s ease forwards; }
+@keyframes modoVelaAcender { from { opacity: 0; } to { opacity: 1; } }
+
+.modo-vela-vinheta { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 38%, rgba(255,183,110,0.14) 0%, rgba(5,3,3,0) 42%, #050303 78%); pointer-events: none; }
+
+.modo-vela-chama { position: absolute; top: 30%; left: 50%; width: 340px; height: 340px; margin-left: -170px; margin-top: -170px; border-radius: 50%; background: radial-gradient(circle, rgba(255,196,120,0.5) 0%, rgba(255,140,60,0.16) 40%, rgba(255,140,60,0) 70%); filter: blur(6px); pointer-events: none; animation: modoVelaTremer 2.6s ease-in-out infinite; }
+.modo-vela-chama-2 { animation-duration: 3.4s; animation-delay: 0.4s; opacity: 0.6; }
+@keyframes modoVelaTremer {
+    0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.85; }
+    25% { transform: scale(1.04) translate(3px, -2px); opacity: 0.95; }
+    50% { transform: scale(0.97) translate(-2px, 1px); opacity: 0.75; }
+    75% { transform: scale(1.02) translate(1px, 2px); opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) { .modo-vela-chama, .modo-vela-chama-2 { animation: none; } }
+
+.modo-vela-fechar { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.06); border: none; color: rgba(255,220,190,0.75); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+
+.modo-vela-papel { position: relative; z-index: 1; max-width: 380px; width: 100%; background: rgba(250,240,225,0.97); border-radius: 4px; padding: 30px 24px; box-shadow: 0 0 60px 10px rgba(255,170,90,0.12), 0 20px 50px rgba(0,0,0,0.6); }
+.modo-vela-papel .letter-text { color: #2b2523; }
 .letter-text { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.02rem; line-height: 1.75; color: #2b2523; text-align: left; min-height: 90px; margin: 0; white-space: pre-wrap; opacity: 0; transition: opacity 1s ease; }
 .letter-text.versiculo-visivel { opacity: 1; }
 .letter-text .amor-swap { display: inline-block; color: var(--rosegold-dark); font-weight: 600; transition: opacity 0.42s ease; }
@@ -408,6 +438,79 @@ img { max-width: 100%; }
 .bicho-slinky-texto { font-size: 0.78rem; color: rgba(240,217,221,0.85); line-height: 1.5; margin: 0; font-style: italic; }
 @media (max-width: 380px) { .bichos-grid { grid-template-columns: repeat(3, 1fr); } }
 
+/* Mapa da relação: trilha vertical com um "pin" por lugar, conectados por
+   uma linha pontilhada, tipo um roteiro de viagem desenhado à mão. A
+   linha é posicionada de forma absoluta (não em grid) porque sua altura
+   precisa acompanhar a altura real do texto de cada card, que varia. */
+.mapa-trilha { display: flex; flex-direction: column; }
+.mapa-card { display: flex; column-gap: 12px; position: relative; padding-bottom: 22px; }
+.mapa-card:last-child { padding-bottom: 0; }
+.mapa-pin { flex: none; width: 36px; height: 36px; border-radius: 50%; background: rgba(183,110,121,0.18); border: 1px solid rgba(183,110,121,0.45); display: flex; align-items: center; justify-content: center; color: var(--rosegold); font-size: 1rem; z-index: 1; }
+.mapa-linha { position: absolute; left: 17px; top: 36px; bottom: 0; width: 0; border-left: 2px dashed rgba(183,110,121,0.35); }
+.mapa-card:last-child .mapa-linha { display: none; }
+.mapa-conteudo { flex: 1; min-width: 0; }
+.mapa-nome { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.05rem; font-weight: 600; color: #fff; margin: 2px 0 0; }
+.mapa-cidade { font-size: 0.7rem; letter-spacing: 0.5px; text-transform: uppercase; color: rgba(240,217,221,0.55); margin: 0 0 6px; }
+.mapa-texto { font-size: 0.82rem; color: #f0d9dd; margin: 0; line-height: 1.5; }
+.mapa-card-futuro .mapa-pin { background: rgba(122,144,101,0.18); border-color: rgba(122,144,101,0.5); color: #a9c48d; }
+.mapa-card-futuro .mapa-nome { color: #d9e8c8; }
+.mapa-card-futuro .mapa-texto { font-style: italic; opacity: 0.9; }
+
+/* Link quase invisível no rodapé — de propósito discreto, pra ela achar
+   por acaso ou quando realmente precisar, não pra chamar atenção. */
+.link-discreto-rodape { display: block; margin: 34px auto 4px; background: none; border: none; color: rgba(255,255,255,0.18); padding: 14px; }
+
+.carta-discussao-overlay { position: fixed; inset: 0; z-index: 12500; background: rgba(10,6,8,0.94); display: flex; align-items: center; justify-content: center; padding: 28px 22px; overflow-y: auto; overscroll-behavior: contain; }
+.carta-discussao-papel { max-width: 380px; width: 100%; background: #faf0e1; border-radius: 4px; padding: 30px 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.carta-discussao-papel .letter-text { color: #2b2523; }
+
+/* Card de adjetivo — transição suave entre uma carta e outra, clicável
+   (além do botão "mais um", tocar direto no card também passa a carta) */
+.adjetivo-card { background: linear-gradient(160deg, rgba(183,110,121,0.14), rgba(255,255,255,0.05)); border: 1px solid rgba(183,110,121,0.35); border-radius: 16px; padding: 28px 20px; text-align: center; cursor: pointer; opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; min-height: 128px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.adjetivo-card-visivel { opacity: 1; transform: translateY(0); }
+.adjetivo-palavra { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.7rem; color: var(--rosegold); margin: 0 0 8px; }
+.adjetivo-motivo { font-size: 0.85rem; color: #f0d9dd; line-height: 1.55; margin: 0; max-width: 320px; }
+
+/* Especial de 8 de agosto — visual um pouco mais festivo que o resto do
+   site (borda dourada, glow suave), pra se destacar como algo raro. */
+.aniversario-card { background: linear-gradient(160deg, rgba(255,196,120,0.16), rgba(183,110,121,0.1)); border: 1px solid rgba(255,196,120,0.4); border-radius: 16px; padding: 22px 20px; text-align: center; box-shadow: 0 0 30px rgba(255,196,120,0.12); }
+.aniversario-topo { font-family: 'Jost', sans-serif; font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: #ffc478; margin: 0 0 10px; }
+.aniversario-texto { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 0.95rem; color: #fff0dd; line-height: 1.7; margin: 0; white-space: pre-wrap; }
+
+/* ----------------------------------------------------------------------
+   "NOSSO CÉU" — timeline em forma de constelação. Fundo com estrelinhas
+   decorativas piscando (geradas via JS, ver renderizarTimeline) e uma
+   estrela clicável por marco, em zigue-zague descendo a tela.
+   ---------------------------------------------------------------------- */
+.ceu-subtitulo { text-align: center; font-size: 0.78rem; color: rgba(240,217,221,0.6); font-style: italic; margin-bottom: 16px; }
+.ceu-estrelado { position: relative; background: radial-gradient(ellipse at 50% 0%, rgba(60,30,45,0.4) 0%, rgba(15,8,12,0.6) 55%, rgba(10,5,8,0.75) 100%); border-radius: 18px; overflow: hidden; border: 1px solid rgba(183,110,121,0.25); }
+
+.ceu-fundo-estrelas { position: absolute; inset: 0; pointer-events: none; }
+.ceu-estrela-fundo { position: absolute; background: #fff; border-radius: 50%; opacity: 0.35; animation: ceuPiscar 3.5s ease-in-out infinite; }
+@keyframes ceuPiscar { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.75; } }
+@media (prefers-reduced-motion: reduce) { .ceu-estrela-fundo { animation: none; opacity: 0.4; } }
+
+.ceu-constelacao { position: relative; padding: 40px 0 60px; }
+.ceu-estrela { position: absolute; transform: translateX(-50%); background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; }
+.ceu-estrela-brilho { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle, #fff8e8 0%, rgba(255,220,160,0.6) 45%, rgba(255,220,160,0) 75%); box-shadow: 0 0 10px 3px rgba(255,220,160,0.35); animation: ceuEstrelaPulsar 2.4s ease-in-out infinite; }
+@keyframes ceuEstrelaPulsar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+.ceu-estrela-label { font-size: 0.68rem; letter-spacing: 0.4px; color: rgba(255,240,220,0.8); white-space: nowrap; }
+.ceu-estrela-pedido .ceu-estrela-brilho { width: 20px; height: 20px; box-shadow: 0 0 18px 6px rgba(255,196,120,0.55); }
+.ceu-estrela-pedido .ceu-estrela-label { color: #ffc478; font-weight: 600; }
+
+.estrela-modal-papel { max-width: 380px; width: 100%; background: rgba(20,14,17,0.97); border: 1px solid rgba(183,110,121,0.4); border-radius: 12px; padding: 20px; text-align: center; }
+.estrela-modal-foto { width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; margin-bottom: 14px; }
+.estrela-modal-data { font-family: 'Jost', sans-serif; font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: var(--rosegold); margin: 0 0 8px; }
+.estrela-modal-texto { font-size: 0.88rem; color: #f0d9dd; line-height: 1.6; margin: 0; }
+
+/* Câmera lenta: vídeo tocando bem devagar (playbackRate via JS), com uma
+   frase por vez surgindo suavemente por cima, tipo legenda de cinema. */
+.momento-lento-container { position: relative; border-radius: 14px; overflow: hidden; background: #000; }
+.momento-lento-container video { width: 100%; display: block; max-height: 480px; object-fit: cover; }
+.momento-lento-container::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.75) 100%); pointer-events: none; }
+.momento-lento-frase { position: absolute; left: 0; right: 0; bottom: 18px; z-index: 1; text-align: center; padding: 0 20px; font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1rem; color: #fff; margin: 0; opacity: 0; transition: opacity 1.1s ease; }
+.momento-lento-frase.visivel { opacity: 1; }
+
 /* ---------------- Proteção por senha da área de memórias (item 8 do prompt) ---------------- */
 .senha-memorias-overlay { position: fixed; inset: 0; z-index: 12000; background: linear-gradient(180deg, #241419 0%, #3a2029 55%, #4a2c34 100%); display: flex; align-items: center; justify-content: center; padding: 24px; overscroll-behavior: contain; }
 .senha-memorias-box { max-width: 320px; width: 100%; text-align: center; color: white; animation: fadeUp 0.5s ease forwards; }
@@ -488,6 +591,9 @@ img { max-width: 100%; }
 
 /* ---------------- Lembranças (prints de conversas antigas) ---------------- */
 .lembrancas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+.lembranca-item-wrap { position: relative; }
+.lembranca-item-excluir { position: absolute; top: 5px; right: 5px; z-index: 2; width: 26px; height: 26px; border-radius: 50%; background: rgba(10,6,8,0.65); border: none; color: rgba(255,255,255,0.85); font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }
+.lembranca-item-excluir:active { background: rgba(200,60,60,0.75); }
 .lembranca-item { border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); aspect-ratio: 3 / 4; cursor: pointer; padding: 0; }
 .lembranca-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .lembranca-lightbox { position: fixed; inset: 0; z-index: 10460; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 24px; overscroll-behavior: contain; }

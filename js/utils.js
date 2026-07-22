@@ -18,6 +18,26 @@ async function arquivoExisteNoServidor(caminho) {
     }
 }
 
+/**
+ * Modo "luz de vela" — escurece a tela e mostra o texto de uma carta já
+ * revelada (carta final ou cápsula do tempo) num papel iluminado, como se
+ * estivesse sendo lida à luz de uma vela. Recebe o HTML já pronto (com
+ * qualquer troca de nome já feita), não o texto bruto — não refaz nenhuma
+ * lógica de revelação, só troca a apresentação visual.
+ */
+function abrirModoVela(eyebrowTexto, textoHtml, assinaturaTexto) {
+    const overlay = document.getElementById('modoVelaOverlay');
+    if (!overlay) return;
+    document.getElementById('modoVelaEyebrow').textContent = eyebrowTexto || '';
+    document.getElementById('modoVelaTexto').innerHTML = textoHtml || '';
+    document.getElementById('modoVelaAssinatura').textContent = assinaturaTexto || '';
+    overlay.classList.remove('d-none');
+
+    const fechar = () => overlay.classList.add('d-none');
+    document.getElementById('btnFecharModoVela').onclick = fechar;
+    overlay.onclick = (evt) => { if (evt.target === overlay) fechar(); };
+}
+
 /* ---------------- Substituição segura de imagens (placeholders) ---------------- */
 /**
  * Aplica getAsset() a uma <img> e prepara um "onerror" elegante: se o
