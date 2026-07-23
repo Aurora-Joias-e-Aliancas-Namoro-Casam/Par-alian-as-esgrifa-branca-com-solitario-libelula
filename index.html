@@ -702,20 +702,14 @@
 
         <div style="max-width: 420px; margin: 0 auto;" class="reveal-up">
             <p class="romance-section-title">Nosso céu</p>
-            <p class="ceu-subtitulo">Cada estrela é um momento nosso. Toque em uma para reviver.</p>
+            <p class="ceu-subtitulo">Assim como não consigo contar as estrelas, quero não conseguir contar todos os momentos bons que a gente ainda vai ter. Toque em uma pra reviver esse aqui, e que os que faltam sejam infinitos.</p>
             <div class="ceu-estrelado" id="ceuEstreladoContainer">
+                <div class="ceu-nebulosa ceu-nebulosa-1" aria-hidden="true"></div>
+                <div class="ceu-nebulosa ceu-nebulosa-2" aria-hidden="true"></div>
+                <div class="ceu-lua" aria-hidden="true"></div>
                 <div class="ceu-fundo-estrelas" id="ceuFundoEstrelas"></div>
+                <div class="ceu-estrelas-cadentes" id="ceuEstrelasCadentes" aria-hidden="true"></div>
                 <div class="ceu-constelacao" id="ceuConstelacao"></div>
-            </div>
-        </div>
-
-        <!-- Modal de uma estrela: foto + texto do marco tocado -->
-        <div id="estrelaModalOverlay" class="carta-discussao-overlay d-none">
-            <button id="btnFecharEstrelaModal" class="modo-vela-fechar" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
-            <div class="estrela-modal-papel">
-                <img id="estrelaModalFoto" class="estrela-modal-foto" alt="Foto do momento">
-                <p class="estrela-modal-data" id="estrelaModalData"></p>
-                <p class="estrela-modal-texto" id="estrelaModalTexto"></p>
             </div>
         </div>
 
@@ -944,9 +938,10 @@
             <p id="compartilharStatus" class="save-status"></p>
 
             <div class="d-flex gap-2 justify-content-center mt-3 flex-wrap">
-                <button id="btnExportarImagem" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-image me-1"></i>Carta em imagem</button>
-                <button id="btnExportarPDF" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-file-earmark-pdf me-1"></i>Carta em PDF</button>
-                <button id="btnExportarCertificado" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-patch-check me-1"></i>Certificado de namoro</button>
+                <button id="btnExportarCartaoPostal" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-postcard me-1"></i>Cartão postal do mapa</button>
+                <button id="btnExportarConstelacaoClara" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-stars me-1"></i>Constelação (clara)</button>
+                <button id="btnExportarConstelacaoEscura" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-moon-stars-fill me-1"></i>Constelação (escura)</button>
+                <button id="btnExportarCartaFisica" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-envelope-paper-fill me-1"></i>Carta física com QR</button>
                 <button id="btnExportarPolaroid" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-camera me-1"></i>Polaroid do momento</button>
                 <button id="btnReverLoja" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-shop me-1"></i>Rever a lojinha das alianças</button>
             </div>
@@ -974,33 +969,71 @@
                 <p id="restaurarStatus" class="save-status"></p>
             </div>
 
-            <button id="btnCartaDiscussao" class="link-discreto-rodape" aria-label="Uma coisa a mais"><i class="bi bi-circle-fill" style="font-size: 4px; vertical-align: middle;"></i></button>
+            <button id="btnCartaDiscussao" class="btn-carta-discussao"><i class="bi bi-envelope-heart-fill me-2"></i>Se um dia a gente brigar, aperte aqui</button>
         </div>
     </div>
 
     <!-- ===================== "SE UM DIA A GENTE DISCUTIR, LEIA ISSO" ===================== -->
     <div id="cartaDiscussaoOverlay" class="carta-discussao-overlay d-none">
         <button id="btnFecharCartaDiscussao" class="modo-vela-fechar" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
-        <div class="carta-discussao-papel">
+
+        <!-- Passo 1: senha -->
+        <div id="cartaDiscussaoPassoSenha" class="carta-discussao-papel carta-discussao-passo">
+            <p class="letter-eyebrow visivel">Antes de continuar</p>
+            <p class="carta-discussao-dica" id="cartaDiscussaoDica"></p>
+            <input type="text" id="cartaDiscussaoSenhaInput" class="senha-memorias-input carta-discussao-senha-input" placeholder="a senha" autocomplete="off">
+            <p id="cartaDiscussaoSenhaErro" class="save-status err d-none">Não é bem essa. Tenta de novo.</p>
+            <button id="btnCartaDiscussaoSenhaEntrar" class="btn btn-rosegold w-100 rounded-pill fw-bold mt-3">Continuar</button>
+        </div>
+
+        <!-- Passo 2: "Brigamos?" -->
+        <div id="cartaDiscussaoPassoPergunta" class="carta-discussao-papel carta-discussao-passo d-none">
+            <p class="letter-eyebrow visivel">Uma pergunta antes</p>
+            <p class="carta-discussao-pergunta-texto">Brigamos?</p>
+            <div class="d-flex gap-2 justify-content-center mt-3">
+                <button id="btnCartaDiscussaoNao" class="btn btn-outline-light btn-sm rounded-pill">Não</button>
+                <button id="btnCartaDiscussaoSim" class="btn btn-rosegold btn-sm rounded-pill fw-bold">Sim</button>
+            </div>
+            <p id="cartaDiscussaoMensagemFofa" class="carta-discussao-mensagem-fofa d-none"></p>
+        </div>
+
+        <!-- Passo 3: a carta -->
+        <div id="cartaDiscussaoPassoCarta" class="carta-discussao-papel carta-discussao-passo d-none">
             <p class="letter-eyebrow visivel">Se um dia a gente discutir</p>
             <p class="letter-text versiculo-visivel" id="cartaDiscussaoTexto"></p>
             <p class="letter-signoff visivel" id="cartaDiscussaoAssinatura"></p>
+            <button id="btnVoltarCartaDiscussao" class="btn btn-outline-light btn-sm rounded-pill mt-3"><i class="bi bi-arrow-left me-1"></i>Voltar</button>
         </div>
     </div>
 
     <!-- ===================== ELEMENTOS OCULTOS USADOS SÓ PARA EXPORTAÇÃO ===================== -->
-    <div id="cartaExportavel" class="exportavel-oculto carta-exportavel" aria-hidden="true">
-        <p class="kicker">1 Coríntios 13</p>
-        <p id="cartaExportavelTexto" class="corpo"></p>
-        <p id="cartaExportavelAssinatura" class="assinatura"></p>
+
+    <!-- Cartão postal do "Nosso mapa" — gerado NA HORA a partir de MAPA_LUGARES
+         (js/config.js), então sempre reflete o que estiver la, sem precisar
+         editar nada aqui quando um lugar novo for adicionado. -->
+    <div id="cartaoPostalExportavel" class="exportavel-oculto cartao-postal-exportavel" aria-hidden="true">
+        <p class="cartao-postal-titulo">Nosso mapa</p>
+        <div class="cartao-postal-lista" id="cartaoPostalLista"></div>
     </div>
 
-    <div id="certificadoExportavel" class="exportavel-oculto certificado-exportavel" aria-hidden="true">
-        <p class="kicker">Certificado Oficial (do coração)</p>
-        <h1>Certificado de Namoro</h1>
-        <p class="corpo">Certificamos, para os devidos fins afetivos, que a partir de hoje as partes abaixo assinadas se comprometem a viver a mais bonita das histórias juntos.</p>
-        <p class="nomes" id="certificadoNomes"></p>
-        <p class="data" id="certificadoData"></p>
+    <!-- Constelação pra imprimir — gerada a partir de TIMELINE_MARCOS
+         (js/config.js). Duas variantes (clara/escura) reaproveitam o mesmo
+         template, só trocando uma classe antes de capturar a imagem. -->
+    <div id="constelacaoExportavel" class="exportavel-oculto constelacao-exportavel" aria-hidden="true">
+        <p class="constelacao-titulo">Nosso céu</p>
+        <div class="constelacao-lista" id="constelacaoLista"></div>
+    </div>
+
+    <!-- Carta física com QR code — mesmo texto da carta final, com um QR
+         no rodapé apontando pro link do site (URL_DO_SITE, em config.js). -->
+    <div id="cartaFisicaExportavel" class="exportavel-oculto carta-fisica-exportavel" aria-hidden="true">
+        <p class="kicker">Um verso pro nosso universo</p>
+        <p id="cartaFisicaTexto" class="corpo"></p>
+        <p id="cartaFisicaAssinatura" class="assinatura"></p>
+        <div id="cartaFisicaQrWrap" class="carta-fisica-qr-wrap d-none">
+            <div id="cartaFisicaQr"></div>
+            <p class="carta-fisica-qr-legenda">aponte a câmera pra reviver tudo de novo</p>
+        </div>
     </div>
 
     <div id="polaroidExportavel" class="exportavel-oculto polaroid-exportavel" aria-hidden="true">
@@ -1008,6 +1041,7 @@
         <p class="legenda-data" id="polaroidExportavelData"></p>
         <p class="legenda" id="polaroidExportavelLegenda"></p>
     </div>
+
 
     <!-- ===================== MODAL: câmera para a Polaroid (Prioridade item 5) ===================== -->
     <div id="polaroidCameraModal" class="polaroid-camera-modal d-none">
@@ -1032,11 +1066,25 @@
         </div>
     </div>
 
+    <!-- Modal de uma estrela: foto + texto do marco tocado — fica fora de
+         #romancePage de propósito (que tem overflow:hidden e quebrava o
+         position:fixed no Safari do iPhone, fazendo parecer que o toque
+         não fazia nada) -->
+    <div id="estrelaModalOverlay" class="carta-discussao-overlay d-none">
+        <button id="btnFecharEstrelaModal" class="modo-vela-fechar" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+        <div class="estrela-modal-papel">
+            <img id="estrelaModalFoto" class="estrela-modal-foto" alt="Foto do momento">
+            <p class="estrela-modal-data" id="estrelaModalData"></p>
+            <p class="estrela-modal-texto" id="estrelaModalTexto"></p>
+        </div>
+    </div>
+
     <!-- ===================== LIGHTBOX (lembranças / momentos / timeline) ===================== -->
     <div id="lembrancaLightbox" class="lembranca-lightbox d-none">
         <button id="btnFecharLembranca" class="lembranca-lightbox-close" aria-label="Fechar">&times;</button>
         <button id="btnLightboxAnterior" class="lightbox-nav-btn lightbox-nav-prev d-none" aria-label="Foto anterior"><i class="bi bi-chevron-left"></i></button>
         <img id="lembrancaLightboxImg" src="" alt="Foto ampliada">
+        <p id="lembrancaLightboxLegenda" class="lembranca-lightbox-legenda d-none"></p>
         <button id="btnLightboxProxima" class="lightbox-nav-btn lightbox-nav-next d-none" aria-label="Próxima foto"><i class="bi bi-chevron-right"></i></button>
     </div>
 

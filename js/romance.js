@@ -107,6 +107,28 @@ function renderizarTimeline() {
     // nenhuma estrela nem sobrar espaço vazio demais.
     const container = document.getElementById('ceuEstreladoContainer');
     if (container) container.style.minHeight = `${TIMELINE_MARCOS.length * ESPACO_VERTICAL_PX + 100}px`;
+
+    iniciarEstrelasCadentes();
+}
+
+// Estrelas cadentes: puramente decorativas, cruzam o céu de vez em
+// quando pra dar mais profundidade, em posições/tempos aleatórios que se
+// repetem em loop.
+function iniciarEstrelasCadentes() {
+    const camada = document.getElementById('ceuEstrelasCadentes');
+    if (!camada || camada.dataset.gerado) return;
+    camada.dataset.gerado = '1';
+
+    const TOTAL_CADENTES = 4;
+    for (let i = 0; i < TOTAL_CADENTES; i++) {
+        const cadente = document.createElement('span');
+        cadente.className = 'ceu-estrela-cadente';
+        cadente.style.top = `${Math.random() * 60}%`;
+        cadente.style.left = `${Math.random() * 50}%`;
+        cadente.style.animationDelay = `${Math.random() * 8 + i * 3}s`;
+        cadente.style.animationDuration = `${2.6 + Math.random() * 1.5}s`;
+        camada.appendChild(cadente);
+    }
 }
 
 function iniciarFechamentoEstrelaModal() {
@@ -127,13 +149,16 @@ function abrirEstrelaModal(indice) {
     const textoEl = document.getElementById('estrelaModalTexto');
 
     aplicarImagemPlaceholder(foto, marco.foto, 'Foto do momento');
-    dataEl.textContent = marco.ehPedido ? (document.getElementById('dataPedidoTimeline')?.textContent || 'Hoje') : (marco.data || '');
+    const nomeEstrela = marco.ehPedido ? (document.getElementById('dataPedidoTimeline')?.textContent || 'Hoje') : (marco.data || '');
+    dataEl.textContent = nomeEstrela;
     textoEl.textContent = marco.texto || '';
     overlay.classList.remove('d-none');
+    overlay.scrollTop = 0; // sempre abre mostrando o começo do texto, nunca no meio
 
     foto.onclick = () => {
         const todasFotos = TIMELINE_MARCOS.map(m => getAsset(m.foto));
-        abrirLightboxGaleria(todasFotos, indice);
+        const todasLegendas = TIMELINE_MARCOS.map(m => m.ehPedido ? (document.getElementById('dataPedidoTimeline')?.textContent || 'Hoje') : (m.data || ''));
+        abrirLightboxGaleria(todasFotos, indice, todasLegendas);
     };
 }
 
@@ -557,6 +582,7 @@ async function renderizarLembrancas() {
 /* ---------------- Lightbox reutilizável ---------------- */
 let lightboxItensAtuais = [];
 let lightboxIndiceAtual = 0;
+let lightboxLegendasAtuais = null;
 
 // Mesma técnica usada em galeria.html: trava o scroll do fundo (inclusive o
 // "bounce" do iOS) enquanto o lightbox está aberto, restaurando a posição
@@ -573,9 +599,10 @@ function desbloquearScrollFundoLembranca() {
     window.scrollTo(0, __lembrancaScrollSalvo);
 }
 
-function abrirLightboxGaleria(itens, indiceInicial) {
+function abrirLightboxGaleria(itens, indiceInicial, legendas) {
     if (!itens || !itens.length) return;
     lightboxItensAtuais = itens;
+    lightboxLegendasAtuais = Array.isArray(legendas) ? legendas : null;
     lightboxIndiceAtual = indiceInicial || 0;
     atualizarImagemLightbox();
     bloquearScrollFundoLembranca();
@@ -587,6 +614,13 @@ function atualizarImagemLightbox() {
     const mostrarNav = lightboxItensAtuais.length > 1;
     document.getElementById('btnLightboxAnterior').classList.toggle('d-none', !mostrarNav);
     document.getElementById('btnLightboxProxima').classList.toggle('d-none', !mostrarNav);
+
+    const legendaEl = document.getElementById('lembrancaLightboxLegenda');
+    const legenda = lightboxLegendasAtuais ? lightboxLegendasAtuais[lightboxIndiceAtual] : '';
+    if (legendaEl) {
+        legendaEl.textContent = legenda || '';
+        legendaEl.classList.toggle('d-none', !legenda);
+    }
 }
 
 function lightboxFotoAnterior() { lightboxIndiceAtual = (lightboxIndiceAtual - 1 + lightboxItensAtuais.length) % lightboxItensAtuais.length; atualizarImagemLightbox(); }
@@ -595,6 +629,7 @@ function fecharLembrancaAmpliada() {
     document.getElementById('lembrancaLightbox').classList.add('d-none');
     document.getElementById('lembrancaLightboxImg').src = '';
     lightboxItensAtuais = [];
+    lightboxLegendasAtuais = null;
     desbloquearScrollFundoLembranca();
 }
 
@@ -864,7 +899,9 @@ function iniciarAdjetivosParaEla() {
         card.classList.remove('adjetivo-card-visivel');
         setTimeout(() => {
             document.getElementById('adjetivoPalavra').textContent = item.adjetivo;
-            document.getElementById('adjetivoMotivo').textContent = item.motivo;
+            const motivoEl = document.getElementById('adjetivoMotivo');
+            motivoEl.textContent = item.motivo || '';
+            motivoEl.classList.toggle('d-none', !item.motivo);
             card.classList.add('adjetivo-card-visivel');
         }, 220);
     }
@@ -882,11 +919,61 @@ function iniciarCartaDiscussao() {
     const fechar = document.getElementById('btnFecharCartaDiscussao');
     if (!botao || !overlay) return;
 
-    botao.addEventListener('click', () => {
+    const passoSenha = document.getElementById('cartaDiscussaoPassoSenha');
+    const passoPergunta = document.getElementById('cartaDiscussaoPassoPergunta');
+    const passoCarta = document.getElementById('cartaDiscussaoPassoCarta');
+    const senhaInput = document.getElementById('cartaDiscussaoSenhaInput');
+    const senhaErro = document.getElementById('cartaDiscussaoSenhaErro');
+    const mensagemFofa = document.getElementById('cartaDiscussaoMensagemFofa');
+
+    function mostrarPasso(passo) {
+        [passoSenha, passoPergunta, passoCarta].forEach(p => p.classList.add('d-none'));
+        passo.classList.remove('d-none');
+        overlay.scrollTop = 0; // cada passo novo começa mostrando o topo, nunca no meio/fim
+    }
+
+    function abrirDoZero() {
+        document.getElementById('cartaDiscussaoDica').textContent = DICA_SENHA_CARTA_DISCUSSAO;
+        senhaInput.value = '';
+        senhaErro.classList.add('d-none');
+        mensagemFofa.classList.add('d-none');
+        document.getElementById('btnCartaDiscussaoSim').classList.remove('d-none');
+        document.getElementById('btnCartaDiscussaoNao').classList.remove('d-none');
+        overlay.classList.remove('d-none');
+        mostrarPasso(passoSenha);
+        setTimeout(() => senhaInput.focus(), 300);
+    }
+
+    function tentarSenha() {
+        const digitada = (senhaInput.value || '').trim().toLowerCase().replace(/\s+/g, '');
+        if (digitada === SENHA_CARTA_DISCUSSAO) {
+            mostrarPasso(passoPergunta);
+        } else {
+            senhaErro.classList.remove('d-none');
+            senhaInput.value = '';
+            senhaInput.focus();
+        }
+    }
+
+    botao.addEventListener('click', abrirDoZero);
+    document.getElementById('btnCartaDiscussaoSenhaEntrar').addEventListener('click', tentarSenha);
+    senhaInput.addEventListener('keydown', (evt) => { if (evt.key === 'Enter') tentarSenha(); });
+
+    document.getElementById('btnCartaDiscussaoSim').addEventListener('click', () => {
         document.getElementById('cartaDiscussaoTexto').textContent = textoCartaDiscussao();
         document.getElementById('cartaDiscussaoAssinatura').textContent = NOME_DELE + '.';
-        overlay.classList.remove('d-none');
+        mostrarPasso(passoCarta);
     });
+
+    document.getElementById('btnCartaDiscussaoNao').addEventListener('click', () => {
+        mensagemFofa.textContent = TEXTOS.brigamosMensagemFofa;
+        mensagemFofa.classList.remove('d-none');
+        document.getElementById('btnCartaDiscussaoSim').classList.add('d-none');
+        document.getElementById('btnCartaDiscussaoNao').classList.add('d-none');
+    });
+
+    document.getElementById('btnVoltarCartaDiscussao').addEventListener('click', () => mostrarPasso(passoPergunta));
+
     fechar.addEventListener('click', () => overlay.classList.add('d-none'));
     overlay.addEventListener('click', (evt) => { if (evt.target === overlay) overlay.classList.add('d-none'); });
 }
@@ -937,6 +1024,7 @@ async function renderizarSeusBichos() {
     // resolverFotoPlaceholder testa cada extensão aceita (EXTENSOES_FOTO_ACEITAS,
     // em js/config.js) até achar o arquivo de verdade — por isso é assíncrona.
     const todasAsFotos = await Promise.all(todosOsBichos.map(b => resolverFotoPlaceholder(b.foto)));
+    const todosOsNomes = todosOsBichos.map(b => b.nome || '');
 
     if (Array.isArray(SEUS_BICHOS)) {
         grid.innerHTML = '';
@@ -944,7 +1032,7 @@ async function renderizarSeusBichos() {
             const card = document.createElement('div');
             card.className = 'bicho-card';
             card.innerHTML = `<span class="bicho-emoji">${bicho.emoji}</span><span class="bicho-nome">${bicho.nome}</span>`;
-            card.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, i));
+            card.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, i, todosOsNomes));
             grid.appendChild(card);
         });
     }
@@ -955,7 +1043,7 @@ async function renderizarSeusBichos() {
         if (slinky && slinkyBox && slinkyTexto) {
             slinkyTexto.textContent = slinky.textoEspecial || '';
             slinkyBox.classList.remove('d-none');
-            slinkyBox.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, indiceSlinky));
+            slinkyBox.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, indiceSlinky, todosOsNomes));
         }
 
         // Os demais "em memória" (sem o Slinky, que já ganhou o bloco de
@@ -968,7 +1056,7 @@ async function renderizarSeusBichos() {
                 return `<span class="bicho-memoria-nome" data-indice="${indice}">${b.nome} ${b.emoji}</span>`;
             }).join(', ') + '.';
             memoria.querySelectorAll('.bicho-memoria-nome').forEach(span => {
-                span.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, Number(span.dataset.indice)));
+                span.addEventListener('click', () => abrirLightboxGaleria(todasAsFotos, Number(span.dataset.indice), todosOsNomes));
             });
         }
     }

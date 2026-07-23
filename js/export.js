@@ -12,12 +12,14 @@
  * ============================================================================
  */
 
-/* ---------------- Carta exportável (imagem / PDF) ---------------- */
-function prepararCartaExportavel() {
-    const textoFinal = textoVersiculoBase().replace(/\{AMOR\}/g, NOME_DELA);
-    document.getElementById('cartaExportavelTexto').textContent = textoFinal;
-    document.getElementById('cartaExportavelAssinatura').textContent = TEXTOS.assinaturaCartaFinal;
-}
+/* ----------------------------------------------------------------------
+   LEMBRANÇAS PRA IMPRIMIR — cartão postal do mapa, constelação (clara e
+   escura) e carta física com QR code. As três leem MAPA_LUGARES /
+   TIMELINE_MARCOS / textoVersiculoBase() DIRETO na hora de gerar a
+   imagem — nada fica "gravado" com antecedência, então qualquer lugar ou
+   marco novo adicionado em js/config.js já aparece no próximo download,
+   sem precisar mexer em mais nada.
+   ---------------------------------------------------------------------- */
 
 function mostrarStatusExportar(mensagem, tipo) {
     const statusEl = document.getElementById('exportarStatus');
@@ -26,52 +28,126 @@ function mostrarStatusExportar(mensagem, tipo) {
     statusEl.className = tipo ? `save-status ${tipo}` : 'save-status';
 }
 
-async function exportarCartaComoImagem() {
+/** Cartão postal do "Nosso mapa" — um card por lugar, com foto (se já tiver sido adicionada) + nome + texto. */
+async function gerarCartaoPostal() {
     if (typeof html2canvas !== 'function') { mostrarStatusExportar('Não foi possível carregar o exportador de imagem. Verifique sua conexão.', 'err'); return; }
-    mostrarStatusExportar('Gerando imagem da carta...', 'pending');
-    prepararCartaExportavel();
+    mostrarStatusExportar('Gerando o cartão postal do mapa...', 'pending');
+
     try {
-        const canvas = await html2canvas(document.getElementById('cartaExportavel'), { backgroundColor: '#FBF7F0', scale: 2 });
-        baixarCanvasComoPng(canvas, 'nossa-carta.png');
-        mostrarStatusExportar('Imagem exportada com sucesso.', 'ok');
+        const lista = document.getElementById('cartaoPostalLista');
+        lista.innerHTML = '';
+        for (const lugar of MAPA_LUGARES) {
+            const card = document.createElement('div');
+            card.className = 'cartao-postal-item';
+            const fotoSrc = await resolverFotoPlaceholder(lugar.foto); // já cai num SVG "adicione esta foto" se o arquivo ainda não existir
+            card.innerHTML = `
+                <img src="${fotoSrc}" alt="${lugar.nome}">
+                <div class="cartao-postal-item-texto">
+                    <p class="cartao-postal-nome">${lugar.nome}</p>
+                    <p class="cartao-postal-cidade">${lugar.cidade || ''}</p>
+                </div>`;
+            lista.appendChild(card);
+        }
+
+        const canvas = await html2canvas(document.getElementById('cartaoPostalExportavel'), {
+            backgroundColor: '#FBF7F0', width: IMPRIMIVEL_LARGURA_PX, height: IMPRIMIVEL_ALTURA_PX, scale: 1
+        });
+        baixarCanvasComoPng(canvas, 'nosso-mapa.png');
+        mostrarStatusExportar('Cartão postal exportado com sucesso. Pode imprimir no tamanho 10x15cm.', 'ok');
     } catch (err) {
-        console.error('Falha ao exportar carta como imagem', err);
-        mostrarStatusExportar('Não foi possível exportar a imagem.', 'err');
+        console.error('Falha ao exportar o cartão postal do mapa', err);
+        mostrarStatusExportar('Não foi possível exportar o cartão postal.', 'err');
     }
 }
 
-async function exportarCartaComoPDF() {
+/** Constelação pra imprimir — reaproveita TIMELINE_MARCOS, em versão clara ou escura. */
+async function gerarConstelacao(modo) {
+    if (typeof html2canvas !== 'function') { mostrarStatusExportar('Não foi possível carregar o exportador de imagem. Verifique sua conexão.', 'err'); return; }
+    mostrarStatusExportar('Gerando a constelação...', 'pending');
+
+    try {
+        const el = document.getElementById('constelacaoExportavel');
+        el.classList.toggle('constelacao-clara', modo === 'clara');
+        el.classList.toggle('constelacao-escura', modo === 'escura');
+
+        const lista = document.getElementById('constelacaoLista');
+        lista.innerHTML = '';
+        for (const marco of TIMELINE_MARCOS) {
+            const item = document.createElement('div');
+            item.className = 'constelacao-item' + (marco.ehPedido ? ' constelacao-item-pedido' : '');
+            const fotoSrc = await resolverFotoPlaceholderOuAsset(marco.foto);
+            item.innerHTML = `
+                <img src="${fotoSrc}" alt="${marco.ehPedido ? 'Hoje' : marco.data}">
+                <p class="constelacao-item-data">${marco.ehPedido ? 'Hoje' : (marco.data || '')}</p>`;
+            lista.appendChild(item);
+        }
+
+        const corFundo = modo === 'clara' ? '#FBF7F0' : '#0f0810';
+        const canvas = await html2canvas(el, { backgroundColor: corFundo, width: IMPRIMIVEL_LARGURA_PX, height: IMPRIMIVEL_ALTURA_PX, scale: 1 });
+        baixarCanvasComoPng(canvas, `nosso-ceu-${modo}.png`);
+        mostrarStatusExportar('Constelação exportada com sucesso. Pode imprimir no tamanho 10x15cm.', 'ok');
+    } catch (err) {
+        console.error('Falha ao exportar a constelação', err);
+        mostrarStatusExportar('Não foi possível exportar a constelação.', 'err');
+    }
+}
+
+/**
+ * Timeline usa fotos já resolvidas de forma fixa (getAsset, ver
+ * PLACEHOLDERS em config.js) — diferente dos bichos/lugares do mapa, que
+ * usam arquivoBase com extensão flexível. Essa função tenta primeiro o
+ * jeito "flexível" (resolverFotoPlaceholder) e, se não achar nada,
+ * cai no jeito fixo (getAsset), cobrindo os dois formatos de placeholder
+ * que o projeto usa.
+ */
+async function resolverFotoPlaceholderOuAsset(id) {
+    const item = PLACEHOLDERS[id];
+    if (item && item.arquivoBase) return resolverFotoPlaceholder(id);
+    return getAsset(id);
+}
+
+/** Carta física com QR code — mesmo texto/carinho da carta final, pensada pra imprimir em papel A4 e guardar de verdade. */
+async function gerarCartaFisica() {
     if (typeof html2canvas !== 'function' || typeof window.jspdf === 'undefined') { mostrarStatusExportar('Não foi possível carregar o exportador de PDF. Verifique sua conexão.', 'err'); return; }
-    mostrarStatusExportar('Gerando PDF da carta...', 'pending');
-    prepararCartaExportavel();
-    try {
-        const canvas = await html2canvas(document.getElementById('cartaExportavel'), { backgroundColor: '#FBF7F0', scale: 2 });
-        salvarCanvasComoPdf(canvas, 'nossa-carta.pdf');
-        mostrarStatusExportar('PDF exportado com sucesso.', 'ok');
-    } catch (err) {
-        console.error('Falha ao exportar carta como PDF', err);
-        mostrarStatusExportar('Não foi possível exportar o PDF.', 'err');
-    }
-}
-
-/* ---------------- Certificado de namoro (PDF estilo diploma) ---------------- */
-async function exportarCertificadoNamoro() {
-    if (typeof html2canvas !== 'function' || typeof window.jspdf === 'undefined') { mostrarStatusExportar('Não foi possível carregar o exportador. Verifique sua conexão.', 'err'); return; }
-    mostrarStatusExportar('Gerando certificado...', 'pending');
-
-    const dataPedidoIso = await obterConfiguracao('aurora_data_pedido');
-    const dataTexto = dataPedidoIso ? formatarDataPedidoComHora(dataPedidoIso) : formatarDataPedidoComHora(new Date().toISOString());
-    document.getElementById('certificadoData').textContent = dataTexto;
-    document.getElementById('certificadoNomes').textContent = `${NOME_DELE_COMPLETO} & ${NOME_DELA_APELIDO}`;
-    const el = document.getElementById('certificadoExportavel');
+    mostrarStatusExportar('Gerando a carta física...', 'pending');
 
     try {
-        const canvas = await html2canvas(el, { backgroundColor: '#FBF7F0', scale: 2 });
-        salvarCanvasComoPdf(canvas, 'certificado-de-namoro.pdf');
-        mostrarStatusExportar('Certificado exportado com sucesso.', 'ok');
+        const textoFinal = textoVersiculoBase().replace(/\{AMOR\}/g, NOME_DELA);
+        document.getElementById('cartaFisicaTexto').textContent = textoFinal;
+        document.getElementById('cartaFisicaAssinatura').textContent = TEXTOS.assinaturaCartaFinal;
+
+        const qrWrap = document.getElementById('cartaFisicaQrWrap');
+        const qrDiv = document.getElementById('cartaFisicaQr');
+        qrDiv.innerHTML = '';
+        if (typeof URL_DO_SITE !== 'undefined' && URL_DO_SITE && typeof qrcode === 'function') {
+            try {
+                const qr = qrcode(0, 'M');
+                qr.addData(URL_DO_SITE);
+                qr.make();
+                qrDiv.innerHTML = qr.createSvgTag({ scalable: true });
+                qrWrap.classList.remove('d-none');
+            } catch (e) {
+                console.error('Não foi possível gerar o QR code da carta física:', e);
+                qrWrap.classList.add('d-none');
+            }
+        } else {
+            qrWrap.classList.add('d-none'); // sem URL_DO_SITE configurada ainda (js/config.js) — a carta sai só com o texto, normalmente
+        }
+
+        const canvas = await html2canvas(document.getElementById('cartaFisicaExportavel'), { backgroundColor: '#FBF7F0', scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const larguraA4 = 210, alturaA4 = 297, margem = 20;
+        const larguraDisponivel = larguraA4 - margem * 2;
+        const alturaImagem = larguraDisponivel * (canvas.height / canvas.width);
+        const yInicial = Math.max(margem, (alturaA4 - alturaImagem) / 2);
+        pdf.addImage(imgData, 'PNG', margem, yInicial, larguraDisponivel, alturaImagem);
+        pdf.save('nossa-carta.pdf');
+        mostrarStatusExportar('Carta física exportada com sucesso. Pode imprimir em papel A4.', 'ok');
     } catch (err) {
-        console.error('Falha ao exportar certificado', err);
-        mostrarStatusExportar('Não foi possível exportar o certificado.', 'err');
+        console.error('Falha ao exportar a carta física', err);
+        mostrarStatusExportar('Não foi possível exportar a carta física.', 'err');
     }
 }
 
@@ -125,12 +201,15 @@ function capturarFotoPolaroid() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    // CORREÇÃO: a câmera frontal já entrega o frame "verdadeiro" (não
-    // espelhado) — quem espelha é a TELA (CSS, ver #polaroidCameraVideo em
-    // style.css), só pra ficar confortável de enquadrar o rosto, tipo
-    // espelho de banheiro. A versão SALVA precisa ser a verdadeira, sem
-    // espelhar de novo — inverter aqui em cima do que já parecia invertido
-    // na tela é o que estava deixando a foto final ao contrário.
+    // CORREÇÃO: a câmera frontal entrega o frame "verdadeiro" (não
+    // espelhado), e é a TELA (CSS, #polaroidCameraVideo em style.css) que
+    // espelha o preview pra ficar confortável de enquadrar, tipo espelho
+    // de banheiro. Só que isso significa que se a gente desenhar o frame
+    // cru no canvas, a foto salva sai ao contrário do que ela viu e
+    // enquadrou durante a pose — por isso espelhamos aqui também, pra
+    // bater exatamente com o que apareceu na tela durante a captura.
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     polaroidFotoCapturadaDataUrl = canvas.toDataURL('image/png');
 
@@ -558,9 +637,10 @@ async function restaurarBackupDeArquivo(arquivo) {
 }
 
 function iniciarModuloExport() {
-    document.getElementById('btnExportarImagem').addEventListener('click', exportarCartaComoImagem);
-    document.getElementById('btnExportarPDF').addEventListener('click', exportarCartaComoPDF);
-    document.getElementById('btnExportarCertificado').addEventListener('click', exportarCertificadoNamoro);
+    document.getElementById('btnExportarCartaoPostal').addEventListener('click', gerarCartaoPostal);
+    document.getElementById('btnExportarConstelacaoClara').addEventListener('click', () => gerarConstelacao('clara'));
+    document.getElementById('btnExportarConstelacaoEscura').addEventListener('click', () => gerarConstelacao('escura'));
+    document.getElementById('btnExportarCartaFisica').addEventListener('click', gerarCartaFisica);
 
     // Novo fluxo da Polaroid: o clique abre a câmera em vez de gerar direto.
     document.getElementById('btnExportarPolaroid').addEventListener('click', abrirCameraPolaroid);

@@ -42,7 +42,7 @@ async function testeConfiguracaoTextoSimples() {
         await salvarConfiguracao(chave, valor);
         const lido = await obterConfiguracao(chave);
         localStorage.removeItem(chave);
-        try { await db.configuracoes.delete(chave); } catch (e) {}
+        try { await db.configuracoes.delete(chave); } catch (e) { /* best-effort: ok se a chave nem existia */ }
         if (lido !== valor) return { ok: false, motivo: `Valor lido ("${lido}") não bate com o gravado ("${valor}").` };
         return { ok: true, motivo: 'Escrita e leitura de configurações simples funcionando.' };
     } catch (e) {
@@ -149,7 +149,7 @@ async function executarDiagnosticoCompleto() {
             ['Configuração de sincronização na nuvem', testeConfiguracaoNuvem]
         ];
 
-        var todosOk = true;
+        let todosOk = true;
         for (const [nome, fn] of testes) {
             const item = document.createElement('li');
             item.className = 'diag-item diag-rodando';

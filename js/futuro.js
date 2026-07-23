@@ -78,7 +78,7 @@ function abrirFuturoOverlay() {
 function fecharFuturoOverlay() {
     document.getElementById('futuroOverlay').classList.add('d-none');
     if (futuroTimeoutMaximo) { clearTimeout(futuroTimeoutMaximo); futuroTimeoutMaximo = null; }
-    if (futuroRecorder && futuroRecorder.state !== 'inactive') { try { futuroRecorder.stop(); } catch (e) {} }
+    if (futuroRecorder && futuroRecorder.state !== 'inactive') { try { futuroRecorder.stop(); } catch (e) { /* já estava parado, sem problema */ } }
     pararStreamFuturo();
     pararTimerFuturo();
 }

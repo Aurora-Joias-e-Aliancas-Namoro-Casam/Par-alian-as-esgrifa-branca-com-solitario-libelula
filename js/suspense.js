@@ -242,7 +242,7 @@ function iniciarAssinatura() {
             await salvarConfiguracao('aurora_data_pedido', new Date().toISOString(), true);
         }
 
-        if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
+        if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) { /* vibração não suportada/permitida — só um extra tátil, nunca crítico */ } }
 
         document.getElementById('signatureScreen').classList.add('d-none');
         iniciarRastreio();
@@ -460,7 +460,7 @@ function finalizarSequencia() {
     document.getElementById('finalScreen').classList.remove('d-none');
     aplicarImagemPlaceholder(document.getElementById('finalPhoto'), 'imagem_foto_final', 'Nossa foto');
 
-    if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} }
+    if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (e) { /* vibração não suportada/permitida — só um extra tátil, nunca crítico */ } }
 
     dispararConfetesRomanticos();
     iniciarCartaFinal();

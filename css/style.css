@@ -456,13 +456,25 @@ img { max-width: 100%; }
 .mapa-card-futuro .mapa-nome { color: #d9e8c8; }
 .mapa-card-futuro .mapa-texto { font-style: italic; opacity: 0.9; }
 
-/* Link quase invisível no rodapé — de propósito discreto, pra ela achar
-   por acaso ou quando realmente precisar, não pra chamar atenção. */
-.link-discreto-rodape { display: block; margin: 34px auto 4px; background: none; border: none; color: rgba(255,255,255,0.18); padding: 14px; }
+/* Botão visível pra abrir a carta escondida — antes era um ponto quase
+   invisível no rodapé; agora é um botão de verdade, fácil de achar. */
+.btn-carta-discussao { display: block; margin: 34px auto 4px; background: rgba(183,110,121,0.14); border: 1px solid rgba(183,110,121,0.4); color: #f0d9dd; padding: 12px 22px; border-radius: 999px; font-size: 0.85rem; }
 
-.carta-discussao-overlay { position: fixed; inset: 0; z-index: 12500; background: rgba(10,6,8,0.94); display: flex; align-items: center; justify-content: center; padding: 28px 22px; overflow-y: auto; overscroll-behavior: contain; }
-.carta-discussao-papel { max-width: 380px; width: 100%; background: #faf0e1; border-radius: 4px; padding: 30px 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+/* CORREÇÃO: "align-items: center" com conteúdo mais alto que a tela
+   fazia o overlay abrir mostrando o meio/fim do papel, exigindo arrastar
+   pra cima devagar pra achar o começo. Com "flex-start" + padding mais
+   generoso (que se adapta em telas pequenas e grandes com clamp), o
+   papel sempre abre mostrando o topo, e ainda sobra respiro nas bordas
+   em qualquer aparelho. */
+.carta-discussao-overlay { position: fixed; inset: 0; z-index: 12500; background: rgba(10,6,8,0.94); display: flex; align-items: flex-start; justify-content: center; padding: clamp(28px, 8vh, 60px) clamp(18px, 6vw, 40px); overflow-y: auto; overscroll-behavior: contain; }
+.carta-discussao-papel { max-width: 380px; width: 100%; background: #faf0e1; border-radius: 4px; padding: clamp(26px, 6vw, 38px) clamp(20px, 5vw, 30px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); margin: auto; }
 .carta-discussao-papel .letter-text { color: #2b2523; }
+
+.carta-discussao-dica { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 0.95rem; color: #4a3b38; text-align: center; margin: 0 0 16px; }
+.carta-discussao-senha-input { color: #2b2523 !important; border-color: rgba(43,37,35,0.25) !important; background: rgba(43,37,35,0.05) !important; letter-spacing: 2px !important; text-transform: none; }
+.carta-discussao-senha-input::placeholder { color: rgba(43,37,35,0.35); }
+.carta-discussao-pergunta-texto { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.6rem; text-align: center; color: #2b2523; margin: 6px 0 0; }
+.carta-discussao-mensagem-fofa { font-size: 0.9rem; text-align: center; color: #4a3b38; line-height: 1.6; margin: 16px 0 0; font-style: italic; }
 
 /* Card de adjetivo — transição suave entre uma carta e outra, clicável
    (além do botão "mais um", tocar direto no card também passa a carta) */
@@ -490,6 +502,19 @@ img { max-width: 100%; }
 @keyframes ceuPiscar { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.75; } }
 @media (prefers-reduced-motion: reduce) { .ceu-estrela-fundo { animation: none; opacity: 0.4; } }
 
+/* Nuvens de nebulosa e a lua — só pra dar mais profundidade e clima de
+   céu de verdade, sem atrapalhar a leitura nem o toque nas estrelas. */
+.ceu-nebulosa { position: absolute; border-radius: 50%; filter: blur(30px); pointer-events: none; opacity: 0.55; }
+.ceu-nebulosa-1 { top: -10%; left: -15%; width: 60%; height: 40%; background: radial-gradient(circle, rgba(183,110,121,0.35) 0%, rgba(183,110,121,0) 70%); }
+.ceu-nebulosa-2 { bottom: 5%; right: -18%; width: 55%; height: 45%; background: radial-gradient(circle, rgba(120,90,160,0.28) 0%, rgba(120,90,160,0) 70%); }
+.ceu-lua { position: absolute; top: 22px; right: 28px; width: 34px; height: 34px; border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 35% 35%, #fff8e8 0%, #ffe9c2 55%, rgba(255,233,194,0.15) 100%); box-shadow: 0 0 26px 8px rgba(255,233,194,0.25); }
+
+.ceu-estrelas-cadentes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ceu-estrela-cadente { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; opacity: 0; box-shadow: 0 0 6px 2px rgba(255,255,255,0.6); animation: ceuCadentePassar 3s ease-in infinite; }
+.ceu-estrela-cadente::before { content: ''; position: absolute; top: 50%; right: 0; width: 70px; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0)); transform: translateY(-50%); }
+@keyframes ceuCadentePassar { 0% { opacity: 0; transform: translate(0, 0); } 4% { opacity: 1; } 22% { opacity: 0; transform: translate(-130px, 90px); } 100% { opacity: 0; transform: translate(-130px, 90px); } }
+@media (prefers-reduced-motion: reduce) { .ceu-estrela-cadente { animation: none; opacity: 0; } }
+
 .ceu-constelacao { position: relative; padding: 40px 0 60px; }
 .ceu-estrela { position: absolute; transform: translateX(-50%); background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; }
 .ceu-estrela-brilho { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle, #fff8e8 0%, rgba(255,220,160,0.6) 45%, rgba(255,220,160,0) 75%); box-shadow: 0 0 10px 3px rgba(255,220,160,0.35); animation: ceuEstrelaPulsar 2.4s ease-in-out infinite; }
@@ -498,8 +523,8 @@ img { max-width: 100%; }
 .ceu-estrela-pedido .ceu-estrela-brilho { width: 20px; height: 20px; box-shadow: 0 0 18px 6px rgba(255,196,120,0.55); }
 .ceu-estrela-pedido .ceu-estrela-label { color: #ffc478; font-weight: 600; }
 
-.estrela-modal-papel { max-width: 380px; width: 100%; background: rgba(20,14,17,0.97); border: 1px solid rgba(183,110,121,0.4); border-radius: 12px; padding: 20px; text-align: center; }
-.estrela-modal-foto { width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; margin-bottom: 14px; }
+.estrela-modal-papel { max-width: 380px; width: 100%; background: rgba(20,14,17,0.97); border: 1px solid rgba(183,110,121,0.4); border-radius: 12px; padding: 20px; text-align: center; margin: auto; }
+.estrela-modal-foto { width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; margin-bottom: 14px; cursor: pointer; }
 .estrela-modal-data { font-family: 'Jost', sans-serif; font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: var(--rosegold); margin: 0 0 8px; }
 .estrela-modal-texto { font-size: 0.88rem; color: #f0d9dd; line-height: 1.6; margin: 0; }
 
@@ -596,8 +621,9 @@ img { max-width: 100%; }
 .lembranca-item-excluir:active { background: rgba(200,60,60,0.75); }
 .lembranca-item { border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.06); border: 1px solid rgba(183,110,121,0.35); aspect-ratio: 3 / 4; cursor: pointer; padding: 0; }
 .lembranca-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.lembranca-lightbox { position: fixed; inset: 0; z-index: 10460; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 24px; overscroll-behavior: contain; }
-.lembranca-lightbox img { max-width: 100%; max-height: 88vh; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.lembranca-lightbox { position: fixed; inset: 0; z-index: 10460; background: rgba(0,0,0,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; overscroll-behavior: contain; }
+.lembranca-lightbox img { max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.lembranca-lightbox-legenda { color: rgba(255,255,255,0.75); font-family: 'Jost', sans-serif; font-size: 0.8rem; letter-spacing: 1px; text-align: center; margin: 0; }
 .lembranca-lightbox-close { position: absolute; top: 18px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; line-height: 1; z-index: 2; }
 .lightbox-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.14); border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; z-index: 2; }
 .lightbox-nav-btn:active { background: rgba(255,255,255,0.28); }
@@ -614,17 +640,42 @@ html.aurora-scroll-lock body { position: fixed; left: 0; right: 0; width: 100%; 
 
 /* ---------------- Elementos "fora da tela" usados apenas para exportação ---------------- */
 .exportavel-oculto { position: fixed; left: -9999px; top: 0; }
-.carta-exportavel { width: 380px; background: #FBF7F0; padding: 34px 28px; font-family: 'Cormorant Garamond', Georgia, serif; color: #2b2523; }
-.carta-exportavel .kicker { text-align:center; font-family:'Jost',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8f4d57; margin-bottom:14px; }
-.carta-exportavel .corpo { font-style:italic; font-size:17px; line-height:1.8; text-align:left; white-space:pre-wrap; margin:0; }
-.carta-exportavel .assinatura { font-family:'Alex Brush',cursive; font-size:30px; color:#8f4d57; margin-top:18px; }
 
-.certificado-exportavel { width: 700px; background: #FBF7F0; padding: 50px; text-align: center; font-family: 'Cormorant Garamond', Georgia, serif; color: #2b2523; border: 10px double #B76E79; }
-.certificado-exportavel .kicker { font-family:'Jost',sans-serif; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #8f4d57; margin-bottom: 20px; }
-.certificado-exportavel h1 { font-size: 2.4rem; margin-bottom: 10px; }
-.certificado-exportavel .corpo { font-size: 1.1rem; line-height: 1.8; max-width: 520px; margin: 20px auto; font-style: italic; }
-.certificado-exportavel .nomes { font-family: 'Alex Brush', cursive; font-size: 2.6rem; color: #8f4d57; margin: 20px 0 10px; }
-.certificado-exportavel .data { font-family:'Jost',sans-serif; font-size: 0.9rem; letter-spacing: 1px; color: #5a5048; }
+/* Cartão postal do "Nosso mapa" e constelação pra imprimir: tamanho fixo
+   em pixels batendo com IMPRIMIVEL_LARGURA_PX/ALTURA_PX (js/config.js),
+   formato "foto revelada" 10x15cm a ~300dpi. */
+.cartao-postal-exportavel, .constelacao-exportavel { width: 1181px; height: 1772px; background: #FBF7F0; padding: 70px 56px; box-sizing: border-box; font-family: 'Cormorant Garamond', Georgia, serif; color: #2b2523; display: flex; flex-direction: column; }
+.cartao-postal-titulo, .constelacao-titulo { text-align: center; font-size: 52px; font-weight: 600; margin: 0 0 44px; }
+.cartao-postal-lista { display: flex; flex-direction: column; gap: 30px; flex: 1; justify-content: center; }
+.cartao-postal-item { display: flex; align-items: center; gap: 26px; }
+.cartao-postal-item img { width: 150px; height: 150px; object-fit: cover; border-radius: 14px; flex: none; }
+.cartao-postal-nome { font-size: 34px; font-weight: 600; margin: 0; }
+.cartao-postal-cidade { font-size: 22px; letter-spacing: 0.5px; text-transform: uppercase; color: #8f4d57; margin: 4px 0 0; }
+
+/* Constelação: mesma ideia da versão on-screen (ver css das classes
+   .ceu-*), só que num template estático pra virar imagem — versão clara
+   (padrão, economiza tinta) e escura (mais fiel ao clima do site,
+   melhor pra quem for mandar imprimir numa gráfica/poster). */
+.constelacao-lista { display: flex; flex-direction: column; gap: 46px; flex: 1; justify-content: center; align-items: center; }
+.constelacao-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.constelacao-item img { width: 170px; height: 170px; object-fit: cover; border-radius: 50%; border: 4px solid #B76E79; }
+.constelacao-item-data { font-family: 'Jost', sans-serif; font-size: 24px; letter-spacing: 1px; text-transform: uppercase; margin: 0; }
+.constelacao-item-pedido img { width: 210px; height: 210px; border-color: #ffc478; }
+.constelacao-item-pedido .constelacao-item-data { color: #b9822f; font-weight: 600; }
+.constelacao-escura { background: #0f0810; color: #f0d9dd; }
+.constelacao-escura .constelacao-item-data { color: #f0d9dd; }
+.constelacao-escura .constelacao-item-pedido .constelacao-item-data { color: #ffc478; }
+
+/* Carta física com QR code — mesmo visual da carta on-screen (parchment,
+   Cormorant itálico), pensada pra sair bonita numa folha A4 impressa. */
+.carta-fisica-exportavel { width: 700px; background: #FBF7F0; padding: 50px 44px; font-family: 'Cormorant Garamond', Georgia, serif; color: #2b2523; }
+.carta-fisica-exportavel .kicker { text-align:center; font-family:'Jost',sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; color:#8f4d57; margin-bottom:18px; }
+.carta-fisica-exportavel .corpo { font-style:italic; font-size:19px; line-height:1.85; text-align:left; white-space:pre-wrap; margin:0; }
+.carta-fisica-exportavel .assinatura { font-family:'Alex Brush',cursive; font-size:32px; color:#8f4d57; margin-top:20px; }
+.carta-fisica-qr-wrap { text-align: center; margin-top: 34px; padding-top: 24px; border-top: 1px solid rgba(143,77,87,0.25); }
+.carta-fisica-qr-wrap #cartaFisicaQr { width: 110px; height: 110px; margin: 0 auto 8px; }
+.carta-fisica-qr-wrap #cartaFisicaQr svg { width: 100%; height: 100%; }
+.carta-fisica-qr-legenda { font-family: 'Jost', sans-serif; font-size: 12px; letter-spacing: 0.5px; color: #8f4d57; margin: 0; }
 
 .polaroid-exportavel { width: 340px; background: #ffffff; padding: 16px 16px 50px; box-shadow: none; }
 .polaroid-exportavel img, .polaroid-exportavel .imagem-placeholder-vazio { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; border-radius: 3px; }

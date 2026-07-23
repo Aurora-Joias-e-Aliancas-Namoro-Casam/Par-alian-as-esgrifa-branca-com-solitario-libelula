@@ -99,6 +99,7 @@ const PLACEHOLDERS = {
     imagem_timeline_5: { arquivo: 'timeline-5.jpg', tipo: 'imagem', descricao: 'Timeline — despedida do Slinky / acolhimento da família dela' },
     imagem_timeline_6: { arquivo: 'timeline-6.jpg', tipo: 'imagem', descricao: 'Timeline — 14/06, o "eu te amo" depois da Brooks' },
     imagem_timeline_7: { arquivo: 'timeline-7.jpg', tipo: 'imagem', descricao: 'Timeline — 20/07, apresentação pros avós em Santa Rosa de Viterbo, Parque Curupira e o balanço em Sales de Oliveira' },
+    imagem_timeline_8: { arquivo: 'timeline-8.jpg', tipo: 'imagem', descricao: 'Timeline — 12/07, o dia em Nuporanga que acabei conhecendo o tio e a tia dela' },
     imagem_timeline_hoje: { arquivo: 'timeline-hoje.jpg', tipo: 'imagem', descricao: 'Timeline — foto de hoje, marcando o dia do pedido' },
 
     // ---- Nossos momentos (mesa de fotos) ----
@@ -124,6 +125,14 @@ const PLACEHOLDERS = {
     bicho_slinky: { arquivoBase: 'bicho-slinky', tipo: 'imagem', descricao: 'Slinky (em memória)' },
     bicho_tommy: { arquivoBase: 'bicho-tommy', tipo: 'imagem', descricao: 'Tommy (em memória)' },
     bicho_anne: { arquivoBase: 'bicho-anne', tipo: 'imagem', descricao: 'Anne (em memória)' },
+
+    // ---- Fotos de cada local do "Nosso mapa" (usadas no cartão postal e na constelação pra imprimir) ----
+    mapa_colina: { arquivoBase: 'mapa-colina', tipo: 'imagem', descricao: 'Colina, Orlândia' },
+    mapa_santa_rosa: { arquivoBase: 'mapa-santa-rosa', tipo: 'imagem', descricao: 'Santa Rosa de Viterbo' },
+    mapa_curupira: { arquivoBase: 'mapa-curupira', tipo: 'imagem', descricao: 'Parque Curupira' },
+    mapa_balanco: { arquivoBase: 'mapa-balanco', tipo: 'imagem', descricao: 'O balanço em Sales de Oliveira' },
+    mapa_nuporanga: { arquivoBase: 'mapa-nuporanga', tipo: 'imagem', descricao: 'Nuporanga' },
+    mapa_proximo: { arquivoBase: 'mapa-proximo', tipo: 'imagem', descricao: 'Próximo destino' },
 
     // ---- Áudio ----
     audio_nossa_musica: { arquivo: 'nossa-musica.mp3', tipo: 'audio', descricao: 'A trilha que toca ao abrir a carta final (ex: Um Dia Te Levo Comigo)' },
@@ -282,11 +291,6 @@ const TIMELINE_MARCOS = [
         foto: 'imagem_timeline_3'
     },
     {
-        data: 'Uma estrada de terra',
-        texto: `Fomos parar numa estrada de terra e o carro atolou de vez. Eu me sujei inteiro de barro, perdi o triângulo tentando tirar o carro do buraco, e mesmo assim rimos do começo ao fim. Prova de que qualquer perrengue com você vira boa lembrança.`,
-        foto: 'imagem_timeline_4'
-    },
-    {
         data: 'Um momento difícil',
         texto: `Também vivemos dias difíceis. Levei o Slinky ao veterinário com você e, pouco depois, tivemos que nos despedir dele. Fiquei do seu lado o tempo todo, e foi aí que também conheci sua família de verdade: busquei seu pai no trabalho, conversei com sua mãe, conheci seu irmão. Mesmo num momento triste, me senti acolhido por todos vocês.`,
         foto: 'imagem_timeline_5'
@@ -295,6 +299,16 @@ const TIMELINE_MARCOS = [
         data: '14 de junho',
         texto: `Nossa data. Estávamos no carro depois de sair da Brooks quando eu disse, pela primeira vez, "eu te amo", e você respondeu do mesmo jeito. Foi o dia em que aquilo que a gente já sentia se tornou oficial. Foi por essa época que "Um Dia Te Levo Comigo" virou a nossa música.`,
         foto: 'imagem_timeline_6'
+    },
+    {
+        data: '21 de junho',
+        texto: `Fomos parar numa estrada de terra e o carro atolou de vez. Eu me sujei inteiro de barro, perdi o triângulo tentando tirar o carro do buraco, e mesmo assim rimos do começo ao fim. Prova de que qualquer perrengue com você vira boa lembrança.`,
+        foto: 'imagem_timeline_4'
+    },
+    {
+        data: '12 de julho',
+        texto: `Fomos pra Nuporanga depois de comer um lanche, só de passagem pra ir na feira. Paramos na sua casa pra você pegar uma blusa de frio, e a ideia era só isso, entrar e sair. Você nem quis usar o banheiro de lá, eu ofereci pra irmos até a igreja e você também não quis. No fim das contas acabei conhecendo seu tio e sua tia, sem estar preparado pra isso. Foi difícil, confesso, mas deu tudo certo, e olha que dia bom acabou virando.`,
+        foto: 'imagem_timeline_8'
     },
     {
         data: '20 de julho',
@@ -317,39 +331,39 @@ const TIMELINE_MARCOS = [
    ---------------------------------------------------------------------- */
 const PERGUNTAS_SUSPENSE = [
     {
-        texto: `Confessa uma coisa: quantas vezes por dia você pensa em girassol, sem eu nem perguntar?`,
-        sim: `Mais vezes do que eu admito`,
-        nao: `Perdi a conta há muito tempo`
+        texto: `Posso confessar uma coisa boba? Toda vez que vejo um girassol na rua, penso em você. Isso também acontece com você, nem que seja um pouquinho?`,
+        sim: `Direto, e nem percebo mais`,
+        nao: `Toda santa vez`
     },
     {
-        texto: `Se eu falar que hoje é dia de hambúrguer do Grill com picles, você larga tudo e vem correndo?`,
-        sim: `Em dois segundos`,
-        nao: `Nem preciso pensar`
+        texto: `Se eu te chamar agora, do nada, pra ir comer hambúrguer do Grill com picles, você já tá calçando o tênis ou ainda vai fingir que precisa pensar?`,
+        sim: `Já tô na porta`,
+        nao: `Nem finjo mais, você me conhece`
     },
     {
-        texto: `O Kovu jura que é neutro, mas a gente sabe muito bem que ele torce mais por você. Isso te incomoda?`,
-        sim: `De jeito nenhum, eu mereço`,
-        nao: `Ele só tem bom gosto`
+        texto: `O Kovu jura de pé junto que é neutro, mas todo mundo aqui sabe que o coração dele já escolheu um lado. Você aceita esse carinho todo sem culpa nenhuma?`,
+        sim: `Aceito, e mereço cada pedacinho`,
+        nao: `Ele só reconhece quem é gente boa`
     },
     {
-        texto: `Se eu aparecer contando que arrumei uma viagem pra um lugar que você nunca foi, você já começa a fazer a mala na cabeça?`,
-        sim: `Já tô fazendo a lista`,
-        nao: `Nem preciso pensar duas vezes`
+        texto: `Se eu chegar em casa e falar "arrumei passagem pra um lugar que você nunca foi", quanto tempo até a mala tá pronta?`,
+        sim: `A mala já tá quase pronta`,
+        nao: `Nem preciso de aviso, já vou pensando na roupa`
     },
     {
-        texto: `Você promete continuar sendo esse silêncio bonito, até decidir que eu mereço ouvir tudo?`,
-        sim: `Prometo, mas só com você`,
+        texto: `Você promete continuar sendo essa pessoa quieta até ganhar confiança, e uma tagarela sem fim depois que ganha? Porque eu não troco isso por nada.`,
+        sim: `Prometo, mas só com quem eu confio`,
         nao: `Isso nunca vai mudar`
     },
     {
-        texto: `Última: você topa continuar escolhendo a gente, todos os dias, mesmo nos dias difíceis?`,
-        sim: `Topo de olhos fechados`,
-        nao: `Sim, sempre`
+        texto: `Tem um "Sosseguei" tocando baixinho na minha cabeça desde que te conheci, sabe aquela sensação de achar que não precisa mais procurar nada? Você topa continuar escolhendo a gente desse jeito, nos dias fáceis e principalmente nos difíceis?`,
+        sim: `Topo, sossego é bom demais`,
+        nao: `Sempre vou escolher a gente`
     },
     {
-        texto: `Repete comigo, do nosso jeito: eu te amo muito, tal qual o Chaves ama sanduíche de presunto. É verdade ou é verdade?`,
-        sim: `É a mais pura verdade`,
-        nao: `Verdade, sempre foi`
+        texto: `Agora repete comigo, do nosso jeitinho: eu te amo, tal qual o Chaves ama sanduíche de presunto. Isso é fato ou é fato?`,
+        sim: `É fato, sempre foi`,
+        nao: `Fato, e sem discussão`
     }
 ];
 
@@ -406,30 +420,38 @@ const QUIZ_PERGUNTAS = [
 
 /* ----------------------------------------------------------------------
    PLAYLIST DO CASAL
+   ----------------------------------------------------------------------
+   Sugestões de Jorge & Mateus pra cada momento, caso queira usar (edite
+   título/artista/arquivo com a música real que escolher):
+     - carona pra faculdade → "De Tanto Te Querer" (o clima de quem já
+       estava gostando antes de admitir)
+     - dia do atoleiro → algo mais animado, tipo "Propaganda"
+     - dia do pedido → "Sosseguei" combina bem com a ideia de gente que
+       já não precisa procurar mais nada
    ---------------------------------------------------------------------- */
 const PLAYLIST_FAIXAS = [
     {
         titulo: 'Um Dia Te Levo Comigo',
-        artista: 'Nossa música',
-        motivo: 'Virou a nossa música por volta do dia 14/06, o dia do nosso "eu te amo" depois da Brooks.',
+        artista: 'Jorge & Mateus — nossa música',
+        motivo: 'Virou nossa música por volta do dia 14/06, o dia do nosso primeiro "eu te amo", ali no carro depois de sair da Brooks.',
         src: 'audio_nossa_musica'
     },
     {
         titulo: '[Edite: música da carona]',
         artista: '[Artista]',
-        motivo: 'Aquela que tocava nas caronas para a faculdade, quando tudo ainda estava começando.',
+        motivo: 'Aquela que tocava nas caronas pra faculdade, lá no comecinho, quando eu ainda estava juntando coragem.',
         src: 'audio_playlist_1'
     },
     {
         titulo: '[Edite: música do dia do atoleiro]',
         artista: '[Artista]',
-        motivo: 'Pra lembrar que até um carro atolado na lama vira boa lembrança do seu lado.',
+        motivo: 'Pra lembrar que até carro atolado na lama vira boa lembrança, quando é do seu lado.',
         src: 'audio_playlist_2'
     },
     {
         titulo: '[Edite: música do dia do pedido]',
         artista: '[Artista]',
-        motivo: 'Escolhida especialmente pra hoje.',
+        motivo: 'Escolhida especialmente pra hoje, pro dia que muda tudo.',
         src: 'audio_playlist_3'
     }
 ];
@@ -461,13 +483,15 @@ const OPCOES_REGRAS_CONTRATO = [
    ---------------------------------------------------------------------- */
 function textoVersiculoBase() {
     if (CARTA_USAR_TEXTO_TESTE) return TEXTO_CARTA_TESTE;
-    return `O universo é tão grande que a luz de algumas estrelas leva milhões de anos pra chegar até nós, e mesmo assim, quando olhamos pro céu à noite, temos a sorte de ver elas brilhando bem ali. É mais ou menos assim que eu sinto esse meu amor por você, {AMOR}: levou bilhões de anos de poeira virando estrela, estrela virando planeta, planeta virando esse pedacinho de mundo onde a gente por fim se encontrou, e mesmo assim valeu cada segundo de espera.
+    return `Eu queria saber escrever bonito do jeito que você merece, {AMOR}, mas a verdade é bem mais simples do que qualquer verso: desde o dia que te vi andando com a Vitória, antes mesmo de ter coragem de puxar assunto, alguma coisa em mim já sabia que ia ser você.
 
-Você é como um girassol, vive virada pro que te ilumina. E desde que te conheci, virei eu esse lugar pra onde você se vira todos os dias.
+Tem tanta música por aí que fala de amor de um jeito que parece exagero, até a gente viver e descobrir que não é exagero nenhum. Sei lá quantas vezes já ouvi "Pra Sempre Com Você" no rádio do carro sem prestar muita atenção, e hoje não consigo mais escutar sem pensar em você, sem pensar que é exatamente isso que eu quero: ficar. Sem enrolação, sem plano B, só ficar.
 
-Não sei dizer direito onde o tempo começa nem onde ele termina, mas sei que em qualquer ponto dele, em qualquer versão possível desse universo inteiro, eu escolheria de novo ficar do seu lado, {AMOR}. Nem distância, nem os anos que ainda vamos viver juntos, mudam isso.
+Você é como um girassol, e não é força de expressão nenhuma, é chão mesmo, é literal: onde bate mais luz, é pra lá que você se vira. E desde que te conheci, virei eu esse lugar pra onde você se vira todos os dias, e isso ainda me deixa sem jeito de tão bom.
 
-Pra selar, um verso que não peguei emprestado de nenhum poeta, porque nenhum poeta te conhece como eu conheço: você carrega o dia inteiro guardado nos olhos, e a noite inteira guardada no sorriso.`;
+Não sei explicar direito por que deu certo entre a gente, só sei que deu, e que em qualquer dia dessa vida, com qualquer versão de mim, eu ia escolher ficar do seu lado de novo, {AMOR}. Nem a distância que a gente já viveu, nem os dias ruins, nem o tempo que ainda vem por aí muda isso.
+
+Então guarda esse verso comigo, que não peguei emprestado de nenhum poeta nem de nenhuma música, porque ninguém te conhece do jeito que eu conheço: você carrega o dia inteiro guardado nos olhos, e a noite inteira guardada no sorriso.`;
 }
 
 /* ----------------------------------------------------------------------
@@ -491,15 +515,15 @@ const TEXTO_CARTA_TESTE = `[CARTA_TESTE] Este é um texto provisório só para t
    ---------------------------------------------------------------------- */
 const CAPSULA_DIAS_PARA_DESBLOQUEIO = 365;
 function textoCapsulaDoTempo() {
-    return `Se você está lendo isso, já faz um ano que eu te pedi em namoro.
+    return `Se você está lendo isso, já faz um ano inteiro que eu te pedi em namoro.
 
-Um ano é pouco tempo pro tanto que eu sinto, mas foi tempo suficiente pra eu ter certeza de uma coisa: não existe versão de mim que não escolheria você de novo, sabendo de tudo o que a gente ia viver. Lembro de cada detalhe daquele dia. Lembro do medo, da vontade de que desse tudo certo, e de como, no fim, nada mais importou além do seu sim.
+Um ano parece pouco pertinho do tanto que eu sinto, mas foi tempo suficiente pra eu ter certeza de uma coisa: não existe versão de mim que não escolheria você de novo, sabendo de tudo o que a gente ia viver, bom ou ruim. Lembro de cada detalhe daquele dia, do frio na barriga, do medo de dar errado, e de como, no fim, nada mais importou além do seu sim.
 
-Se hoje a gente discutiu por bobagem, se a rotina engoliu um pouco da leveza, ou se esse ano trouxe coisas que a gente nem imaginava, quero que você leia isso e lembre do começo. Do quanto eu quis isso. Do quanto ainda quero.
+Se hoje a gente brigou por bobagem, se a rotina engoliu um pouco da leveza, ou se esse ano trouxe coisa que a gente nem imaginava, quero que você leia isso e volte pro começo. Lembra do quanto eu quis isso. Do quanto eu ainda quero, todo santo dia.
 
-Amor não é o dia do pedido. É todos os dias comuns depois dele, os que ninguém filma e ninguém guarda em cápsula nenhuma. É acordar do seu lado achando normal, quando na verdade é a maior sorte que eu já tive.
+Amor de verdade não é o dia do pedido, com foto bonita e roupa nova. É todo dia comum depois dele, os que ninguém filma nem guarda em cápsula nenhuma. É acordar do seu lado achando normal, quando na real é a maior sorte que eu já tive na vida.
 
-E sim, continua tal qual o Chaves ama sanduíche de presunto. Isso nunca vai mudar.
+E sim, continua tal qual o Chaves ama sanduíche de presunto. Isso, com certeza, nunca vai mudar.
 
 Com tudo o que eu sou,`;
 }
@@ -582,14 +606,37 @@ const BICHOS_EM_MEMORIA = [
    ruim, não num dia bom. Edite à vontade.
    ---------------------------------------------------------------------- */
 function textoCartaDiscussao() {
-    return `Se você está lendo isso agora, provavelmente hoje não foi um dia fácil entre a gente. Só queria lembrar de uma coisa antes de qualquer outra: discutir não significa que a gente errou em se escolher, significa só que a gente é gente, com dia ruim, cansaço e orgulho às vezes maior do que deveria.
+    return `Se você tá lendo isso agora, é bem provável que hoje não foi um dia fácil entre a gente. Só queria lembrar de uma coisa antes de qualquer outra: brigar não quer dizer que a gente errou em se escolher, quer dizer só que a gente é gente, com dia ruim, cansaço e um orgulho que às vezes fala mais alto do que devia.
 
-Nada do que a gente discute hoje apaga o que a gente construiu até aqui. Continua valendo tudo: o Colina, a estrada de terra, o balanço em Sales de Oliveira, cada risada boba, cada silêncio que virou carinho.
+Ninguém é perfeito, nem eu, nem você, e tudo bem. É tipo aquela "Duas Metades" que a gente ouve no rádio às vezes: a graça nunca foi achar alguém sem defeito nenhum, foi achar alguém que vale a pena apesar deles, e você vale, e muito.
 
-Se puder, respira, volta e conversa comigo de novo. E se ainda não conseguir, tudo bem, eu espero. Só não esquece que eu escolhi você antes de qualquer briga, e vou continuar escolhendo depois dela.
+Nada do que a gente discute hoje apaga o que a gente construiu até aqui. Continua tudo valendo: o Colina, a estrada de terra, o balanço em Sales de Oliveira, cada risada boba, cada silêncio que virou carinho com o tempo.
 
-Com amor, mesmo nos dias difíceis,`;
+Se der, respira, volta e conversa comigo de novo. E se ainda não conseguir agora, tudo bem, eu espero. Só não esquece que eu escolhi você antes de qualquer briga, e vou continuar escolhendo bem depois dela.
+
+Com amor, até nos dias difíceis,`;
 }
+
+/* ----------------------------------------------------------------------
+   LEMBRANÇAS PRA IMPRIMIR — cartão postal do mapa, constelação (clara e
+   escura) e carta física com QR code. Tudo gerado NA HORA a partir dos
+   dados que já existem (MAPA_LUGARES, TIMELINE_MARCOS, a carta final) —
+   ou seja, sempre que você adicionar um lugar novo no mapa ou um marco
+   novo na timeline, o próximo download já sai atualizado, sem precisar
+   editar nada além desses arrays.
+   ---------------------------------------------------------------------- */
+
+// Link do site pra virar QR code na carta física. Deixe vazio ('') até
+// saber onde o site vai ficar hospedado — enquanto estiver vazio, a carta
+// física não mostra QR nenhum (só o texto), sem quebrar nada.
+const URL_DO_SITE = '';
+
+// Tamanho de impressão do cartão postal e da constelação: formato "foto
+// revelada" (10x15cm), o padrão de qualquer revelação de foto em loja ou
+// farmácia — barato e fácil de imprimir. Em pixels, numa resolução boa
+// o bastante pra imprimir sem serrilhado (~300 DPI).
+const IMPRIMIVEL_LARGURA_PX = 1181; // 10cm a 300dpi
+const IMPRIMIVEL_ALTURA_PX = 1772;  // 15cm a 300dpi
 
 /* ----------------------------------------------------------------------
    CÂMERA LENTA DE UM MOMENTO — um vídeo curto, tocado bem devagar e em
@@ -616,13 +663,13 @@ const MOMENTO_LENTO_FRASES = [
 const ANIVERSARIO_DIA = 8;
 const ANIVERSARIO_MES = 8; // agosto
 function textoAniversario() {
-    return `Hoje é um dia diferente de todos os outros: é o seu dia.
+    return `Hoje é diferente de todos os outros dias: hoje é o seu dia.
 
-Espero que 8 de agosto sempre te encontre cercada de girassol, do jeito que você merece, rodeada por quem te ama de verdade, e com a vida te tratando tão bem quanto você trata todo mundo ao seu redor.
+Espero que 8 de agosto sempre te encontre cercada de girassol, do jeitinho que você merece, rodeada de quem te ama de verdade, com a vida te tratando tão bem quanto você trata todo mundo ao redor.
 
-Que esse novo ano te traga viagem nova, foto nova, bicho novo pra cuidar, e principalmente, muita saúde e paz. E que em algum lugar desse ano que começa hoje, a gente colecione mais um monte de lugares novos juntos.
+Que esse ano novo te traga viagem, foto nova pra guardar, bicho novo pra cuidar, e principalmente muita saúde e paz. E que em algum canto desse ano que começa hoje, a gente colecione mais um punhado de lugares novos, só nosso.
 
-Feliz aniversário, meu amor. Hoje o mundo gira um pouco mais em volta de você, e eu não podia estar mais feliz de fazer parte disso.`;
+Feliz aniversário, meu amor. Hoje o mundo gira um pouquinho mais em volta de você, e eu não podia estar mais feliz de fazer parte disso.`;
 }
 
 /* ----------------------------------------------------------------------
@@ -639,7 +686,79 @@ const ADJETIVOS_PARA_ELA = [
     { adjetivo: 'Especial', motivo: 'porque nunca conheci alguém que trata tão bem quem ama e tão bem os bichos que cruzam o seu caminho.' },
     { adjetivo: 'Magnífica', motivo: 'sim, magnífica mesmo. Existem pessoas boas, e existe você, que é diferente de todas elas.' },
     { adjetivo: 'Corajosa', motivo: 'porque abriu esse seu silêncio todo pra mim, mesmo sabendo que isso não é fácil pra você.' },
-    { adjetivo: 'Amada', motivo: 'mais do que você imagina, mais do que eu consigo colocar em palavras, todos os dias, sem exceção.' }
+    { adjetivo: 'Amada', motivo: 'mais do que você imagina, mais do que eu consigo colocar em palavras, todos os dias, sem exceção.' },
+
+    // A partir daqui, uma lista bem grande de adjetivos, só a palavra, sem
+    // motivo embaixo — pra quando bater vontade de ver muitas palavras
+    // bonitas sobre você, sem precisar de uma explicação pra cada uma.
+    { adjetivo: 'Incrível' },
+    { adjetivo: 'Doce' },
+    { adjetivo: 'Carinhosa' },
+    { adjetivo: 'Gentil' },
+    { adjetivo: 'Generosa' },
+    { adjetivo: 'Leal' },
+    { adjetivo: 'Sincera' },
+    { adjetivo: 'Autêntica' },
+    { adjetivo: 'Alegre' },
+    { adjetivo: 'Divertida' },
+    { adjetivo: 'Espontânea' },
+    { adjetivo: 'Cativante' },
+    { adjetivo: 'Encantadora' },
+    { adjetivo: 'Radiante' },
+    { adjetivo: 'Luminosa' },
+    { adjetivo: 'Serena' },
+    { adjetivo: 'Calma' },
+    { adjetivo: 'Paciente' },
+    { adjetivo: 'Dedicada' },
+    { adjetivo: 'Batalhadora' },
+    { adjetivo: 'Determinada' },
+    { adjetivo: 'Persistente' },
+    { adjetivo: 'Guerreira' },
+    { adjetivo: 'Resiliente' },
+    { adjetivo: 'Confiante' },
+    { adjetivo: 'Segura' },
+    { adjetivo: 'Sensível' },
+    { adjetivo: 'Empática' },
+    { adjetivo: 'Compreensiva' },
+    { adjetivo: 'Acolhedora' },
+    { adjetivo: 'Protetora' },
+    { adjetivo: 'Cuidadosa' },
+    { adjetivo: 'Atenciosa' },
+    { adjetivo: 'Companheira' },
+    { adjetivo: 'Parceira' },
+    { adjetivo: 'Presente' },
+    { adjetivo: 'Sonhadora' },
+    { adjetivo: 'Curiosa' },
+    { adjetivo: 'Aventureira' },
+    { adjetivo: 'Livre' },
+    { adjetivo: 'Leve' },
+    { adjetivo: 'Delicada' },
+    { adjetivo: 'Meiga' },
+    { adjetivo: 'Fofa' },
+    { adjetivo: 'Charmosa' },
+    { adjetivo: 'Elegante' },
+    { adjetivo: 'Única' },
+    { adjetivo: 'Rara' },
+    { adjetivo: 'Preciosa' },
+    { adjetivo: 'Valiosa' },
+    { adjetivo: 'Verdadeira' },
+    { adjetivo: 'Justa' },
+    { adjetivo: 'Humilde' },
+    { adjetivo: 'Grata' },
+    { adjetivo: 'Otimista' },
+    { adjetivo: 'Positiva' },
+    { adjetivo: 'Animada' },
+    { adjetivo: 'Espirituosa' },
+    { adjetivo: 'Esperta' },
+    { adjetivo: 'Sábia' },
+    { adjetivo: 'Observadora' },
+    { adjetivo: 'Criativa' },
+    { adjetivo: 'Talentosa' },
+    { adjetivo: 'Capaz' },
+    { adjetivo: 'Admirável' },
+    { adjetivo: 'Inspiradora' },
+    { adjetivo: 'Marcante' },
+    { adjetivo: 'Inesquecível' }
 ];
 
 /* ----------------------------------------------------------------------
@@ -698,12 +817,12 @@ async function resolverVideoPorBase(arquivoBase) {
      (usado no card de próximo destino, mas pode usar em qualquer outro)
    ---------------------------------------------------------------------- */
 const MAPA_LUGARES = [
-    { nome: 'Colina', cidade: 'Orlândia', texto: 'Onde tudo começou de verdade, no nosso primeiro encontro.', icon: 'bi-cup-hot-fill' },
-    { nome: 'Uma estrada de terra', cidade: 'Entre um lugar e outro', texto: 'Onde o carro atolou e a gente riu horas, mesmo enlameado até o pescoço.', icon: 'bi-signpost-2-fill' },
-    { nome: 'Santa Rosa de Viterbo', cidade: 'Casa dos meus avós', texto: 'Onde te apresentei pra minha família.', icon: 'bi-house-heart-fill' },
-    { nome: 'Parque Curupira', cidade: 'Ribeirão Preto', texto: 'Um passeio tranquilo, só a gente, sem pressa nenhuma.', icon: 'bi-tree-fill' },
-    { nome: 'Um balanço', cidade: 'Sales de Oliveira', texto: 'Onde a gente sentou no fim daquele dia e o tempo pareceu parar um pouco.', icon: 'bi-flower1' },
-    { nome: 'Próximo destino', cidade: 'A definir, com você', texto: 'Ainda temos o mundo inteiro pra conhecer juntos.', icon: 'bi-airplane-fill', futuro: true }
+    { nome: 'Colina', cidade: 'Orlândia', texto: 'Onde tudo começou de verdade, no nosso primeiro encontro.', icon: 'bi-cup-hot-fill', foto: 'mapa_colina' },
+    { nome: 'Santa Rosa de Viterbo', cidade: 'Casa dos meus avós', texto: 'Onde te apresentei pra minha família.', icon: 'bi-house-heart-fill', foto: 'mapa_santa_rosa' },
+    { nome: 'Parque Curupira', cidade: 'Ribeirão Preto', texto: 'Um passeio tranquilo, só a gente, sem pressa nenhuma.', icon: 'bi-tree-fill', foto: 'mapa_curupira' },
+    { nome: 'Um balanço', cidade: 'Sales de Oliveira', texto: 'Onde a gente sentou no fim daquele dia e o tempo pareceu parar um pouco.', icon: 'bi-flower1', foto: 'mapa_balanco' },
+    { nome: 'Nuporanga', cidade: 'Onde acabei conhecendo seu tio e sua tia', texto: 'Um dia que era só de passagem e virou mais um lugar nosso.', icon: 'bi-signpost-2-fill', foto: 'mapa_nuporanga' },
+    { nome: 'Próximo destino', cidade: 'A definir, com você', texto: 'Ainda temos o mundo inteiro pra conhecer juntos.', icon: 'bi-airplane-fill', futuro: true, foto: 'mapa_proximo' }
 ];
 
 /* ----------------------------------------------------------------------
@@ -715,6 +834,16 @@ const MAPA_LUGARES = [
    em js/romance.js e o fluxo em js/main.js).
    ---------------------------------------------------------------------- */
 const SENHA_AREA_MEMORIAS = '1406';
+
+/* ----------------------------------------------------------------------
+   SENHA DA CARTA "SE UM DIA A GENTE DISCUTIR, LEIA ISSO"
+   ----------------------------------------------------------------------
+   Antes de chegar na pergunta "Brigamos?" e na carta em si, pede essa
+   senha, com uma dica que é só um lembrete carinhoso, não a resposta
+   escancarada (ver iniciarCartaDiscussao() em js/romance.js).
+   ---------------------------------------------------------------------- */
+const SENHA_CARTA_DISCUSSAO = 'teamo';
+const DICA_SENHA_CARTA_DISCUSSAO = 'A dica são duas palavras que a gente nunca pode esquecer de dizer um pro outro.';
 
 /* ----------------------------------------------------------------------
    SENHA DO BOTÃO "RESETAR SITE"
@@ -736,9 +865,10 @@ const SENHA_RESET_SITE = '13046700';
    ---------------------------------------------------------------------- */
 const TEXTOS = {
     heroTituloRomance: 'Nossa Trajetória',
-    heroSubRomance: `tudo que você acabou de passar era só uma desculpa boba pra chegar até aqui. Não tinha aliança nenhuma no correio, a única coisa que eu queria entregar era isso: tudo o que a gente construiu até hoje, contado do meu jeito.`,
-    encerramentoRomance: `obrigado por topar essa vida comigo, dia após dia. Isso aqui é só um jeito diferente de dizer o que eu já sinto todos os dias: eu escolho você.`,
+    heroSubRomance: `tudo que você acabou de passar foi só uma desculpa boba pra te trazer até aqui. Não tinha aliança nenhuma chegando pelo correio, a única coisa que eu realmente queria entregar era isso: tudo que a gente construiu até hoje, contado do meu jeito, sem enfeite.`,
+    encerramentoRomance: `obrigado por topar essa vida comigo, dia após dia, tipo "Amo Noite e Dia", sem exagero nenhum. Isso aqui é só um jeito diferente de dizer o que eu já sinto todos os dias: eu escolho você.`,
     digitacaoSuspense: `Cada uma dessas fotos guarda um pedaço da gente. E o pedido que você acabou de "fazer" também guarda um segredo...`,
-    assinaturaCartaFinal: `Assim eu quero te amar, ${NOME_DELA}.`,
-    polaroidFrasePadrao: `O dia em que tudo começou, ${NOME_DELA}.`
+    assinaturaCartaFinal: `Assim eu quero te amar, ${NOME_DELA}, pra sempre com você.`,
+    polaroidFrasePadrao: `O dia em que tudo começou, ${NOME_DELA}.`,
+    brigamosMensagemFofa: `Que bom que não. Guarda essa carta guardadinha aí, pro dia em que a gente realmente precisar dela. Até lá, só sabe de uma coisa: eu te amo.`
 };

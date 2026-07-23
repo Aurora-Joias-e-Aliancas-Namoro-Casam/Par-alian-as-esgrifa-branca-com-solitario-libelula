@@ -51,7 +51,7 @@ A lista completa e atualizável está em `js/config.js`, no objeto
 | casal-1.jpg / casal-2.jpg / casal-3.jpg | Galeria de polaroids durante o suspense |
 | foto-final.jpg | Foto grande após "identidade confirmada" |
 | flashback-1.jpg … flashback-5.jpg | Flashback cinematográfico antes de "Nossa História" |
-| timeline-1.jpg … timeline-6.jpg, timeline-hoje.jpg | Linha do tempo |
+| timeline-1.jpg … timeline-8.jpg, timeline-hoje.jpg | Linha do tempo |
 | momento-1.jpg … momento-4.jpg | "Nossos momentos" (mesa de fotos) |
 
 ### Fotos da "loja"
