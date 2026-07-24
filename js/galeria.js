@@ -72,10 +72,24 @@ async function montarGaleria() {
     const masonry = document.getElementById('galeriaMasonry');
     if (!masonry) return;
 
+    const barraWrap = document.getElementById('galeriaCarregando');
+    const barra = document.getElementById('galeriaCarregandoBarra');
+    const texto = document.getElementById('galeriaCarregandoTexto');
+    const atualizarBarra = (fracao, mensagem) => {
+        if (!barra) return;
+        barra.style.width = `${Math.max(0, Math.min(100, fracao * 100))}%`;
+        if (texto && mensagem) texto.textContent = mensagem;
+    };
+
     const TAMANHO_LOTE = 8; // testa vários números em paralelo por vez — bem mais rápido que um por um conforme a galeria cresce
     let proximoNumero = 1;
     let lacunaAtual = 0;
+    const itensEncontrados = [];
 
+    // Fase 1: descobrir quais números de foto/vídeo existem de verdade no
+    // servidor. A barra aqui acompanha o quanto já foi varrido do total
+    // possível (GALERIA_MAX_NUMERO), só pra dar uma ideia de progresso —
+    // não sabemos quantos itens existem de fato até terminar de procurar.
     while (proximoNumero <= GALERIA_MAX_NUMERO && lacunaAtual < GALERIA_LACUNA_PARA_PARAR) {
         const numerosDoLote = [];
         for (let i = 0; i < TAMANHO_LOTE; i++) numerosDoLote.push(proximoNumero + i);
@@ -85,7 +99,7 @@ async function montarGaleria() {
         for (let i = 0; i < resultados.length; i++) {
             if (resultados[i]) {
                 lacunaAtual = 0;
-                adicionarItemNaGrade(numerosDoLote[i], resultados[i].caminho, resultados[i].tipo, masonry);
+                itensEncontrados.push({ numero: numerosDoLote[i], ...resultados[i] });
             } else {
                 lacunaAtual++;
                 if (lacunaAtual >= GALERIA_LACUNA_PARA_PARAR) break; // já sabe que vai parar — não precisa olhar o resto do lote
@@ -93,6 +107,30 @@ async function montarGaleria() {
         }
 
         proximoNumero += TAMANHO_LOTE;
+        atualizarBarra((proximoNumero / GALERIA_MAX_NUMERO) * 0.4, 'Procurando fotos...');
+    }
+
+    // Fase 2: os itens já foram encontrados, agora é acompanhar o
+    // carregamento de verdade (o navegador ainda precisa baixar cada
+    // imagem/vídeo). A barra passa a refletir quantas mídias já
+    // terminaram de carregar, não só quantas foram descobertas.
+    const totalParaCarregar = itensEncontrados.length;
+    let carregados = 0;
+    const contarCarregado = () => {
+        carregados++;
+        atualizarBarra(0.4 + (carregados / Math.max(totalParaCarregar, 1)) * 0.6, `Carregando fotos: ${carregados}/${totalParaCarregar}`);
+        if (carregados >= totalParaCarregar && barraWrap) {
+            setTimeout(() => barraWrap.classList.add('d-none'), 400);
+        }
+    };
+
+    if (totalParaCarregar === 0) {
+        if (barraWrap) barraWrap.classList.add('d-none');
+    } else {
+        atualizarBarra(0.4, `Carregando fotos: 0/${totalParaCarregar}`);
+        itensEncontrados.forEach(item => {
+            adicionarItemNaGrade(item.numero, item.caminho, item.tipo, masonry, contarCarregado);
+        });
     }
 
     montarItensYoutube(masonry);
@@ -100,7 +138,7 @@ async function montarGaleria() {
     setTimeout(verificarSeGaleriaFicouVazia, 1200);
 }
 
-function adicionarItemNaGrade(numero, src, tipo, masonry) {
+function adicionarItemNaGrade(numero, src, tipo, masonry, aoCarregar) {
     const legenda = (typeof GALERIA_LEGENDAS === 'object' && GALERIA_LEGENDAS[numero]) ? GALERIA_LEGENDAS[numero] : '';
 
     const item = document.createElement('figure');
@@ -128,12 +166,13 @@ function adicionarItemNaGrade(numero, src, tipo, masonry) {
             clearTimeout(timeoutRevelacao);
             __galeriaFotosCarregadas++;
             observarRevelacao(item);
+            if (aoCarregar) aoCarregar();
         };
         const timeoutRevelacao = setTimeout(revelarUmaVez, 2500);
 
         video.onloadedmetadata = revelarUmaVez;
         video.onloadeddata = revelarUmaVez; // fallback extra — dispara em mais casos que onloadedmetadata
-        video.onerror = () => { clearTimeout(timeoutRevelacao); item.remove(); verificarSeGaleriaFicouVazia(); };
+        video.onerror = () => { clearTimeout(timeoutRevelacao); item.remove(); verificarSeGaleriaFicouVazia(); if (aoCarregar) aoCarregar(); };
 
         const iconePlay = document.createElement('div');
         iconePlay.className = 'galeria-video-play';
@@ -143,11 +182,10 @@ function adicionarItemNaGrade(numero, src, tipo, masonry) {
         item.appendChild(iconePlay);
     } else {
         const img = document.createElement('img');
-        img.loading = 'lazy';
         img.alt = legenda || `Lembrança ${numero}`;
         img.src = src;
-        img.onload = () => { __galeriaFotosCarregadas++; observarRevelacao(item); };
-        img.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); };
+        img.onload = () => { __galeriaFotosCarregadas++; observarRevelacao(item); if (aoCarregar) aoCarregar(); };
+        img.onerror = () => { item.remove(); verificarSeGaleriaFicouVazia(); if (aoCarregar) aoCarregar(); };
 
         item.appendChild(img);
     }

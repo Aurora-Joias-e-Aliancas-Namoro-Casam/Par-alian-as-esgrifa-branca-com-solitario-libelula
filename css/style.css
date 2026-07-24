@@ -160,7 +160,7 @@ img { max-width: 100%; }
 
 .polaroid { background: white; padding: 16px 16px 44px 16px; box-shadow: 0 18px 40px rgba(0,0,0,0.5); border-radius: 6px; max-width: 95%; width: 320px; opacity: 0; transition: opacity 1.15s cubic-bezier(0.22, 1, 0.36, 1); }
 .polaroid.foto-visivel { opacity: 1; }
-.polaroid img, .polaroid .imagem-placeholder-vazio { width: 100%; height: auto; aspect-ratio: 1/1; border-radius: 3px; display: block; }
+.polaroid img, .polaroid .imagem-placeholder-vazio { width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover; border-radius: 3px; display: block; }
 .polaroid-caption { font-family: 'Courier New', Courier, monospace; text-align: center; margin-top: 14px; font-weight: bold; color: #333; font-size: 1.05rem; }
 .polaroid-stack { position: relative; width: 100%; max-width: 96vw; height: 480px; margin: 0 auto; }
 @media (min-width: 400px) { .polaroid-stack { max-width: 440px; height: 520px; } }
@@ -198,7 +198,7 @@ img { max-width: 100%; }
 .rotate-hint .phone-icon { font-size: 3.2rem; display: inline-block; animation: rotatePhone 1.8s ease-in-out infinite; }
 @keyframes rotatePhone { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
 #conteudoGravacao .signature-pad-wrap { max-width: 520px !important; }
-#videoPreview, #videoPlayback { aspect-ratio: 16 / 9 !important; }
+#videoPreview, #videoPlayback { aspect-ratio: 16 / 9 !important; object-fit: cover; }
 #videoPreview { transform: scaleX(-1); } /* espelha só a prévia ao vivo (conforto de enquadrar) — o arquivo gravado já sai espelhado corretamente por conta própria, ver criarStreamEspelhado em js/utils.js */
 .rec-dot { width: 10px; height: 10px; background: #ff3b3b; border-radius: 50%; display: inline-block; margin-right: 6px; animation: recBlink 1s step-start infinite; }
 @keyframes recBlink { 50% { opacity: 0; } }
@@ -243,7 +243,16 @@ img { max-width: 100%; }
     padding: 20px 16px 16px; z-index: 3;
     transform: translate(-50%, 6%) scale(0.82); opacity: 0;
     transition: transform 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.55s, opacity 0.9s ease 0.55s, z-index 0s 0.55s;
+    display: flex; flex-direction: column;
 }
+/* Área com o texto da carta em si — é ELA que rola, se o texto for
+   grande demais pra caber. O rodapé (luz de vela + Continuar) fica FORA
+   dessa rolagem, sempre visível e sempre depois do texto, nunca por
+   cima dele. */
+.letter-paper-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.letter-paper-rodape { flex: 0 0 auto; text-align: center; padding-top: 10px; margin-top: 6px; border-top: 1px solid rgba(43,37,35,0.12); }
+.btn-modo-vela { margin-top: 10px; background: none; border: 1px solid rgba(43,37,35,0.3); color: rgba(43,37,35,0.75); font-size: 0.75rem; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+.btn-modo-vela:active { background: rgba(43,37,35,0.08); }
 /* CORREÇÃO (carta saindo da tela / "puxar pra cima recarrega a página"): as
    versões anteriores tentavam posicionar a carta calculando um deslocamento
    a partir de onde o envelope está NA PÁGINA — mas isso depende de quanto a
@@ -254,15 +263,16 @@ img { max-width: 100%; }
    gesto vira "puxar pra atualizar" no Safari/Chrome do iPhone, recarregando
    a página sem querer.
    Agora, quando aberta, a carta gruda direto no CENTRO DA TELA (position:
-   fixed), não mais relativa ao envelope — sempre alcançável, e com rolagem
-   própria DENTRO da carta (max-height + overflow-y) pra qualquer tamanho de
-   texto, sem nunca depender de rolar a página por trás dela. */
+   fixed), não mais relativa ao envelope — sempre alcançável. Só o TEXTO
+   (".letter-paper-scroll") rola por dentro; o cartão inteiro (com a
+   moldura rosé e o botão "Continuar" no rodapé) tem altura definida pelo
+   conteúdo, então a moldura sempre chega até o fim de verdade, e o botão
+   "Continuar" sempre aparece deitado embaixo do texto, nunca por cima. */
 .envelope.aberto .letter-paper {
     position: fixed;
     top: 50%; left: 50%; bottom: auto;
     width: min(86vw, 400px);
     max-height: 78vh;
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
     transform: translate(-50%, -50%) scale(1);
     opacity: 1; z-index: 9000;
 }
@@ -271,8 +281,6 @@ img { max-width: 100%; }
 .letter-eyebrow.visivel { opacity: 1; }
 
 /* Botão discreto pra entrar no modo vela, some até a carta estar aberta (ver JS) */
-.btn-modo-vela { margin-top: 14px; background: none; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.75); font-size: 0.75rem; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
-.btn-modo-vela:active { background: rgba(255,255,255,0.08); }
 
 /* ----------------------------------------------------------------------
    MODO "LUZ DE VELA" — escurece tudo ao redor e ilumina só o papel, como
@@ -280,7 +288,7 @@ img { max-width: 100%; }
    "chama" são só glows radiais que tremem em CSS puro (sem imagem, sem
    canvas) — leve o bastante pra rodar bem em qualquer celular.
    ---------------------------------------------------------------------- */
-.modo-vela-overlay { position: fixed; inset: 0; z-index: 12500; background: #050303; display: flex; align-items: center; justify-content: center; padding: 28px 22px; overflow-y: auto; overscroll-behavior: contain; animation: modoVelaAcender 1.1s ease forwards; }
+.modo-vela-overlay { position: fixed; inset: 0; z-index: 12500; background: #050303; display: flex; align-items: flex-start; justify-content: center; padding: clamp(28px, 8vh, 60px) clamp(18px, 6vw, 40px); overflow-y: auto; overscroll-behavior: contain; animation: modoVelaAcender 1.1s ease forwards; }
 @keyframes modoVelaAcender { from { opacity: 0; } to { opacity: 1; } }
 
 .modo-vela-vinheta { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 38%, rgba(255,183,110,0.14) 0%, rgba(5,3,3,0) 42%, #050303 78%); pointer-events: none; }
@@ -476,10 +484,25 @@ img { max-width: 100%; }
 .carta-discussao-pergunta-texto { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.6rem; text-align: center; color: #2b2523; margin: 6px 0 0; }
 .carta-discussao-mensagem-fofa { font-size: 0.9rem; text-align: center; color: #4a3b38; line-height: 1.6; margin: 16px 0 0; font-style: italic; }
 
+.mais-opcoes-papel { max-width: 460px; }
+.carta-discussao-papel .btn-outline-dark { color: #2b2523; border-color: rgba(43,37,35,0.35); }
+.carta-discussao-papel .btn-outline-dark:hover, .carta-discussao-papel .btn-outline-dark:active { background: rgba(43,37,35,0.08); color: #2b2523; }
+
+/* Dica visual discreta: um girassolzinho perto de qualquer elemento que
+   seja um easter egg clicável (5 toques), pra ela saber onde vale a pena
+   tentar, sem entregar o segredo em si. */
+.easter-egg-gatilho { cursor: pointer; }
+.easter-egg-dica { font-size: 0.7rem; opacity: 0.55; margin-left: 4px; display: inline-block; }
+.easter-egg-dica-canto { position: absolute; top: 6px; right: 8px; margin-left: 0; z-index: 2; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
+
+.lua-easter-egg-morse { font-family: 'Courier New', Courier, monospace; font-size: 1.1rem; letter-spacing: 2px; color: #2b2523; word-break: break-all; line-height: 1.8; margin: 10px 0; }
+.lua-easter-egg-traducao { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.15rem; color: #2b2523; margin-top: 14px; }
+
 /* Card de adjetivo — transição suave entre uma carta e outra, clicável
    (além do botão "mais um", tocar direto no card também passa a carta) */
-.adjetivo-card { background: linear-gradient(160deg, rgba(183,110,121,0.14), rgba(255,255,255,0.05)); border: 1px solid rgba(183,110,121,0.35); border-radius: 16px; padding: 28px 20px; text-align: center; cursor: pointer; opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; min-height: 128px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.adjetivo-card { background: linear-gradient(160deg, rgba(183,110,121,0.14), rgba(255,255,255,0.05)); border: 1px solid rgba(183,110,121,0.35); border-radius: 16px; padding: 28px 20px; text-align: center; cursor: pointer; opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .adjetivo-card-visivel { opacity: 1; transform: translateY(0); }
+.adjetivo-eyebrow { font-family: 'Jost', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(240,217,221,0.55); margin: 0 0 6px; }
 .adjetivo-palavra { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.7rem; color: var(--rosegold); margin: 0 0 8px; }
 .adjetivo-motivo { font-size: 0.85rem; color: #f0d9dd; line-height: 1.55; margin: 0; max-width: 320px; }
 
@@ -507,12 +530,42 @@ img { max-width: 100%; }
 .ceu-nebulosa { position: absolute; border-radius: 50%; filter: blur(30px); pointer-events: none; opacity: 0.55; }
 .ceu-nebulosa-1 { top: -10%; left: -15%; width: 60%; height: 40%; background: radial-gradient(circle, rgba(183,110,121,0.35) 0%, rgba(183,110,121,0) 70%); }
 .ceu-nebulosa-2 { bottom: 5%; right: -18%; width: 55%; height: 45%; background: radial-gradient(circle, rgba(120,90,160,0.28) 0%, rgba(120,90,160,0) 70%); }
-.ceu-lua { position: absolute; top: 22px; right: 28px; width: 34px; height: 34px; border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 35% 35%, #fff8e8 0%, #ffe9c2 55%, rgba(255,233,194,0.15) 100%); box-shadow: 0 0 26px 8px rgba(255,233,194,0.25); }
+.ceu-lua {
+    position: absolute; top: 22px; right: 28px; width: 38px; height: 38px; border-radius: 50%; padding: 0; border: none;
+    background: radial-gradient(circle at 35% 32%, #fff9ec 0%, #ffedc7 45%, #f2d9a3 75%, rgba(255,233,194,0.15) 100%);
+    box-shadow: 0 0 20px 6px rgba(255,233,194,0.3), 0 0 40px 14px rgba(255,233,194,0.12);
+    overflow: hidden; cursor: pointer; animation: ceuLuaRespirar 6s ease-in-out infinite;
+}
+.ceu-lua-cratera { position: absolute; border-radius: 50%; background: rgba(200,170,120,0.35); }
+.ceu-lua-cratera-1 { width: 9px; height: 9px; top: 20%; left: 25%; }
+.ceu-lua-cratera-2 { width: 6px; height: 6px; top: 55%; left: 55%; }
+.ceu-lua-cratera-3 { width: 5px; height: 5px; top: 32%; left: 62%; }
+@keyframes ceuLuaRespirar { 0%, 100% { box-shadow: 0 0 20px 6px rgba(255,233,194,0.3), 0 0 40px 14px rgba(255,233,194,0.12); } 50% { box-shadow: 0 0 26px 9px rgba(255,233,194,0.4), 0 0 48px 18px rgba(255,233,194,0.18); } }
+@media (prefers-reduced-motion: reduce) { .ceu-lua { animation: none; } }
 
 .ceu-estrelas-cadentes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.ceu-estrela-cadente { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; opacity: 0; box-shadow: 0 0 6px 2px rgba(255,255,255,0.6); animation: ceuCadentePassar 3s ease-in infinite; }
-.ceu-estrela-cadente::before { content: ''; position: absolute; top: 50%; right: 0; width: 70px; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0)); transform: translateY(-50%); }
-@keyframes ceuCadentePassar { 0% { opacity: 0; transform: translate(0, 0); } 4% { opacity: 1; } 22% { opacity: 0; transform: translate(-130px, 90px); } 100% { opacity: 0; transform: translate(-130px, 90px); } }
+.ceu-estrela-cadente {
+    position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; opacity: 0;
+    box-shadow: 0 0 6px 2px rgba(255,255,255,0.6);
+    animation-name: ceuCadentePassar; animation-timing-function: ease-in; animation-iteration-count: infinite;
+    animation-duration: 3s; /* sobrescrito por JS (animationDuration inline) com um valor aleatório por estrela */
+}
+/* O rastro nasce exatamente no ponto da estrela (left:0, transform-origin
+   na ponta esquerda) e gira pra apontar pra trás da direção real do
+   movimento — nunca fixo pra um lado só, sempre coerente com --cadente-
+   rastro-rot calculado em JS a partir de pra onde a estrela realmente vai. */
+.ceu-estrela-cadente::before {
+    content: ''; position: absolute; left: 0; top: 50%; width: 62px; height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(255,255,255,0));
+    transform-origin: 0 50%;
+    transform: rotate(var(--cadente-rastro-rot, 180deg));
+}
+@keyframes ceuCadentePassar {
+    0% { opacity: 0; transform: translate(0, 0); }
+    4% { opacity: 1; }
+    22% { opacity: 0; transform: translate(var(--cadente-dx, -260px), var(--cadente-dy, 90px)); }
+    100% { opacity: 0; transform: translate(var(--cadente-dx, -260px), var(--cadente-dy, 90px)); }
+}
 @media (prefers-reduced-motion: reduce) { .ceu-estrela-cadente { animation: none; opacity: 0; } }
 
 .ceu-constelacao { position: relative; padding: 40px 0 60px; }
@@ -766,6 +819,11 @@ html.galeria-html { background-color: #1c1014; }
 .galeria-girassol { width: 34px; height: 34px; margin: 0 auto 6px; opacity: 0.85; }
 
 .galeria-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 70px; }
+.galeria-carregando { max-width: 320px; margin: 0 auto 24px; text-align: center; transition: opacity 0.4s ease; }
+.galeria-carregando.d-none { display: none; }
+.galeria-carregando-barra { width: 100%; height: 4px; border-radius: 999px; background: rgba(183,110,121,0.18); overflow: hidden; }
+.galeria-carregando-barra-preenchida { height: 100%; width: 0%; background: var(--rosegold); border-radius: 999px; transition: width 0.3s ease; }
+.galeria-carregando-texto { font-size: 0.75rem; color: rgba(240,217,221,0.6); margin: 8px 0 0; letter-spacing: 0.5px; }
 .galeria-masonry { column-count: 1; column-gap: 16px; }
 @media (min-width: 480px) { .galeria-masonry { column-count: 2; column-gap: 16px; } }
 @media (min-width: 640px) { .galeria-masonry { column-count: 3; column-gap: 20px; } }

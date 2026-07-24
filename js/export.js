@@ -52,7 +52,7 @@ async function gerarCartaoPostal() {
         const canvas = await html2canvas(document.getElementById('cartaoPostalExportavel'), {
             backgroundColor: '#FBF7F0', width: IMPRIMIVEL_LARGURA_PX, height: IMPRIMIVEL_ALTURA_PX, scale: 1
         });
-        baixarCanvasComoPng(canvas, 'nosso-mapa.png');
+        await baixarCanvasComoPng(canvas, 'nosso-mapa.png');
         mostrarStatusExportar('Cartão postal exportado com sucesso. Pode imprimir no tamanho 10x15cm.', 'ok');
     } catch (err) {
         console.error('Falha ao exportar o cartão postal do mapa', err);
@@ -84,7 +84,7 @@ async function gerarConstelacao(modo) {
 
         const corFundo = modo === 'clara' ? '#FBF7F0' : '#0f0810';
         const canvas = await html2canvas(el, { backgroundColor: corFundo, width: IMPRIMIVEL_LARGURA_PX, height: IMPRIMIVEL_ALTURA_PX, scale: 1 });
-        baixarCanvasComoPng(canvas, `nosso-ceu-${modo}.png`);
+        await baixarCanvasComoPng(canvas, `nosso-ceu-${modo}.png`);
         mostrarStatusExportar('Constelação exportada com sucesso. Pode imprimir no tamanho 10x15cm.', 'ok');
     } catch (err) {
         console.error('Falha ao exportar a constelação', err);
@@ -143,7 +143,8 @@ async function gerarCartaFisica() {
         const alturaImagem = larguraDisponivel * (canvas.height / canvas.width);
         const yInicial = Math.max(margem, (alturaA4 - alturaImagem) / 2);
         pdf.addImage(imgData, 'PNG', margem, yInicial, larguraDisponivel, alturaImagem);
-        pdf.save('nossa-carta.pdf');
+        const blobPdf = pdf.output('blob'); // pdf.save() sozinho não faz nada no Safari do iPhone, mesmo bug do PNG
+        await salvarOuCompartilharArquivo(blobPdf, 'nossa-carta.pdf', 'application/pdf');
         mostrarStatusExportar('Carta física exportada com sucesso. Pode imprimir em papel A4.', 'ok');
     } catch (err) {
         console.error('Falha ao exportar a carta física', err);
@@ -247,7 +248,7 @@ async function gerarPolaroidComFoto(fotoDataUrl, fraseCustom) {
 
     try {
         const canvas = await html2canvas(document.getElementById('polaroidExportavel'), { backgroundColor: '#ffffff', scale: 2 });
-        baixarCanvasComoPng(canvas, 'nosso-momento-polaroid.png'); // download local: mantém PNG (qualidade máxima, é só um arquivo)
+        await baixarCanvasComoPng(canvas, 'nosso-momento-polaroid.png'); // download local: mantém PNG (qualidade máxima, é só um arquivo)
 
         // Versão salva no banco/nuvem: JPEG reduz bastante o tamanho (a foto já
         // não tem transparência, então JPEG não perde nada visualmente aqui).
@@ -280,23 +281,10 @@ async function exibirPolaroidSalva() {
 }
 
 /* ---------------- Helpers de exportação ---------------- */
-function baixarCanvasComoPng(canvas, nomeArquivo) {
-    const link = document.createElement('a');
-    link.download = nomeArquivo;
-    link.href = canvas.toDataURL('image/png');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-function salvarCanvasComoPdf(canvas, nomeArquivo) {
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const larguraMM = 130;
-    const alturaMM = larguraMM * (canvas.height / canvas.width);
-    const pdf = new jsPDF({ orientation: alturaMM > larguraMM ? 'portrait' : 'landscape', unit: 'mm', format: [larguraMM, alturaMM] });
-    pdf.addImage(imgData, 'PNG', 0, 0, larguraMM, alturaMM);
-    pdf.save(nomeArquivo);
+async function baixarCanvasComoPng(canvas, nomeArquivo) {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Não foi possível gerar a imagem a partir do canvas.');
+    return salvarOuCompartilharArquivo(blob, nomeArquivo, 'image/png');
 }
 
 /* ----------------------------------------------------------------------
@@ -451,14 +439,7 @@ async function baixarBackupCompleto() {
 
     try {
         const blob = await gerarBackupZipBlob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup-nossa-historia-${new Date().toISOString().slice(0, 10)}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        await salvarOuCompartilharArquivo(blob, `backup-nossa-historia-${new Date().toISOString().slice(0, 10)}.zip`, 'application/zip');
 
         // Registra quando o último backup manual foi feito — usado pelo
         // lembrete de backup (ver verificarLembreteBackup) pra não incomodar
@@ -637,6 +618,11 @@ async function restaurarBackupDeArquivo(arquivo) {
 }
 
 function iniciarModuloExport() {
+    const maisOpcoesOverlay = document.getElementById('maisOpcoesOverlay');
+    document.getElementById('btnMaisOpcoes').addEventListener('click', () => { maisOpcoesOverlay.classList.remove('d-none'); maisOpcoesOverlay.scrollTop = 0; });
+    document.getElementById('btnFecharMaisOpcoes').addEventListener('click', () => maisOpcoesOverlay.classList.add('d-none'));
+    maisOpcoesOverlay.addEventListener('click', (evt) => { if (evt.target === maisOpcoesOverlay) maisOpcoesOverlay.classList.add('d-none'); });
+
     document.getElementById('btnExportarCartaoPostal').addEventListener('click', gerarCartaoPostal);
     document.getElementById('btnExportarConstelacaoClara').addEventListener('click', () => gerarConstelacao('clara'));
     document.getElementById('btnExportarConstelacaoEscura').addEventListener('click', () => gerarConstelacao('escura'));

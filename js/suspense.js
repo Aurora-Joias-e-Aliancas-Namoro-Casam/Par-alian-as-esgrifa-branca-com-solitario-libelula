@@ -520,10 +520,6 @@ function iniciarCartaFinal() {
                 setTimeout(() => {
                     continuarWrap.classList.remove('d-none');
                     continuarWrap.classList.add('reveal-up');
-                    // Correção da Prioridade 1, item 5: garante que o botão
-                    // "Continuar" fique visível na tela assim que aparecer,
-                    // em vez de exigir rolagem manual até bem mais abaixo.
-                    setTimeout(() => continuarWrap.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
 
                     // Modo vela só aparece depois que a carta terminou de se
                     // revelar por completo — não faz sentido oferecer antes disso.
@@ -727,6 +723,6 @@ function iniciarSuspense() {
 
     document.getElementById('btnVerHistoria').addEventListener('click', async () => {
         await salvarConfiguracao('aurora_stage', 'final', true);
-        iniciarFlashback(() => { goToRomancePage(); });
+        iniciarFlashback(() => { goToRomancePage(true); });
     });
 }

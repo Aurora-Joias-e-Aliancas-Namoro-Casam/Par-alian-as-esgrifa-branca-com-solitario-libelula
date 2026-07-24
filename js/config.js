@@ -331,39 +331,29 @@ const TIMELINE_MARCOS = [
    ---------------------------------------------------------------------- */
 const PERGUNTAS_SUSPENSE = [
     {
-        texto: `Posso confessar uma coisa boba? Toda vez que vejo um girassol na rua, penso em você. Isso também acontece com você, nem que seja um pouquinho?`,
-        sim: `Direto, e nem percebo mais`,
-        nao: `Toda santa vez`
+        texto: `Notamos que esse modelo de aliança tem um valor bem alto. Antes de continuarmos, você confirma que tem certeza da pessoa que vai usá-la?`,
+        sim: `Confirmo, tenho toda certeza`,
+        nao: `Deixa eu pensar melhor`
     },
     {
-        texto: `Se eu te chamar agora, do nada, pra ir comer hambúrguer do Grill com picles, você já tá calçando o tênis ou ainda vai fingir que precisa pensar?`,
-        sim: `Já tô na porta`,
-        nao: `Nem finjo mais, você me conhece`
+        texto: `Nosso sistema também perguntou: você tem noção de quando esse pedido vai ser entregue? A pessoa que vai receber deve estar bem ansiosa.`,
+        sim: `Tenho, e a ansiedade é mútua`,
+        nao: `Prefiro ser surpreendida`
     },
     {
-        texto: `O Kovu jura de pé junto que é neutro, mas todo mundo aqui sabe que o coração dele já escolheu um lado. Você aceita esse carinho todo sem culpa nenhuma?`,
-        sim: `Aceito, e mereço cada pedacinho`,
-        nao: `Ele só reconhece quem é gente boa`
+        texto: `Confirmando o endereço de entrega: ainda é ali perto daquele lugar do hambúrguer com picles que você tanto gosta?`,
+        sim: `Isso mesmo, pode confirmar`,
+        nao: `Mudei de bairro, não de gosto`
     },
     {
-        texto: `Se eu chegar em casa e falar "arrumei passagem pra um lugar que você nunca foi", quanto tempo até a mala tá pronta?`,
-        sim: `A mala já tá quase pronta`,
-        nao: `Nem preciso de aviso, já vou pensando na roupa`
+        texto: `Última coisa do formulário: quer alguma frase gravada por dentro da aliança? Temos uma sugestão salva aqui, algo como "tal qual o Chaves ama sanduíche de presunto".`,
+        sim: `Perfeita, pode gravar assim`,
+        nao: `Prefiro deixar sem legenda`
     },
     {
-        texto: `Você promete continuar sendo essa pessoa quieta até ganhar confiança, e uma tagarela sem fim depois que ganha? Porque eu não troco isso por nada.`,
-        sim: `Prometo, mas só com quem eu confio`,
-        nao: `Isso nunca vai mudar`
-    },
-    {
-        texto: `Tem um "Sosseguei" tocando baixinho na minha cabeça desde que te conheci, sabe aquela sensação de achar que não precisa mais procurar nada? Você topa continuar escolhendo a gente desse jeito, nos dias fáceis e principalmente nos difíceis?`,
-        sim: `Topo, sossego é bom demais`,
-        nao: `Sempre vou escolher a gente`
-    },
-    {
-        texto: `Agora repete comigo, do nosso jeitinho: eu te amo, tal qual o Chaves ama sanduíche de presunto. Isso é fato ou é fato?`,
-        sim: `É fato, sempre foi`,
-        nao: `Fato, e sem discussão`
+        texto: `Última confirmação antes de fechar esse pedido: você tá certa dessa escolha, nos dias fáceis e principalmente nos difíceis?`,
+        sim: `Tô certa, sem dúvida nenhuma`,
+        nao: `Preciso pensar mais um pouco`
     }
 ];
 
@@ -421,6 +411,14 @@ const QUIZ_PERGUNTAS = [
 /* ----------------------------------------------------------------------
    PLAYLIST DO CASAL
    ----------------------------------------------------------------------
+   CORREÇÃO: "Um Dia Te Levo Comigo" (audio_nossa_musica / nossa-musica.mp3)
+   NÃO entra nessa lista numerada — ela é a trilha exclusiva que toca ao
+   abrir a carta final (ver abrirEnvelope() em js/suspense.js), papel
+   diferente da playlist. Colocá-la como "faixa 1" aqui empurrava o
+   arquivo que você realmente batizou de playlist_1 pra posição 2, dando
+   a impressão de que a faixa 1 estava tocando a música errada. Agora a
+   playlist tem só as 3 faixas de verdade, na ordem que você escolher.
+
    Sugestões de Jorge & Mateus pra cada momento, caso queira usar (edite
    título/artista/arquivo com a música real que escolher):
      - carona pra faculdade → "De Tanto Te Querer" (o clima de quem já
@@ -430,12 +428,6 @@ const QUIZ_PERGUNTAS = [
        já não precisa procurar mais nada
    ---------------------------------------------------------------------- */
 const PLAYLIST_FAIXAS = [
-    {
-        titulo: 'Um Dia Te Levo Comigo',
-        artista: 'Jorge & Mateus — nossa música',
-        motivo: 'Virou nossa música por volta do dia 14/06, o dia do nosso primeiro "eu te amo", ali no carro depois de sair da Brooks.',
-        src: 'audio_nossa_musica'
-    },
     {
         titulo: '[Edite: música da carona]',
         artista: '[Artista]',
@@ -473,13 +465,12 @@ const OPCOES_REGRAS_CONTRATO = [
 ];
 
 /* ----------------------------------------------------------------------
-   CARTA FINAL — tema do universo, escrita na sua voz
+   CARTA FINAL — escrita na sua voz
    ----------------------------------------------------------------------
    Cada ocorrência de {AMOR} vira, com uma transição suave, o nome dela.
-   O verso de fechamento é original (não é de nenhum poeta e não usa
-   trecho de nenhuma música com direito autoral): se você quiser usar a
-   frase exata de "Um Dia Te Levo Comigo" ali no lugar, cole ela mesmo,
-   direto nesta função, no lugar da última frase.
+   O texto cita "Um Dia Te Levo Comigo" só pelo NOME da música (sem
+   nenhuma letra reproduzida) — é regra do projeto não reproduzir letra
+   de música com direito autoral, nem trecho curto.
    ---------------------------------------------------------------------- */
 function textoVersiculoBase() {
     if (CARTA_USAR_TEXTO_TESTE) return TEXTO_CARTA_TESTE;
@@ -487,11 +478,13 @@ function textoVersiculoBase() {
 
 Tem tanta música por aí que fala de amor de um jeito que parece exagero, até a gente viver e descobrir que não é exagero nenhum. Sei lá quantas vezes já ouvi "Pra Sempre Com Você" no rádio do carro sem prestar muita atenção, e hoje não consigo mais escutar sem pensar em você, sem pensar que é exatamente isso que eu quero: ficar. Sem enrolação, sem plano B, só ficar.
 
-Você é como um girassol, e não é força de expressão nenhuma, é chão mesmo, é literal: onde bate mais luz, é pra lá que você se vira. E desde que te conheci, virei eu esse lugar pra onde você se vira todos os dias, e isso ainda me deixa sem jeito de tão bom.
+Um dia você me perguntou o que é o amor, do nada, meio de brincadeira, meio séria. Não soube responder direito na hora, e a verdade é que ainda não sei explicar direito por que te amo tanto. Só sei que não é sobre entender o motivo. É sobre escolher, todo santo dia, mesmo sem essa resposta pronta.
 
 Não sei explicar direito por que deu certo entre a gente, só sei que deu, e que em qualquer dia dessa vida, com qualquer versão de mim, eu ia escolher ficar do seu lado de novo, {AMOR}. Nem a distância que a gente já viveu, nem os dias ruins, nem o tempo que ainda vem por aí muda isso.
 
-Então guarda esse verso comigo, que não peguei emprestado de nenhum poeta nem de nenhuma música, porque ninguém te conhece do jeito que eu conheço: você carrega o dia inteiro guardado nos olhos, e a noite inteira guardada no sorriso.`;
+Antes de te conhecer, minha vida seguia bem sem graça nenhuma, tocando quase no automático. Eu nem percebia que faltava alguma coisa até você aparecer e virar tudo do avesso, do jeito bom. Tem um motivo de "Um Dia Te Levo Comigo" ter grudado tanto em mim: fala exatamente disso, de como um dia comum vira o dia que muda todos os outros depois dele.
+
+Então guarda esse tanto comigo, {AMOR}: você carrega o dia inteiro guardado nos olhos, e a noite inteira guardada no sorriso.`;
 }
 
 /* ----------------------------------------------------------------------
@@ -517,7 +510,7 @@ const CAPSULA_DIAS_PARA_DESBLOQUEIO = 365;
 function textoCapsulaDoTempo() {
     return `Se você está lendo isso, já faz um ano inteiro que eu te pedi em namoro.
 
-Um ano parece pouco pertinho do tanto que eu sinto, mas foi tempo suficiente pra eu ter certeza de uma coisa: não existe versão de mim que não escolheria você de novo, sabendo de tudo o que a gente ia viver, bom ou ruim. Lembro de cada detalhe daquele dia, do frio na barriga, do medo de dar errado, e de como, no fim, nada mais importou além do seu sim.
+Um ano parece pouco perto do tanto que eu sinto, mas foi tempo suficiente pra eu ter certeza de uma coisa: não existe versão de mim que não escolheria você de novo, sabendo de tudo o que a gente ia viver, bom ou ruim. Lembro de cada detalhe daquele dia, do frio na barriga, do medo de dar errado, e de como, no fim, nada mais importou além do seu sim.
 
 Se hoje a gente brigou por bobagem, se a rotina engoliu um pouco da leveza, ou se esse ano trouxe coisa que a gente nem imaginava, quero que você leia isso e volte pro começo. Lembra do quanto eu quis isso. Do quanto eu ainda quero, todo santo dia.
 
@@ -667,7 +660,7 @@ function textoAniversario() {
 
 Espero que 8 de agosto sempre te encontre cercada de girassol, do jeitinho que você merece, rodeada de quem te ama de verdade, com a vida te tratando tão bem quanto você trata todo mundo ao redor.
 
-Que esse ano novo te traga viagem, foto nova pra guardar, bicho novo pra cuidar, e principalmente muita saúde e paz. E que em algum canto desse ano que começa hoje, a gente colecione mais um punhado de lugares novos, só nosso.
+Que esse ano novo te traga viagem, foto nova pra guardar, bicho novo pra cuidar, e principalmente muita saúde e paz. E que em algum canto desse ano que começa hoje, a gente colecione mais um punhado de lugares novos, só nossos.
 
 Feliz aniversário, meu amor. Hoje o mundo gira um pouquinho mais em volta de você, e eu não podia estar mais feliz de fazer parte disso.`;
 }
@@ -688,77 +681,77 @@ const ADJETIVOS_PARA_ELA = [
     { adjetivo: 'Corajosa', motivo: 'porque abriu esse seu silêncio todo pra mim, mesmo sabendo que isso não é fácil pra você.' },
     { adjetivo: 'Amada', motivo: 'mais do que você imagina, mais do que eu consigo colocar em palavras, todos os dias, sem exceção.' },
 
-    // A partir daqui, uma lista bem grande de adjetivos, só a palavra, sem
-    // motivo embaixo — pra quando bater vontade de ver muitas palavras
-    // bonitas sobre você, sem precisar de uma explicação pra cada uma.
-    { adjetivo: 'Incrível' },
-    { adjetivo: 'Doce' },
-    { adjetivo: 'Carinhosa' },
-    { adjetivo: 'Gentil' },
-    { adjetivo: 'Generosa' },
-    { adjetivo: 'Leal' },
-    { adjetivo: 'Sincera' },
-    { adjetivo: 'Autêntica' },
-    { adjetivo: 'Alegre' },
-    { adjetivo: 'Divertida' },
-    { adjetivo: 'Espontânea' },
-    { adjetivo: 'Cativante' },
-    { adjetivo: 'Encantadora' },
-    { adjetivo: 'Radiante' },
-    { adjetivo: 'Luminosa' },
-    { adjetivo: 'Serena' },
-    { adjetivo: 'Calma' },
-    { adjetivo: 'Paciente' },
-    { adjetivo: 'Dedicada' },
-    { adjetivo: 'Batalhadora' },
-    { adjetivo: 'Determinada' },
-    { adjetivo: 'Persistente' },
-    { adjetivo: 'Guerreira' },
-    { adjetivo: 'Resiliente' },
-    { adjetivo: 'Confiante' },
-    { adjetivo: 'Segura' },
-    { adjetivo: 'Sensível' },
-    { adjetivo: 'Empática' },
-    { adjetivo: 'Compreensiva' },
-    { adjetivo: 'Acolhedora' },
-    { adjetivo: 'Protetora' },
-    { adjetivo: 'Cuidadosa' },
-    { adjetivo: 'Atenciosa' },
-    { adjetivo: 'Companheira' },
-    { adjetivo: 'Parceira' },
-    { adjetivo: 'Presente' },
-    { adjetivo: 'Sonhadora' },
-    { adjetivo: 'Curiosa' },
-    { adjetivo: 'Aventureira' },
-    { adjetivo: 'Livre' },
-    { adjetivo: 'Leve' },
-    { adjetivo: 'Delicada' },
-    { adjetivo: 'Meiga' },
-    { adjetivo: 'Fofa' },
-    { adjetivo: 'Charmosa' },
-    { adjetivo: 'Elegante' },
-    { adjetivo: 'Única' },
-    { adjetivo: 'Rara' },
-    { adjetivo: 'Preciosa' },
-    { adjetivo: 'Valiosa' },
-    { adjetivo: 'Verdadeira' },
-    { adjetivo: 'Justa' },
-    { adjetivo: 'Humilde' },
-    { adjetivo: 'Grata' },
-    { adjetivo: 'Otimista' },
-    { adjetivo: 'Positiva' },
-    { adjetivo: 'Animada' },
-    { adjetivo: 'Espirituosa' },
-    { adjetivo: 'Esperta' },
-    { adjetivo: 'Sábia' },
-    { adjetivo: 'Observadora' },
-    { adjetivo: 'Criativa' },
-    { adjetivo: 'Talentosa' },
-    { adjetivo: 'Capaz' },
-    { adjetivo: 'Admirável' },
-    { adjetivo: 'Inspiradora' },
-    { adjetivo: 'Marcante' },
-    { adjetivo: 'Inesquecível' }
+    // A partir daqui, uma lista bem grande de adjetivos (pelo menos 50
+    // novos, item do prompt de melhorias), cada um com uma frasezinha
+    // própria embaixo, no mesmo espírito dos 8 primeiros.
+    { adjetivo: 'Incrível', motivo: 'de um jeito que eu nem sei explicar direito, só sei que é verdade.' },
+    { adjetivo: 'Doce', motivo: 'no jeito de falar, no jeito de cuidar, em quase tudo que você faz.' },
+    { adjetivo: 'Carinhosa', motivo: 'com todo mundo ao seu redor, principalmente com quem você ama.' },
+    { adjetivo: 'Gentil', motivo: 'mesmo com quem não merece tanto assim.' },
+    { adjetivo: 'Generosa', motivo: 'sempre pronta a dividir o que tem, mesmo quando é pouco.' },
+    { adjetivo: 'Leal', motivo: 'até o fim, com quem conquista essa lealdade.' },
+    { adjetivo: 'Sincera', motivo: 'até quando dói, porque prefere a verdade a qualquer mentira bonita.' },
+    { adjetivo: 'Autêntica', motivo: 'você é você mesma, sem se render a moldes de ninguém.' },
+    { adjetivo: 'Alegre', motivo: 'mesmo nos dias em que teria todo motivo pra não ser.' },
+    { adjetivo: 'Divertida', motivo: 'do jeito mais inesperado, bem na hora que eu menos espero.' },
+    { adjetivo: 'Espontânea', motivo: 'nas suas reações mais sinceras, sem filtro nenhum.' },
+    { adjetivo: 'Cativante', motivo: 'sem nem precisar tentar, as pessoas simplesmente gostam de você.' },
+    { adjetivo: 'Encantadora', motivo: 'de um jeito que ninguém explica direito, só sente.' },
+    { adjetivo: 'Radiante', motivo: 'principalmente quando está feliz de verdade, e isso contagia.' },
+    { adjetivo: 'Luminosa', motivo: 'você ilumina qualquer ambiente que entra, sem nem perceber.' },
+    { adjetivo: 'Serena', motivo: 'mesmo quando tudo ao redor é caos.' },
+    { adjetivo: 'Calma', motivo: 'você tem um jeito de acalmar o que está tenso, inclusive eu.' },
+    { adjetivo: 'Paciente', motivo: 'até comigo, principalmente comigo.' },
+    { adjetivo: 'Dedicada', motivo: 'em tudo que se propõe a fazer, sem meio-termo.' },
+    { adjetivo: 'Batalhadora', motivo: 'lutando pelo que quer, do seu jeito, sem desistir.' },
+    { adjetivo: 'Determinada', motivo: 'quando decide alguma coisa, ninguém segura.' },
+    { adjetivo: 'Persistente', motivo: 'insiste até dar certo, e quase sempre dá.' },
+    { adjetivo: 'Guerreira', motivo: 'já passou por muita coisa e continua de pé.' },
+    { adjetivo: 'Resiliente', motivo: 'levanta de qualquer queda, sempre mais forte.' },
+    { adjetivo: 'Confiante', motivo: 'no seu próprio jeito, mesmo quando ninguém mais acredita.' },
+    { adjetivo: 'Segura', motivo: 'de quem você é, o que é raro de ver.' },
+    { adjetivo: 'Sensível', motivo: 'sente tudo intensamente, e isso é bonito de ver.' },
+    { adjetivo: 'Empática', motivo: 'se coloca no lugar do outro antes de julgar.' },
+    { adjetivo: 'Compreensiva', motivo: 'mesmo quando eu erro, você entende antes de cobrar.' },
+    { adjetivo: 'Acolhedora', motivo: 'quem chega perto de você se sente em casa.' },
+    { adjetivo: 'Protetora', motivo: 'com quem você ama, sem pensar duas vezes.' },
+    { adjetivo: 'Cuidadosa', motivo: 'em cada detalhe, com cada pessoa, com cada bicho.' },
+    { adjetivo: 'Atenciosa', motivo: 'percebe as coisas que ninguém mais percebe.' },
+    { adjetivo: 'Companheira', motivo: 'nos dias bons e, principalmente, nos ruins.' },
+    { adjetivo: 'Parceira', motivo: 'de verdade, dessas que ficam.' },
+    { adjetivo: 'Presente', motivo: 'mesmo quando a vida tá corrida, você sempre acha um jeito.' },
+    { adjetivo: 'Sonhadora', motivo: 'com planos e vontades que eu adoro ouvir você contar.' },
+    { adjetivo: 'Curiosa', motivo: 'sempre querendo aprender e entender mais sobre tudo.' },
+    { adjetivo: 'Aventureira', motivo: 'topa qualquer plano do nada, sem pensar duas vezes.' },
+    { adjetivo: 'Livre', motivo: 'do jeito que só quem não precisa provar nada pra ninguém consegue ser.' },
+    { adjetivo: 'Leve', motivo: 'você tem um jeito de deixar tudo mais fácil de carregar.' },
+    { adjetivo: 'Delicada', motivo: 'no trato, mesmo sendo forte por dentro.' },
+    { adjetivo: 'Meiga', motivo: 'de um jeito que desarma qualquer um.' },
+    { adjetivo: 'Fofa', motivo: 'sem nem perceber, principalmente quando fica com sono.' },
+    { adjetivo: 'Charmosa', motivo: 'nem precisa se esforçar pra isso.' },
+    { adjetivo: 'Elegante', motivo: 'no jeito de ser, não só no de se vestir.' },
+    { adjetivo: 'Única', motivo: 'não existe ninguém parecido com você, e olha que eu já reparei.' },
+    { adjetivo: 'Rara', motivo: 'gente boa desse jeito não se encontra todo dia.' },
+    { adjetivo: 'Preciosa', motivo: 'pra mim, e pra quem mais tem a sorte de te conhecer.' },
+    { adjetivo: 'Valiosa', motivo: 'muito mais do que qualquer coisa que se possa comprar.' },
+    { adjetivo: 'Verdadeira', motivo: 'em tudo que fala e em tudo que sente.' },
+    { adjetivo: 'Justa', motivo: 'mesmo quando seria bem mais fácil não ser.' },
+    { adjetivo: 'Humilde', motivo: 'apesar de ter todo motivo pra não ser.' },
+    { adjetivo: 'Grata', motivo: 'por coisas pequenas que a maioria nem repara.' },
+    { adjetivo: 'Otimista', motivo: 'mesmo quando o dia começa torto.' },
+    { adjetivo: 'Positiva', motivo: 'sua energia muda o ambiente inteiro.' },
+    { adjetivo: 'Animada', motivo: 'contagia todo mundo ao redor, inclusive eu.' },
+    { adjetivo: 'Espirituosa', motivo: 'sempre com uma resposta na ponta da língua.' },
+    { adjetivo: 'Esperta', motivo: 'enxerga o que os outros deixam passar.' },
+    { adjetivo: 'Sábia', motivo: 'você entende de gente e de vida de um jeito que impressiona.' },
+    { adjetivo: 'Observadora', motivo: 'repara em detalhes que eu nem imaginava que existiam.' },
+    { adjetivo: 'Criativa', motivo: 'sempre com uma ideia diferente pra tudo.' },
+    { adjetivo: 'Talentosa', motivo: 'em mais coisas do que você mesma acredita.' },
+    { adjetivo: 'Capaz', motivo: 'de fazer tudo que decide fazer, sem exceção.' },
+    { adjetivo: 'Admirável', motivo: 'do jeito que encara a vida, sempre de cabeça erguida.' },
+    { adjetivo: 'Inspiradora', motivo: 'só de ver você lutando pelo que quer, já dá vontade de fazer o mesmo.' },
+    { adjetivo: 'Marcante', motivo: 'quem te conhece não esquece de você fácil.' },
+    { adjetivo: 'Inesquecível', motivo: 'do primeiro encontro até hoje, e vai continuar sendo.' }
 ];
 
 /* ----------------------------------------------------------------------
@@ -833,6 +826,14 @@ const MAPA_LUGARES = [
    área de memórias passa a exigir esta senha (ver solicitarSenhaMemorias()
    em js/romance.js e o fluxo em js/main.js).
    ---------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------
+   EASTER EGG DA LUA — 5 toques na lua do "Nosso céu" revelam essa
+   mensagem em código Morse (ver iniciarEasterEggDaLua() em js/romance.js
+   e paraCodigoMorse() em js/utils.js).
+   ---------------------------------------------------------------------- */
+const MENSAGEM_SECRETA_LUA = 'EU AMO MUITO VOCE ANA JULIA POLONI';
+const MENSAGEM_SECRETA_LUA_EXIBICAO = 'Eu amo muito você, Ana Julia Poloni.';
+
 const SENHA_AREA_MEMORIAS = '1406';
 
 /* ----------------------------------------------------------------------
@@ -870,5 +871,5 @@ const TEXTOS = {
     digitacaoSuspense: `Cada uma dessas fotos guarda um pedaço da gente. E o pedido que você acabou de "fazer" também guarda um segredo...`,
     assinaturaCartaFinal: `Assim eu quero te amar, ${NOME_DELA}, pra sempre com você.`,
     polaroidFrasePadrao: `O dia em que tudo começou, ${NOME_DELA}.`,
-    brigamosMensagemFofa: `Que bom que não. Guarda essa carta guardadinha aí, pro dia em que a gente realmente precisar dela. Até lá, só sabe de uma coisa: eu te amo.`
+    brigamosMensagemFofa: `Que bom que não. Deixa essa carta guardadinha aí, pro dia em que a gente realmente precisar dela. Até lá, só saiba de uma coisa: eu te amo.`
 };

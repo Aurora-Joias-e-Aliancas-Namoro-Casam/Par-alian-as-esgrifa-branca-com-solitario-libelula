@@ -206,27 +206,11 @@ function preencherValoresPadraoPedido() {
  */
 function iniciarEasterEggsLoja() {
     if (typeof LOJA_EASTER_EGGS !== 'object' || !LOJA_EASTER_EGGS) return;
-    const JANELA_ENTRE_CLIQUES_MS = 1800; // clique demorado demais reinicia a contagem
-    const CLIQUES_NECESSARIOS = 5;
 
     Object.keys(LOJA_EASTER_EGGS).forEach(id => {
         const elemento = document.getElementById(id);
         if (!elemento) return;
-
-        let contador = 0;
-        let ultimoCliqueEm = 0;
-
-        elemento.addEventListener('click', () => {
-            const agora = Date.now();
-            if (agora - ultimoCliqueEm > JANELA_ENTRE_CLIQUES_MS) contador = 0;
-            ultimoCliqueEm = agora;
-            contador++;
-
-            if (contador >= CLIQUES_NECESSARIOS) {
-                contador = 0;
-                abrirLojaEasterEgg(id);
-            }
-        });
+        contarToquesRepetidos(elemento, 5, () => abrirLojaEasterEgg(id));
     });
 
     document.getElementById('btnFecharLojaEasterEgg').addEventListener('click', () => {

@@ -32,6 +32,7 @@ function abrirModoVela(eyebrowTexto, textoHtml, assinaturaTexto) {
     document.getElementById('modoVelaTexto').innerHTML = textoHtml || '';
     document.getElementById('modoVelaAssinatura').textContent = assinaturaTexto || '';
     overlay.classList.remove('d-none');
+    overlay.scrollTop = 0;
 
     const fechar = () => overlay.classList.add('d-none');
     document.getElementById('btnFecharModoVela').onclick = fechar;
@@ -98,7 +99,51 @@ function iniciarFallbackImagensGlobais() {
     }, true);
 }
 
-/* ---------------- Bloqueio de zoom (pinça, duplo toque e gestos) ---------------- */
+/* ---------------- Código Morse (easter egg da lua) ---------------- */
+const TABELA_MORSE = {
+    A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.', G: '--.',
+    H: '....', I: '..', J: '.---', K: '-.-', L: '.-..', M: '--', N: '-.',
+    O: '---', P: '.--.', Q: '--.-', R: '.-.', S: '...', T: '-', U: '..-',
+    V: '...-', W: '.--', X: '-..-', Y: '-.--', Z: '--..',
+    '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+    '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.'
+};
+
+/** Converte um texto (sem acento) em código Morse, com "/" separando palavras. */
+function paraCodigoMorse(texto) {
+    return texto
+        .toUpperCase()
+        .split(' ')
+        .map(palavra => palavra.split('').map(letra => TABELA_MORSE[letra] || '').filter(Boolean).join(' '))
+        .join(' / ');
+}
+
+
+/**
+ * Conta toques repetidos no MESMO elemento dentro de uma janela curta de
+ * tempo (evita contar cliques espalhados ao longo do dia) e dispara um
+ * callback ao atingir a quantidade necessária. Mecanismo genérico por
+ * trás de todos os easter eggs de "N toques" do site (loja e a lua do
+ * Nosso céu).
+ */
+function contarToquesRepetidos(elemento, quantidadeNecessaria, aoCompletar) {
+    const JANELA_ENTRE_TOQUES_MS = 1800;
+    let contador = 0;
+    let ultimoToqueEm = 0;
+
+    elemento.addEventListener('click', () => {
+        const agora = Date.now();
+        if (agora - ultimoToqueEm > JANELA_ENTRE_TOQUES_MS) contador = 0;
+        ultimoToqueEm = agora;
+        contador++;
+
+        if (contador >= quantidadeNecessaria) {
+            contador = 0;
+            aoCompletar();
+        }
+    });
+}
+
 function bloquearZoom() {
     // Pinça em iOS Safari dispara eventos "gesture*" que ignoram o
     // user-scalable=no do viewport — precisam ser bloqueados manualmente.
@@ -112,12 +157,30 @@ function bloquearZoom() {
         if (e.touches && e.touches.length > 1) e.preventDefault();
     }, { passive: false });
 
-    // Duplo toque para zoom.
+    // Duplo toque para zoom: só conta como duplo toque de verdade se as
+    // duas batidas caírem no MESMO elemento e bem pertinho uma da outra —
+    // do contrário, qualquer sequência de toques rápidos em lugares
+    // diferentes (ex.: os easter eggs de 5 toques) tinha o clique
+    // suprimido sem querer, porque preventDefault() aqui impede o clique
+    // sintético de disparar depois.
     let ultimoToque = 0;
+    let ultimoToqueAlvo = null;
+    let ultimoToqueX = 0;
+    let ultimoToqueY = 0;
     document.addEventListener('touchend', (e) => {
         const agora = Date.now();
-        if (agora - ultimoToque <= 300) e.preventDefault();
+        const toque = e.changedTouches && e.changedTouches[0];
+        const x = toque ? toque.clientX : 0;
+        const y = toque ? toque.clientY : 0;
+        const distancia = Math.hypot(x - ultimoToqueX, y - ultimoToqueY);
+
+        if (agora - ultimoToque <= 300 && e.target === ultimoToqueAlvo && distancia < 30) {
+            e.preventDefault();
+        }
         ultimoToque = agora;
+        ultimoToqueAlvo = e.target;
+        ultimoToqueX = x;
+        ultimoToqueY = y;
     }, { passive: false });
 
     document.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
@@ -379,4 +442,52 @@ async function carregarFonteDeImagem(arquivo) {
         img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
         img.src = url;
     });
+}
+
+/**
+ * CORREÇÃO: os botões de exportar (cartão postal, constelação, carta em
+ * PDF) usavam só um link com atributo "download" — isso funciona bem no
+ * computador e no Android, mas no Safari do iPhone (o navegador que essa
+ * pessoa realmente vai usar) o atributo "download" é praticamente
+ * ignorado quando o link aponta pra uma data URI: o toque não faz nada
+ * visível, mesmo com o arquivo gerado certinho por trás. Por isso a
+ * mensagem de sucesso aparecia mas nenhum arquivo chegava a lugar nenhum.
+ *
+ * Solução: tenta primeiro a folha de compartilhamento nativa
+ * (navigator.share com um arquivo de verdade), que no iPhone é o jeito
+ * confiável de salvar direto nas Fotos ou nos Arquivos. Se o aparelho
+ * não suportar isso, cai pro link de download tradicional (funciona bem
+ * fora do iPhone). Se nem isso rolar, abre a imagem numa aba nova como
+ * último recurso, pra pelo menos dar pra segurar o dedo e salvar.
+ */
+async function salvarOuCompartilharArquivo(blob, nomeArquivo, mimeType) {
+    try {
+        const arquivo = new File([blob], nomeArquivo, { type: mimeType });
+        if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+            await navigator.share({ files: [arquivo] });
+            return 'compartilhado';
+        }
+    } catch (e) {
+        // Pessoa cancelou a folha de compartilhamento, ou o navegador recusou —
+        // não é erro de verdade, só cai pro próximo jeito abaixo.
+    }
+
+    try {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = nomeArquivo;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        return 'baixado';
+    } catch (e) {
+        try {
+            window.open(URL.createObjectURL(blob), '_blank');
+            return 'aberto';
+        } catch (e2) {
+            return 'falhou';
+        }
+    }
 }

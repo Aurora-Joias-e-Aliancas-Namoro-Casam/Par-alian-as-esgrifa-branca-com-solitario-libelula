@@ -109,24 +109,78 @@ function renderizarTimeline() {
     if (container) container.style.minHeight = `${TIMELINE_MARCOS.length * ESPACO_VERTICAL_PX + 100}px`;
 
     iniciarEstrelasCadentes();
+    iniciarEasterEggDaLua();
+}
+
+/* ---------------- Easter egg da lua: 5 toques revelam uma mensagem em Morse ---------------- */
+function iniciarEasterEggDaLua() {
+    const lua = document.getElementById('ceuLua');
+    const overlay = document.getElementById('luaEasterEggOverlay');
+    if (!lua || !overlay || lua.dataset.easterEggIniciado) return;
+    lua.dataset.easterEggIniciado = '1';
+
+    const morseEl = document.getElementById('luaEasterEggMorse');
+    const traducaoEl = document.getElementById('luaEasterEggTraducao');
+    const btnTraduzir = document.getElementById('btnTraduzirMorse');
+
+    contarToquesRepetidos(lua, 5, () => {
+        morseEl.textContent = paraCodigoMorse(MENSAGEM_SECRETA_LUA);
+        traducaoEl.textContent = '';
+        traducaoEl.classList.add('d-none');
+        btnTraduzir.classList.remove('d-none');
+        overlay.classList.remove('d-none');
+        overlay.scrollTop = 0;
+    });
+
+    btnTraduzir.addEventListener('click', () => {
+        traducaoEl.textContent = `"${MENSAGEM_SECRETA_LUA_EXIBICAO}"`;
+        traducaoEl.classList.remove('d-none');
+        btnTraduzir.classList.add('d-none');
+    });
+
+    document.getElementById('btnFecharLuaEasterEgg').addEventListener('click', () => overlay.classList.add('d-none'));
+    overlay.addEventListener('click', (evt) => { if (evt.target === overlay) overlay.classList.add('d-none'); });
 }
 
 // Estrelas cadentes: puramente decorativas, cruzam o céu de vez em
-// quando pra dar mais profundidade, em posições/tempos aleatórios que se
-// repetem em loop.
+// quando pra dar mais profundidade, em posições/tempos/direções
+// aleatórios que se repetem em loop.
 function iniciarEstrelasCadentes() {
     const camada = document.getElementById('ceuEstrelasCadentes');
     if (!camada || camada.dataset.gerado) return;
     camada.dataset.gerado = '1';
 
-    const TOTAL_CADENTES = 4;
+    const TOTAL_CADENTES = 5;
     for (let i = 0; i < TOTAL_CADENTES; i++) {
         const cadente = document.createElement('span');
         cadente.className = 'ceu-estrela-cadente';
-        cadente.style.top = `${Math.random() * 60}%`;
-        cadente.style.left = `${Math.random() * 50}%`;
+
+        // Cruza de um lado do céu até o outro: às vezes indo pra direita,
+        // às vezes pra esquerda, sempre descendo um pouco, nunca sempre
+        // o mesmo trajeto.
+        const indoDireita = Math.random() < 0.5;
+        const distanciaX = 160 + Math.random() * 160; // 160 a 320px de travessia
+        const dx = indoDireita ? distanciaX : -distanciaX;
+        const dy = 50 + Math.random() * 110; // sempre descendo um pouco, em graus variados
+
+        // CORREÇÃO (risco branco "sobrando" onde não devia): o rastro
+        // (::before) antes sempre apontava pra um lado fixo (esquerda),
+        // então quando a estrela ia pra outro sentido, o rastro ficava
+        // apontando pra FRENTE do movimento em vez de atrás dele — dava a
+        // impressão de um traço solto, fora do lugar. Calculando o ângulo
+        // de verdade a partir de (dx, dy) e girando o rastro 180° em
+        // relação a ele, o rastro sempre fica atrás da estrela, não
+        // importa a direção que ela cruzar.
+        const anguloMovimento = Math.atan2(dy, dx) * (180 / Math.PI);
+        const anguloRastro = anguloMovimento + 180;
+
+        cadente.style.setProperty('--cadente-dx', `${dx}px`);
+        cadente.style.setProperty('--cadente-dy', `${dy}px`);
+        cadente.style.setProperty('--cadente-rastro-rot', `${anguloRastro}deg`);
+        cadente.style.top = `${Math.random() * 55}%`;
+        cadente.style.left = indoDireita ? `${Math.random() * 15}%` : `${55 + Math.random() * 30}%`;
         cadente.style.animationDelay = `${Math.random() * 8 + i * 3}s`;
-        cadente.style.animationDuration = `${2.6 + Math.random() * 1.5}s`;
+        cadente.style.animationDuration = `${2.4 + Math.random() * 1.6}s`;
         camada.appendChild(cadente);
     }
 }
@@ -399,15 +453,15 @@ async function iniciarEnvelopeCapsula() {
     // a partir daqui (desbloqueio real confirmado), e só se um ID tiver
     // sido preenchido em CAPSULA_YOUTUBE_ID (js/config.js).
     if (CAPSULA_YOUTUBE_ID) {
-        const cartaPaper = envelope.querySelector('.letter-paper');
-        if (cartaPaper && !cartaPaper.querySelector('.btn-capsula-video')) {
+        const rodape = envelope.querySelector('.letter-paper-rodape');
+        if (rodape && !rodape.querySelector('.btn-capsula-video')) {
             const btnVideo = document.createElement('a');
             btnVideo.href = `https://www.youtube.com/watch?v=${CAPSULA_YOUTUBE_ID}`;
             btnVideo.target = '_blank';
             btnVideo.rel = 'noopener noreferrer';
-            btnVideo.className = 'btn btn-rosegold btn-sm rounded-pill fw-bold mt-3 btn-capsula-video';
+            btnVideo.className = 'btn btn-rosegold btn-sm rounded-pill fw-bold mt-2 btn-capsula-video';
             btnVideo.innerHTML = '<i class="bi bi-youtube me-1"></i>Ver o vídeo';
-            cartaPaper.appendChild(btnVideo);
+            rodape.appendChild(btnVideo);
         }
     }
 
@@ -681,7 +735,7 @@ async function executarComBarraDeProgresso(tarefas) {
     ));
 }
 
-async function goToRomancePage() {
+async function goToRomancePage(primeiraVez) {
     document.getElementById('lojaScreen').style.display = 'none';
     document.getElementById('checkoutScreen').style.display = 'none';
     document.getElementById('suspenseOverlay').style.display = 'none';
@@ -694,7 +748,12 @@ async function goToRomancePage() {
     document.getElementById('heroSubRomanceTexto').textContent = TEXTOS.heroSubRomance;
     document.getElementById('encerramentoRomanceTexto').textContent = TEXTOS.encerramentoRomance;
 
-    pausarMusicaFundoImediatamente();
+    // Só corta a música de fundo (a que tocou na revelação da carta) se
+    // NÃO for a primeira vez chegando aqui — ou seja, em qualquer visita
+    // depois do dia do pedido em si. Na primeira vez (vindo direto do
+    // pedido de verdade), a música continua tocando naturalmente pra
+    // dentro de "Nossa História", sem cortar de repente.
+    if (!primeiraVez) pausarMusicaFundoImediatamente();
     iniciarPlaylistDaGente();
 
     // Rápidas e sem leitura pesada no banco — chamadas direto, sem entrar na barra de progresso.
@@ -933,13 +992,18 @@ function iniciarCartaDiscussao() {
     }
 
     function abrirDoZero() {
-        document.getElementById('cartaDiscussaoDica').textContent = DICA_SENHA_CARTA_DISCUSSAO;
-        senhaInput.value = '';
         senhaErro.classList.add('d-none');
         mensagemFofa.classList.add('d-none');
         document.getElementById('btnCartaDiscussaoSim').classList.remove('d-none');
         document.getElementById('btnCartaDiscussaoNao').classList.remove('d-none');
         overlay.classList.remove('d-none');
+        mostrarPasso(passoPergunta);
+    }
+
+    function irParaSenha() {
+        document.getElementById('cartaDiscussaoDica').textContent = DICA_SENHA_CARTA_DISCUSSAO;
+        senhaInput.value = '';
+        senhaErro.classList.add('d-none');
         mostrarPasso(passoSenha);
         setTimeout(() => senhaInput.focus(), 300);
     }
@@ -947,7 +1011,9 @@ function iniciarCartaDiscussao() {
     function tentarSenha() {
         const digitada = (senhaInput.value || '').trim().toLowerCase().replace(/\s+/g, '');
         if (digitada === SENHA_CARTA_DISCUSSAO) {
-            mostrarPasso(passoPergunta);
+            document.getElementById('cartaDiscussaoTexto').textContent = textoCartaDiscussao();
+            document.getElementById('cartaDiscussaoAssinatura').textContent = NOME_DELE + '.';
+            mostrarPasso(passoCarta);
         } else {
             senhaErro.classList.remove('d-none');
             senhaInput.value = '';
@@ -959,11 +1025,15 @@ function iniciarCartaDiscussao() {
     document.getElementById('btnCartaDiscussaoSenhaEntrar').addEventListener('click', tentarSenha);
     senhaInput.addEventListener('keydown', (evt) => { if (evt.key === 'Enter') tentarSenha(); });
 
-    document.getElementById('btnCartaDiscussaoSim').addEventListener('click', () => {
-        document.getElementById('cartaDiscussaoTexto').textContent = textoCartaDiscussao();
-        document.getElementById('cartaDiscussaoAssinatura').textContent = NOME_DELE + '.';
-        mostrarPasso(passoCarta);
+    // Não deixa digitar espaço nenhum, e sempre mantém a primeira letra
+    // maiúscula enquanto ela digita (a comparação em tentarSenha() ignora
+    // maiúscula/minúscula de qualquer forma, isso é só visual).
+    senhaInput.addEventListener('input', () => {
+        const semEspaco = senhaInput.value.replace(/\s/g, '');
+        senhaInput.value = semEspaco.charAt(0).toUpperCase() + semEspaco.slice(1);
     });
+
+    document.getElementById('btnCartaDiscussaoSim').addEventListener('click', irParaSenha);
 
     document.getElementById('btnCartaDiscussaoNao').addEventListener('click', () => {
         mensagemFofa.textContent = TEXTOS.brigamosMensagemFofa;
