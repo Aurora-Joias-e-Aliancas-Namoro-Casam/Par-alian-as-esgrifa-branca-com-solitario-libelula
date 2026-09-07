@@ -50,6 +50,10 @@ assert.equal(
     'sem cinco gerações confirmadas a limpeza precisa permanecer bloqueada'
 );
 assert.equal(RETENCAO_MINIMA, 5);
+assert.deepEqual(selecionarGeracoesParaExcluir({ geracoes, agora, meta: {
+    ...meta,
+    geracaoAtual: { id: 'g10', partes: [{ objeto: 'experiencia/geracoes/g5/parte-000.zip' }] }
+} }), [], 'parte reutilizada deve proteger sua geração de origem, mesmo fora das cinco últimas');
 
 const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows/backup-externo-e-limpeza.yml'), 'utf8');
 const posCriptografar = workflow.indexOf('Criptografar e conferir a restauração');

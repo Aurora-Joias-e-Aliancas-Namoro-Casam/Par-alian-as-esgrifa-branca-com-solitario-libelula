@@ -15,6 +15,14 @@ function selecionarGeracoesParaExcluir({ geracoes, meta, agora = Date.now(), ret
         if (geracao && geracao.id) protegidas.add(geracao.id);
     }
     if (protegidas.size < retencao) return [];
+    // Uma geração nova pode reutilizar partes imutáveis de uma geração antiga.
+    // Protege os arquivos referenciados, não apenas os cinco ids de publicação.
+    for (const geracao of [meta?.geracaoAtual, ...(meta?.historico || [])]) {
+        for (const parte of geracao?.partes || []) {
+            const origem = String(parte.objeto || '').match(/\/geracoes\/([^/]+)\//);
+            if (origem) protegidas.add(origem[1]);
+        }
+    }
 
     return geracoes
         .filter(geracao => geracao && geracao.id && !protegidas.has(geracao.id))
@@ -187,9 +195,12 @@ async function executar() {
         removidos.push({ id: geracao.id, objetos: caminhos.length, bytes: Number(geracao.manifesto.tamanho) || null });
     }
 
-    const prefixoAtual = `${codigo}/geracoes/${meta.geracaoAtual.id}`;
-    const atuais = await listarObjetos(supabaseUrl, anonKey, bucket, prefixoAtual);
-    const nomesAtuais = new Set(atuais.map(item => caminhoCompleto(prefixoAtual, item.name)));
+    const nomesAtuais = new Set();
+    const prefixosAtuais = new Set((meta.geracaoAtual.partes || []).map(parte => parte.objeto.slice(0, parte.objeto.lastIndexOf('/'))));
+    for (const prefixoAtual of prefixosAtuais) {
+        const atuais = await listarObjetos(supabaseUrl, anonKey, bucket, prefixoAtual);
+        for (const item of atuais) nomesAtuais.add(caminhoCompleto(prefixoAtual, item.name));
+    }
     for (const parte of meta.geracaoAtual.partes || []) {
         if (!nomesAtuais.has(parte.objeto)) throw new Error(`Proteção final falhou: parte atual ausente (${parte.objeto}).`);
     }

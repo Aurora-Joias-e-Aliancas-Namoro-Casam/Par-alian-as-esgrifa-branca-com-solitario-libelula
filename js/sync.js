@@ -19,11 +19,10 @@ function syncEstaConfigurado() {
 async function obterHoraConfiavel() {
     if (!syncEstaConfigurado()) return new Date();
     try {
-        const resposta = await fetch(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/`, {
+        const cabecalhoData = await requisicaoNuvem(`${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/`, {
             method: 'HEAD',
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        const cabecalhoData = resposta.headers.get('date');
+        }, async resposta => resposta.headers.get('date'), 8000);
         if (cabecalhoData) {
             const dataServidor = new Date(cabecalhoData);
             if (!isNaN(dataServidor.getTime())) return dataServidor;
@@ -60,6 +59,63 @@ const AVISO_QUOTA_TOTAL_BYTES = 900 * 1024 * 1024; // aviso perto do 1GB de quot
 
 const POLONI_RETENCAO_GERACOES = 5;
 
+// Inclui a leitura do corpo no prazo, não apenas a chegada dos cabeçalhos.
+async function requisicaoNuvem(url, opcoes, consumir, prazo = 30000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), prazo);
+    try {
+        const resposta = await fetch(url, { ...opcoes, signal: controller.signal });
+        return await consumir(resposta);
+    } catch (erro) {
+        if (controller.signal.aborted) throw new Error('A conexão com a nuvem demorou demais. O envio continua pendente neste aparelho.');
+        throw erro;
+    } finally { clearTimeout(timer); }
+}
+
+// Separa o manifesto textual do prefixo binário sem mudar o formato ZIP.
+// Leitores antigos e o backup externo continuam remontando o mesmo arquivo.
+async function dividirBackupIncremental(blob) {
+    const final = new Uint8Array(await blob.slice(Math.max(0, blob.size - 65557)).arrayBuffer());
+    const view = new DataView(final.buffer);
+    let inicioManifest = 0;
+    for (let i = final.length - 22; i >= 0; i--) {
+        if (view.getUint32(i, true) !== 0x06054b50 || i + 22 + view.getUint16(i + 20, true) !== final.length) continue;
+        const tamanho = view.getUint32(i + 12, true);
+        const inicio = view.getUint32(i + 16, true);
+        if (inicio + tamanho > blob.size || tamanho > 16 * 1024 * 1024) break;
+        const central = new Uint8Array(await blob.slice(inicio, inicio + tamanho).arrayBuffer());
+        const dados = new DataView(central.buffer);
+        for (let p = 0; p + 46 <= central.length;) {
+            if (dados.getUint32(p, true) !== 0x02014b50) break;
+            const n = dados.getUint16(p + 28, true);
+            if (new TextDecoder().decode(central.slice(p + 46, p + 46 + n)) === 'manifest.json') {
+                inicioManifest = dados.getUint32(p + 42, true);
+                break;
+            }
+            p += 46 + n + dados.getUint16(p + 30, true) + dados.getUint16(p + 32, true);
+        }
+        break;
+    }
+    const partes = [];
+    const limites = inicioManifest > 0 && inicioManifest < blob.size ? [0, inicioManifest, blob.size] : [0, blob.size];
+    for (let intervalo = 1; intervalo < limites.length; intervalo++) {
+        for (let inicio = limites[intervalo - 1]; inicio < limites[intervalo]; inicio += TAMANHO_MAXIMO_PARTE_BYTES) {
+            partes.push(blob.slice(inicio, Math.min(inicio + TAMANHO_MAXIMO_PARTE_BYTES, limites[intervalo])));
+        }
+    }
+    return partes;
+}
+
+async function geracaoJaAplicada(codigo, meta) {
+    if (!meta?.geracaoAtual?.id) return false;
+    return (await obterConfiguracao('aurora_sync_geracao')) === `${codigo}:${meta.geracaoAtual.id}`;
+}
+
+async function registrarGeracaoAplicada(codigo, meta) {
+    await salvarConfiguracao('aurora_sync_revision', String(Number(meta.revisao) || 0), false, false);
+    await salvarConfiguracao('aurora_sync_geracao', `${codigo}:${meta.geracaoAtual?.id || ''}`, false, false);
+}
+
 // Compatibilidade com o formato remoto antigo.
 function caminhoParteZip(codigo, indice, totalPartes) {
     return totalPartes <= 1 ? `${codigo}.zip` : `${codigo}.zip.parte${indice}`;
@@ -74,7 +130,7 @@ function caminhoEscrita(objeto) {
 }
 
 async function enviarObjetoNuvem(objeto, corpo, contentType, upsert = false) {
-    const resposta = await fetch(caminhoEscrita(objeto), {
+    await requisicaoNuvem(caminhoEscrita(objeto), {
         method: 'POST',
         headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -83,18 +139,25 @@ async function enviarObjetoNuvem(objeto, corpo, contentType, upsert = false) {
             'x-upsert': upsert ? 'true' : 'false'
         },
         body: corpo
-    });
-    if (!resposta.ok) throw new Error(`Falha ao gravar objeto remoto (${resposta.status}).`);
+    }, async resposta => {
+        if (!resposta.ok) {
+            const erro = new Error(`Falha ao gravar na nuvem (HTTP ${resposta.status}). Os dados locais foram mantidos.`);
+            erro.status = resposta.status;
+            throw erro;
+        }
+    }, 120000);
 }
 
-async function confirmarObjetoNuvem(objeto, tamanhoEsperado) {
+async function confirmarObjetoNuvem(objeto, tamanhoEsperado, hashEsperado = null) {
     let ultimoErro;
     for (let tentativa = 1; tentativa <= 3; tentativa++) {
         try {
-            const resposta = await fetch(`${caminhoPublico(objeto)}?v=${Date.now()}`, { cache: 'no-store' });
-            if (!resposta.ok) throw new Error(`Não foi possível confirmar a parte remota (${resposta.status}).`);
-            const blob = await resposta.blob();
+            const blob = await requisicaoNuvem(caminhoPublico(objeto), { cache: tentativa === 1 ? 'default' : 'reload' }, async resposta => {
+                if (!resposta.ok) throw new Error(`Não foi possível confirmar a parte remota (${resposta.status}).`);
+                return resposta.blob();
+            }, 120000);
             if (blob.size !== tamanhoEsperado) throw new Error(`Parte remota incompleta: esperado ${tamanhoEsperado}, recebido ${blob.size}.`);
+            if (hashEsperado && await sha256BlobSeguro(blob) !== hashEsperado) throw new Error('O conteúdo confirmado na nuvem não confere. A versão anterior foi mantida.');
             return true;
         } catch (e) {
             ultimoErro = e;
@@ -105,7 +168,7 @@ async function confirmarObjetoNuvem(objeto, tamanhoEsperado) {
 }
 
 async function lerManifestBackup(blob) {
-    const zip = await JSZip.loadAsync(blob, { checkCRC32: true });
+    const zip = await JSZip.loadAsync(await blob.arrayBuffer(), { checkCRC32: true });
     const arquivo = zip.file('manifest.json');
     if (!arquivo) throw new Error('Backup gerado sem manifest.json.');
     return JSON.parse(await arquivo.async('string'));
@@ -129,12 +192,11 @@ async function publicarBackupNaNuvem(codigo, lockPublicacao = null) {
     // remota atual ao banco local. Assim um celular desatualizado nunca remove
     // a foto que outro celular adicionou.
     const metaInicial = await buscarMetaDaNuvem(codigo);
-    if (metaInicial && !metaInicial.resetado) {
+    if (metaInicial && !metaInicial.resetado && !(await geracaoJaAplicada(codigo, metaInicial))) {
         const remoto = await buscarBackupZipDaNuvem(codigo, metaInicial.partes, metaInicial);
         if (remoto) {
-            __auroraAplicandoBackupRemoto = true;
-            try { await aplicarBackupDeZip(remoto); }
-            finally { __auroraAplicandoBackupRemoto = false; }
+            await aplicarBackupDeZip(remoto);
+            await registrarGeracaoAplicada(codigo, metaInicial);
         }
     }
 
@@ -157,20 +219,39 @@ async function publicarBackupNaNuvem(codigo, lockPublicacao = null) {
         throw new Error(`O backup ficou com ${tamanhoMB}MB — perto do espaço TOTAL de 1GB do plano gratuito da nuvem (dividir em partes não resolve isso, é um limite de espaço, não de tamanho por arquivo). Baixe uma cópia manual ("Backup da Nossa História", na página final) para não perder nada.`);
     }
 
-    const totalPartes = Math.max(1, Math.ceil(zipBlob.size / TAMANHO_MAXIMO_PARTE_BYTES));
+    const partesLocais = await dividirBackupIncremental(zipBlob);
+    const totalPartes = partesLocais.length;
     const geracaoId = `${Date.now().toString(36)}-${gerarIdUnico('g').slice(-10)}`;
     const baseGeracao = `${codigo}/geracoes/${geracaoId}`;
     const partesMeta = [];
+    let diarioPartes = [];
+    try { diarioPartes = JSON.parse(await obterConfiguracao(`aurora_sync_upload_${codigo}`) || '[]'); } catch (_) { /* diário é apenas otimização */ }
+    if (!Array.isArray(diarioPartes)) diarioPartes = [];
+    const conhecidas = new Map([...diarioPartes, ...(metaInicial?.geracaoAtual?.partes || [])]
+        .filter(parte => parte.sha256 && parte.objeto.startsWith(`${codigo}/geracoes/`))
+        .map(parte => [`${parte.sha256}:${parte.tamanho}`, parte]));
 
     for (let i = 0; i < totalPartes; i++) {
-        const inicio = i * TAMANHO_MAXIMO_PARTE_BYTES;
-        const fim = Math.min(inicio + TAMANHO_MAXIMO_PARTE_BYTES, zipBlob.size);
-        const parte = zipBlob.slice(inicio, fim);
+        const parte = partesLocais[i];
+        atualizarEstadoSincronizacao('enviando', `Salvando na nuvem: parte ${i + 1} de ${totalPartes}`);
+        const hashParte = await sha256BlobSeguro(parte);
+        const conhecida = hashParte && conhecidas.get(`${hashParte}:${parte.size}`);
+        if (conhecida) {
+            // Revalida a existência, sem baixar novamente os megabytes já confirmados.
+            const existe = await requisicaoNuvem(caminhoPublico(conhecida.objeto), { method: 'HEAD', cache: 'no-store' }, async resposta =>
+                resposta.ok && Number(resposta.headers.get('content-length')) === parte.size);
+            if (existe) { partesMeta.push(conhecida); continue; }
+        }
 
         const objeto = `${baseGeracao}/parte-${String(i).padStart(3, '0')}.zip`;
         await enviarObjetoNuvem(objeto, parte, 'application/zip', false);
-        await confirmarObjetoNuvem(objeto, parte.size);
-        partesMeta.push({ objeto, tamanho: parte.size });
+        await confirmarObjetoNuvem(objeto, parte.size, hashParte);
+        const confirmada = { objeto, tamanho: parte.size, sha256: hashParte };
+        partesMeta.push(confirmada);
+        // Persiste somente partes relidas e verificadas. Após uma interrupção,
+        // o próximo envio retoma sem repetir as partes já concluídas.
+        diarioPartes = [...diarioPartes.filter(p => p.sha256 !== hashParte), confirmada].slice(-256);
+        await salvarConfiguracao(`aurora_sync_upload_${codigo}`, JSON.stringify(diarioPartes), false, false);
     }
 
     const hashZip = await sha256BlobSeguro(zipBlob);
@@ -210,7 +291,8 @@ async function publicarBackupNaNuvem(codigo, lockPublicacao = null) {
     if (Number(metaConfirmado && metaConfirmado.revisao) !== geracao.revisao || metaConfirmado?.geracaoAtual?.id !== geracao.id) {
         throw new Error('A geração foi enviada, mas o ponteiro remoto não pôde ser confirmado. Os dados locais continuam marcados para nova tentativa.');
     }
-    await salvarConfiguracao('aurora_sync_revision', String(geracao.revisao), false, false);
+    await registrarGeracaoAplicada(codigo, metaNovo);
+    await salvarConfiguracao(`aurora_sync_upload_${codigo}`, '[]', false, false);
     return metaNovo;
 }
 
@@ -230,10 +312,11 @@ async function buscarMetaDaNuvem(codigo) {
     // aparelho podia continuar recebendo uma resposta antiga (inclusive um
     // 404 já superado) por um tempo depois de algo mudar de verdade.
     const url = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${codigo}-meta.json?t=${Date.now()}`;
-    const resposta = await fetch(url, { cache: 'no-store' });
-    if (resposta.status === 404) return null;
-    if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
-    return await resposta.json();
+    return requisicaoNuvem(url, { cache: 'no-store' }, async resposta => {
+        if (resposta.status === 404) return null;
+        if (!resposta.ok) throw new Error(`Falha ao consultar a nuvem (${resposta.status})`);
+        return resposta.json();
+    });
 }
 
 /**
@@ -247,12 +330,16 @@ async function buscarBackupZipDaNuvem(codigo, totalPartes, meta = null) {
     if (meta && meta.geracaoAtual && Array.isArray(meta.geracaoAtual.partes)) {
         const buffers = [];
         for (const parte of meta.geracaoAtual.partes) {
-            const resposta = await fetch(`${caminhoPublico(parte.objeto)}?v=${Date.now()}`, { cache: 'no-store' });
-            if (!resposta.ok) throw new Error(`Geração remota incompleta (${resposta.status}).`);
-            const buffer = await resposta.arrayBuffer();
+            atualizarProgressoEntrada('Buscando novidades', buffers.length, meta.geracaoAtual.partes.length);
+            const buffer = await requisicaoNuvem(caminhoPublico(parte.objeto), { cache: 'default' }, async resposta => {
+                if (!resposta.ok) throw new Error(`Geração remota incompleta (${resposta.status}).`);
+                return resposta.arrayBuffer();
+            }, 120000);
             if (parte.tamanho && buffer.byteLength !== parte.tamanho) throw new Error('Geração remota truncada; dados locais foram preservados.');
+            if (parte.sha256 && await sha256BlobSeguro(new Blob([buffer])) !== parte.sha256) throw new Error('Checksum da parte remota não confere.');
             buffers.push(buffer);
         }
+        atualizarProgressoEntrada('Conferindo as lembranças baixadas', buffers.length, buffers.length);
         const tamanhoTotal = buffers.reduce((soma, b) => soma + b.byteLength, 0);
         const combinado = new Uint8Array(tamanhoTotal);
         let offset = 0;
@@ -322,7 +409,7 @@ let __auroraSyncEmAndamento = 0; // contador de envios em voo (pode haver mais d
 let __auroraSequenciaMudancas = 0;
 let __auroraRetryTimeout = null;
 let __auroraFalhasConsecutivas = 0;
-const POLONI_RETRY_ATRASOS_MS = [5000, 15000, 45000];
+const POLONI_RETRY_ATRASOS_MS = [5000, 15000, 45000, 120000, 300000, 600000];
 window.__auroraSyncDirtyMemoria = Boolean(window.__auroraSyncDirtyMemoria);
 
 // Banner "Salvando na nuvem": mídia grande dispara o envio imediatamente
@@ -353,18 +440,15 @@ let __auroraPublicacaoPromessa = null;     // todos os chamadores aguardam a mes
 const POLONI_LOCK_EXPIRA_MS = 10 * 60 * 1000;
 
 async function lerLockPublicacao(objeto) {
-    try {
-        const resposta = await fetch(`${caminhoPublico(objeto)}?lock=${Date.now()}`, { cache: 'no-store' });
-        if (!resposta.ok) return null;
-        return await resposta.json();
-    } catch (_) {
-        return null;
-    }
+    return requisicaoNuvem(`${caminhoPublico(objeto)}?lock=${Date.now()}`, { cache: 'no-store' }, async resposta => {
+        if (resposta.status === 404) return null;
+        if (!resposta.ok) throw new Error(`Não foi possível consultar a fila de salvamento (HTTP ${resposta.status}).`);
+        return resposta.json();
+    });
 }
 
 async function tentarCriarLockPublicacao(objeto, lock) {
-    try {
-        const resposta = await fetch(caminhoEscrita(objeto), {
+        return requisicaoNuvem(caminhoEscrita(objeto), {
             method: 'POST',
             headers: {
                 'apikey': SUPABASE_ANON_KEY,
@@ -373,11 +457,12 @@ async function tentarCriarLockPublicacao(objeto, lock) {
                 'x-upsert': 'false'
             },
             body: JSON.stringify(lock)
+        }, async resposta => {
+            if (resposta.ok) return true;
+            const detalhe = await resposta.json().catch(() => ({}));
+            if (resposta.status === 409 || String(detalhe.statusCode) === '409' || detalhe.error === 'Duplicate') return false;
+            throw new Error(`A nuvem recusou o salvamento (HTTP ${resposta.status}). Confira conexão, espaço e permissões.`);
         });
-        return resposta.ok;
-    } catch (_) {
-        return false;
-    }
 }
 
 async function adquirirLockPublicacao(codigo) {
@@ -385,7 +470,12 @@ async function adquirirLockPublicacao(codigo) {
     const agoraServidor = (await obterHoraConfiavel()).getTime();
     const lock = { token: gerarIdUnico('lock'), criadoEm: new Date(agoraServidor).toISOString() };
 
-    if (await tentarCriarLockPublicacao(objeto, lock)) return { objeto, ...lock };
+    const chaveSessao = `poloni_lock_${codigo}`;
+    const assumir = valor => {
+        try { sessionStorage.setItem(chaveSessao, valor.token); } catch (_) { /* recuperação opcional */ }
+        return { objeto, ...valor };
+    };
+    if (await tentarCriarLockPublicacao(objeto, lock)) return assumir(lock);
 
     // Um aparelho fechado no meio do upload pode deixar o lock órfão. Só o
     // remove após 10 minutos e depois de identificar exatamente seu token;
@@ -396,12 +486,12 @@ async function adquirirLockPublicacao(codigo) {
         const releitura = await lerLockPublicacao(objeto);
         if (releitura?.token === existente.token) {
             try {
-                await fetch(caminhoEscrita(objeto), {
+                await requisicaoNuvem(caminhoEscrita(objeto), {
                     method: 'DELETE',
                     headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-                });
+                }, async resposta => { if (!resposta.ok) throw new Error('A fila ainda está ocupada.'); });
             } catch (_) { /* a tentativa atômica abaixo decidirá */ }
-            if (await tentarCriarLockPublicacao(objeto, lock)) return { objeto, ...lock };
+            if (await tentarCriarLockPublicacao(objeto, lock)) return assumir(lock);
         }
     }
 
@@ -413,11 +503,10 @@ async function liberarLockPublicacao(lock) {
     try {
         const atual = await lerLockPublicacao(lock.objeto);
         if (!atual || atual.token !== lock.token) return;
-        const resposta = await fetch(caminhoEscrita(lock.objeto), {
+        await requisicaoNuvem(caminhoEscrita(lock.objeto), {
             method: 'DELETE',
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-        });
-        if (!resposta.ok) throw new Error(`Falha ao liberar lock remoto (${resposta.status}).`);
+        }, async resposta => { if (!resposta.ok) throw new Error(`Falha ao liberar lock remoto (${resposta.status}).`); });
     } catch (erro) {
         await registrarDiagnosticoSeguro('sync.liberar_lock', erro);
     }
@@ -458,6 +547,7 @@ async function publicarComIndicadorVisivel() {
     }
 
     __auroraPublicacaoEmAndamento = true;
+    atualizarEstadoSincronizacao('enviando');
     mostrarBannerSync(true);
     __auroraPublicacaoPromessa = (async () => {
         try {
@@ -483,6 +573,8 @@ async function publicarComIndicadorVisivel() {
                 break;
             }
             window.__auroraSyncDirtyMemoria = false;
+            await salvarConfiguracao('aurora_sync_confirmado_em', new Date().toISOString(), false, false);
+            atualizarEstadoSincronizacao('confirmado');
             __auroraFalhasConsecutivas = 0;
             if (__auroraRetryTimeout) { clearTimeout(__auroraRetryTimeout); __auroraRetryTimeout = null; }
         } finally {
@@ -495,6 +587,7 @@ async function publicarComIndicadorVisivel() {
 }
 
 function tratarFalhaEnvioAutomatico(err) {
+    atualizarEstadoSincronizacao('pendente');
     console.error('Falha no envio automático para a nuvem:', err);
     window.__auroraSyncDirtyMemoria = true;
     const mensagemEspecifica = (err && err.message && err.message.includes('espaço TOTAL')) ? err.message : null;
@@ -545,11 +638,13 @@ window.__auroraSuprimirSyncDiagnostico = false;
 
 function agendarEnvioNuvem(imediato = false) {
     if (!syncEstaConfigurado()) return;
-    if (__auroraAplicandoBackupRemoto) return; // essa mudança veio de um backup importado, não precisa reenviar
+    // O restore usa bulkPut sem este hook. Escritas do usuário durante um
+    // download precisam continuar marcadas, mesmo com a consulta em andamento.
     if (window.__auroraSuprimirSyncDiagnostico) return; // mudança causada por um teste de diagnóstico — não é conteúdo real, não sincroniza
 
     __auroraSequenciaMudancas++;
     window.__auroraSyncDirtyMemoria = true;
+    atualizarEstadoSincronizacao('pendente');
     __auroraFalhasConsecutivas = 0;
     if (__auroraRetryTimeout) { clearTimeout(__auroraRetryTimeout); __auroraRetryTimeout = null; }
     clearTimeout(__auroraTimeoutEnvioNuvem);
@@ -587,6 +682,7 @@ window.addEventListener('pagehide', anteciparEnvioAoSuspender);
  * aparelho tem mudanças que a nuvem ainda não tem).
  */
 async function sincronizarNaAbertura() {
+    if (__auroraPublicacaoEmAndamento) return;
     // Compatibilidade com links antigos que ainda usem "?c=codigo".
     await verificarImportacaoPorLink();
 
@@ -594,13 +690,15 @@ async function sincronizarNaAbertura() {
 
     const revisaoLocal = parseInt(await obterConfiguracao('aurora_sync_revision'), 10) || 0;
     const localSujo = (await obterConfiguracao('aurora_sync_dirty')) === '1';
-    window.__auroraSyncDirtyMemoria = localSujo;
+    window.__auroraSyncDirtyMemoria = localSujo || window.__auroraSyncDirtyMemoria;
 
     let meta = null;
     try {
         meta = await buscarMetaDaNuvem(EXPERIENCE_ID);
     } catch (err) {
         console.error('Não foi possível consultar a nuvem ao abrir o site (seguindo com os dados locais):', err);
+        atualizarEstadoSincronizacao('local');
+        if (localSujo) tratarFalhaEnvioAutomatico(err);
         return;
     }
 
@@ -618,27 +716,24 @@ async function sincronizarNaAbertura() {
         await salvarConfiguracao('aurora_reset_visto_em', String(timestampNuvem), false, false);
     }
 
-    if (meta && !nuvemFoiResetada && (revisaoNuvem > revisaoLocal || revisaoLocal === 0)) {
+    if (meta && !nuvemFoiResetada && !(await geracaoJaAplicada(EXPERIENCE_ID, meta))) {
         // A revisão remota é monotônica e não depende do relógio do aparelho.
-        __auroraAplicandoBackupRemoto = true;
         try {
             const zipDados = await buscarBackupZipDaNuvem(EXPERIENCE_ID, meta.partes, meta);
             if (zipDados) {
                 await aplicarBackupDeZip(zipDados);
-                await salvarConfiguracao('aurora_sync_revision', String(revisaoNuvem), false, false);
-                await salvarConfiguracao('aurora_sync_dirty', localSujo ? '1' : '0', false, false);
+                await registrarGeracaoAplicada(EXPERIENCE_ID, meta);
+                window.dispatchEvent(new Event('poloni:nuvem-atualizada'));
             }
         } catch (err) {
             console.error('Falha ao baixar/aplicar o backup da nuvem:', err);
             await registrarDiagnosticoSeguro('sync.abertura_download', err, { revisaoLocal, revisaoNuvem });
-        } finally {
-            __auroraAplicandoBackupRemoto = false;
         }
     }
 
     // Só publica se existe uma alteração local explicitamente marcada. Um
     // navegador novo nasce limpo e, portanto, jamais envia backup vazio.
-    if (!nuvemFoiResetada && localSujo) {
+    if (!nuvemFoiResetada && (localSujo || window.__auroraSyncDirtyMemoria)) {
         try {
             await publicarComIndicadorVisivel();
         } catch (err) {
@@ -646,8 +741,78 @@ async function sincronizarNaAbertura() {
             await registrarDiagnosticoSeguro('sync.abertura_upload', err, { revisaoLocal, revisaoNuvem });
             tratarFalhaEnvioAutomatico(err);
         }
+    } else if (meta && await geracaoJaAplicada(EXPERIENCE_ID, meta)) {
+        atualizarEstadoSincronizacao('confirmado');
     }
 }
+
+let __poloniEstadoSync = 'local';
+function atualizarEstadoSincronizacao(estado, detalhe) {
+    __poloniEstadoSync = estado;
+    const textos = {
+        local: 'Dados neste aparelho. Nuvem ainda não conferida.',
+        pendente: 'Salvo neste aparelho. Aguardando envio.',
+        enviando: 'Salvando na nuvem...',
+        confirmado: 'Salvamento confirmado na nuvem.'
+    };
+    for (const painel of document.querySelectorAll?.('[data-poloni-sync]') || []) {
+        painel.dataset.estado = estado;
+        const texto = painel.querySelector('[data-poloni-sync-texto]');
+        if (texto) texto.textContent = detalhe || textos[estado] || textos.local;
+        const botao = painel.querySelector('[data-poloni-sync-retry]');
+        if (botao) botao.disabled = estado === 'enviando';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    for (const botao of document.querySelectorAll?.('[data-poloni-sync-retry]') || []) {
+        botao.addEventListener('click', async () => {
+            if (navigator.onLine === false) { atualizarEstadoSincronizacao('local', 'Sem internet. As alterações continuam neste aparelho.'); return; }
+            await consultarAtualizacoesEmSegundoPlano(true);
+        });
+    }
+    atualizarEstadoSincronizacao(__poloniEstadoSync);
+});
+
+let __poloniConsultaPromessa = null;
+let __poloniUltimaConsulta = 0;
+function consultarAtualizacoesEmSegundoPlano(forcar = false) {
+    if (navigator.onLine === false || __auroraPublicacaoEmAndamento) return Promise.resolve();
+    if (__poloniConsultaPromessa) return __poloniConsultaPromessa;
+    if (!forcar && Date.now() - __poloniUltimaConsulta < 60000) return Promise.resolve();
+    __poloniUltimaConsulta = Date.now();
+    __poloniConsultaPromessa = sincronizarNaAbertura()
+        .catch(erro => registrarDiagnosticoSeguro('sync.consulta_background', erro))
+        .finally(() => { __poloniConsultaPromessa = null; });
+    return __poloniConsultaPromessa;
+}
+
+async function prepararDadosParaEntrada() {
+    atualizarProgressoEntrada('Abrindo as lembranças deste aparelho', 1, 3);
+    const possuiDados = (await db.configuracoes.count()) > 0 || (await db.media.count()) > 0;
+    if (!possuiDados || new URLSearchParams(window.location.search).has('c')) {
+        atualizarProgressoEntrada('Consultando a nuvem pela primeira vez');
+        await consultarAtualizacoesEmSegundoPlano(true);
+    }
+    atualizarProgressoEntrada('Preparando nossa história', 2, 3);
+}
+
+function atualizarProgressoEntrada(mensagem, feito, total) {
+    const texto = document.getElementById('vinhetaProgressoTexto');
+    const barra = document.getElementById('vinhetaProgresso');
+    if (texto) texto.textContent = Number.isFinite(total) && total > 0
+        ? `${mensagem} (${feito} de ${total})` : mensagem;
+    if (barra) {
+        if (Number.isFinite(total) && total > 0) { barra.max = total; barra.value = feito; }
+        else barra.removeAttribute('value');
+    }
+}
+
+window.addEventListener('online', () => consultarAtualizacoesEmSegundoPlano(true));
+window.addEventListener('pageshow', evento => { if (evento.persisted) consultarAtualizacoesEmSegundoPlano(); });
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') consultarAtualizacoesEmSegundoPlano();
+});
 
 /**
  * Ao carregar a página: se a URL tiver "?c=CODIGO" e a sincronização

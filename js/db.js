@@ -441,6 +441,42 @@ async function obterConfiguracao(chave) {
     return null;
 }
 
+// Mantém o legado legível, mas cada texto novo tem sua própria chave.
+function unirItensMural(listas) {
+    const porId = new Map();
+    const tempo = valor => Number(valor) || Date.parse(valor || '') || 0;
+    for (const item of listas.flat()) {
+        if (!item || !item.id || typeof item.texto !== 'string') continue;
+        const anterior = porId.get(item.id);
+        const versao = valor => Math.max(tempo(valor?.atualizadoEm), tempo(valor?.data));
+        const unido = !anterior || versao(item) >= versao(anterior) ? { ...anterior, ...item } : { ...item, ...anterior };
+        const exclusao = Math.max(tempo(anterior?.excluidoEm), tempo(item.excluidoEm));
+        if (exclusao && exclusao >= Math.max(versao(item), versao(anterior))) unido.excluidoEm = new Date(exclusao).toISOString();
+        porId.set(item.id, unido);
+    }
+    return [...porId.values()].sort((a, b) => tempo(a.data) - tempo(b.data) || String(a.id).localeCompare(String(b.id)));
+}
+
+async function obterMensagensMural() {
+    const legado = JSON.parse(await obterConfiguracao('aurora_mural_ana') || '[]');
+    if (!Array.isArray(legado)) throw new Error('O mural salvo está em um formato inválido. Nada foi apagado.');
+    const registros = await db.configuracoes.where('chave').startsWith('aurora_mural_item:').toArray();
+    const individuais = registros.map(item => JSON.parse(item.valor));
+    // Inclui também uma escrita que só tenha conseguido chegar ao espelho.
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const chave = localStorage.key(i);
+            if (chave?.startsWith('aurora_mural_item:')) individuais.push(JSON.parse(localStorage.getItem(chave)));
+        }
+    } catch (_) { /* a fonte principal já foi lida */ }
+    return unirItensMural([legado, individuais]);
+}
+
+async function salvarMensagemMural(item) {
+    if (!item?.id || typeof item.texto !== 'string') throw new Error('Mensagem inválida.');
+    return salvarConfiguracao(`aurora_mural_item:${item.id}`, JSON.stringify(item));
+}
+
 /* ---------------- Armazenamento persistente e estimativa de espaço ----------------
    Pede ao navegador para não apagar os dados do site sob pressão de espaço. */
 async function solicitarArmazenamentoPersistente() {
@@ -485,5 +521,6 @@ if (typeof module !== 'undefined' && module.exports) {
         salvarConfiguracao,
         excluirConfiguracao,
         obterConfiguracao
+        ,unirItensMural, obterMensagensMural, salvarMensagemMural
     };
 }

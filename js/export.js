@@ -371,7 +371,7 @@ async function sha256BlobSeguro(blob) {
 
 function chaveConfigEhTecnica(chave) {
     return chave === 'aurora_atualizado_em' || chave === 'aurora_sync_dirty' ||
-        chave === 'aurora_sync_revision' || chave.startsWith('aurora_galeria_cache_');
+        chave === 'aurora_sync_revision' || chave.startsWith('aurora_sync_') || chave.startsWith('aurora_galeria_cache_');
 }
 
 /** Gera o backup completo como um Blob .zip (usado tanto pelo botão "Backup" quanto pela sincronização — ver sync.js). */
@@ -450,6 +450,14 @@ async function gerarBackupZipBlob() {
                 manifest.configuracoes.aurora_config_modificados_em = JSON.stringify(relogiosUnidos);
             }
         } catch (_) { /* IndexedDB já forneceu a cópia principal */ }
+        // Espelho agregado no ZIP mantém compatibilidade com aparelhos antigos.
+        // A escrita diária no navegador continua sendo um registro por mensagem.
+        const mensagensIndividuais = Object.entries(manifest.configuracoes)
+            .filter(([chave]) => chave.startsWith('aurora_mural_item:')).map(([, valor]) => JSON.parse(valor));
+        if (mensagensIndividuais.length) {
+            manifest.muralAna = unirItensMural([tentarJSON(manifest.configuracoes.aurora_mural_ana || '[]') || [], mensagensIndividuais]);
+            manifest.configuracoes.aurora_mural_ana = JSON.stringify(manifest.muralAna);
+        }
         manifest.estatisticas.configuracoes = Object.keys(manifest.configuracoes).length;
     } catch (e) {
         await registrarDiagnosticoSeguro('backup.listar_configuracoes', e);
@@ -498,7 +506,9 @@ async function gerarBackupZipBlob() {
 
     manifest.estatisticas.medias = manifest.medias.length;
 
-    zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+    zip.file('manifest.json', JSON.stringify(manifest), { compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    // Cabeçalhos estáveis: uma mensagem nova não altera os bytes das fotos/vídeos.
+    for (const arquivo of Object.values(zip.files)) arquivo.date = new Date('2000-01-01T00:00:00Z');
     // Sem compressão adicional (STORE): mídia já vem comprimida (MP4/JPEG),
     // recomprimir só gastaria processamento à toa.
     const ambienteNode = typeof process !== 'undefined' && process.versions && process.versions.node;
@@ -847,6 +857,18 @@ async function aplicarBackupDeZip(zipDados) {
     }
 
     await db.transaction('rw', db.configuracoes, db.media, async () => {
+        // Revalidar dentro da transação evita sobrescrever uma mensagem digitada
+        // enquanto o download e os hashes estavam sendo processados.
+        const configsAgora = await db.configuracoes.toArray();
+        const assinaturaConfigs = itens => JSON.stringify([...itens]
+            .filter(([chave]) => !chaveConfigEhTecnica(chave)).sort(([a], [b]) => a.localeCompare(b)));
+        const assinaturaMedias = itens => JSON.stringify([...itens].map(item =>
+            [item.id, item.atualizadoEm, item.criadoEm, item.excluidoEm, item.blob?.size, item.texto])
+            .sort(([a], [b]) => String(a).localeCompare(String(b))));
+        if (assinaturaConfigs(configsAtuais) !== assinaturaConfigs(configsAgora.map(item => [item.chave, item.valor])) ||
+            assinaturaMedias(mediasAtuais.values()) !== assinaturaMedias(await db.media.toArray())) {
+            throw new Error('Os dados locais mudaram durante a atualização. A sincronização será repetida sem sobrescrever suas alterações.');
+        }
         const configsValidas = configsMescladas.filter(item => !exclusoesSet.has(item.chave));
         if (configsValidas.length) await db.configuracoes.bulkPut(configsValidas);
         if (configsParaExcluir.length) await db.configuracoes.bulkDelete(configsParaExcluir);

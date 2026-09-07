@@ -1278,9 +1278,11 @@ async function executarComBarraDeProgresso(tarefas) {
     const barra = document.getElementById('romanceLoadingBarra');
     const total = tarefas.length || 1;
     let concluidas = 0;
+    if (typeof atualizarProgressoEntrada === 'function') atualizarProgressoEntrada('Preparando nossa história', 0, total);
     const marcarProgresso = () => {
         concluidas++;
         if (barra) barra.style.width = `${Math.max(6, Math.round((concluidas / total) * 100))}%`;
+        if (typeof atualizarProgressoEntrada === 'function') atualizarProgressoEntrada('Preparando nossa história', concluidas, total);
     };
     await Promise.all(tarefas.map(tarefa =>
         Promise.resolve(tarefa)
@@ -2782,11 +2784,17 @@ function iniciarModoSilencioso() {
    solicitarSenhaMemorias acima).
    ---------------------------------------------------------------------- */
 async function obterMural() {
-    const salvo = await obterConfiguracao('aurora_mural_ana');
-    return salvo ? JSON.parse(salvo) : [];
+    return obterMensagensMural();
 }
 
 let muralSalvando = false;
+let muralQuantidadeVisivel = 20;
+let muralRenderSequencia = 0;
+
+window.addEventListener('poloni:nuvem-atualizada', () => {
+    if (!muralSalvando) renderizarMural().catch(erro => console.error('Falha ao atualizar o mural:', erro));
+    renderizarResumoChecklist().catch(erro => console.error('Falha ao atualizar o resumo:', erro));
+});
 
 async function salvarNovoTextoMural() {
     if (muralSalvando) return;
@@ -2798,17 +2806,21 @@ async function salvarNovoTextoMural() {
     muralSalvando = true;
     if (botao) botao.disabled = true;
     try {
-        const lista = await obterMural();
-        lista.push({ id: gerarIdUnico('mural'), data: new Date().toISOString(), texto });
-        await salvarConfiguracao('aurora_mural_ana', JSON.stringify(lista));
+        const salvo = await salvarMensagemMural({ id: gerarIdUnico('mural'), data: new Date().toISOString(), texto });
+        if (!salvo) throw new Error('Não foi possível salvar neste aparelho. Copie seu texto antes de fechar a página.');
 
         if (input) input.value = '';
         if (status) {
-            status.textContent = 'Guardado!';
+            status.textContent = 'Guardado neste aparelho. A nuvem será atualizada em seguida.';
             status.className = 'save-status ok';
             setTimeout(() => { status.textContent = ''; }, 2500);
         }
         await renderizarMural();
+    } catch (erro) {
+        if (status) {
+            status.textContent = erro.message || 'Não foi possível salvar. Seu texto continua no campo.';
+            status.className = 'save-status err';
+        }
     } finally {
         muralSalvando = false;
         if (botao) botao.disabled = false;
@@ -2817,12 +2829,15 @@ async function salvarNovoTextoMural() {
 
 async function excluirTextoMural(id) {
     if (!confirm('Apagar este texto? Essa ação não pode ser desfeita.')) return;
-    const lista = await obterMural();
-    const restante = lista.map(item => item.id === id
-        ? Object.assign({}, item, { excluidoEm: new Date().toISOString() })
-        : item);
-    await salvarConfiguracao('aurora_mural_ana', JSON.stringify(restante));
-    await renderizarMural();
+    try {
+        const item = (await obterMural()).find(mensagem => mensagem.id === id);
+        if (!item) return;
+        if (!await salvarMensagemMural({ ...item, excluidoEm: new Date().toISOString() })) throw new Error('Não foi possível guardar a exclusão neste aparelho.');
+        await renderizarMural();
+    } catch (erro) {
+        const status = document.getElementById('muralStatus');
+        if (status) { status.textContent = erro.message; status.className = 'save-status err'; }
+    }
 }
 
 // Mantém o subtítulo do cartão de entrada ("Seu mural") em dia com a
@@ -2837,9 +2852,11 @@ function atualizarMuralCtaSub(quantidade) {
 }
 
 async function renderizarMural() {
+    const renderAtual = ++muralRenderSequencia;
     const lista = document.getElementById('muralLista');
     if (!lista) return;
     const itens = (await obterMural()).filter(item => !item.excluidoEm);
+    if (renderAtual !== muralRenderSequencia) return;
     atualizarMuralCtaSub(itens.length);
 
     if (!itens.length) {
@@ -2852,7 +2869,7 @@ async function renderizarMural() {
         return;
     }
 
-    lista.innerHTML = itens.slice().reverse().map((item) => {
+    lista.innerHTML = itens.slice().reverse().slice(0, muralQuantidadeVisivel).map((item) => {
         const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         return `
             <div class="mural-item">
@@ -2865,12 +2882,22 @@ async function renderizarMural() {
         `;
     }).join('');
 
+    if (itens.length > muralQuantidadeVisivel) {
+        const mais = document.createElement('button');
+        mais.type = 'button';
+        mais.className = 'mural-ver-mais';
+        mais.textContent = `Ver mais (${itens.length - muralQuantidadeVisivel} restantes)`;
+        mais.addEventListener('click', () => { muralQuantidadeVisivel += 20; renderizarMural(); });
+        lista.appendChild(mais);
+    }
+
     lista.querySelectorAll('.mural-item-excluir').forEach((btn) => {
         btn.addEventListener('click', () => excluirTextoMural(btn.dataset.id));
     });
 }
 
 function abrirMural() {
+    muralQuantidadeVisivel = 20;
     const overlay = document.getElementById('muralOverlay');
     if (!overlay) return;
     overlay.classList.remove('d-none');
@@ -2891,7 +2918,7 @@ function iniciarMural() {
     if (!botaoAbrir) return;
     const introEl = document.getElementById('muralIntro');
     if (introEl) introEl.textContent = TEXTOS.muralIntro;
-    obterMural().then((itens) => atualizarMuralCtaSub(itens.length)).catch(() => {});
+    obterMural().then((itens) => atualizarMuralCtaSub(itens.filter(item => !item.excluidoEm).length)).catch(() => {});
     botaoAbrir.addEventListener('click', abrirMural);
     const botaoFechar = document.getElementById('btnFecharMural');
     if (botaoFechar) botaoFechar.addEventListener('click', fecharMural);

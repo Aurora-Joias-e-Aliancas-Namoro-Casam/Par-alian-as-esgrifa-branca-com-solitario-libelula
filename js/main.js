@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return; // tela de bloqueio já exibida, para o resto da inicialização
     }
 
-    await sincronizarNaAbertura();
+    await prepararDadosParaEntrada();
 
     // Regrava os 3 valores fixos do pedido (data/horário/local — ver
     // js/config.js e js/preservacao.js) a cada abertura, garantindo que
@@ -47,8 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (estagio === 'final') {
         document.getElementById('maintenancePopup').style.display = 'none';
         desbloquearScrollFundoLembranca();
+        atualizarProgressoEntrada('Aguardando sua senha para continuar');
         await solicitarSenhaMemorias();
-        goToRomancePage();
+        await goToRomancePage();
     } else {
         const dataPedidoExistente = await obterConfiguracao('aurora_data_pedido');
         if (dataPedidoExistente) {
@@ -70,7 +71,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     verificarOrientacao();
+    atualizarProgressoEntrada('Tudo pronto', 3, 3);
     esconderVinhetaCarregamento();
+    consultarAtualizacoesEmSegundoPlano();
 
     // Reforço: garante o topo mesmo se fontes/imagens ainda estiverem
     // terminando de carregar e empurrando o layout depois deste ponto.

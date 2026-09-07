@@ -2,7 +2,7 @@
   "name": "poloni-site",
   "private": true,
   "scripts": {
-    "test": "node tests/auditoria-preservacao.test.js && node tests/migracao-legada.test.js && node tests/backup-integracao.test.js && node tests/backup-retencao.test.js",
+    "test": "node tests/auditoria-preservacao.test.js && node tests/migracao-legada.test.js && node tests/backup-integracao.test.js && node tests/backup-retencao.test.js && node tests/sync-incremental.test.js",
     "manifesto": "node scripts/gerar-manifesto-galeria.js",
     "backup:verificar": "node scripts/verificar-backup-remoto.js"
   },

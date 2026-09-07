@@ -119,6 +119,16 @@ function checklistAtualizarProgresso(estado) {
 }
 
 // Marca/desmarca um item (original ou customizado) pelo id final.
+window.addEventListener('poloni:nuvem-atualizada', async () => {
+    try {
+        await __checklistFilaSalvar;
+        __checklistEstadoAtual = await checklistCarregarEstadoDoBanco();
+        __checklistAlteracoesEm = await checklistCarregarAlteracoesDoBanco();
+        __checklistItensCustomizados = await checklistCarregarItensCustomizadosDoBanco();
+        checklistRenderizarLista();
+    } catch (erro) { console.error('Falha ao atualizar o checklist:', erro); }
+});
+
 async function checklistAlternarItem(id, marcado) {
     if (!__checklistEstadoAtual) __checklistEstadoAtual = await checklistCarregarEstadoDoBanco();
     if (!__checklistAlteracoesEm) __checklistAlteracoesEm = await checklistCarregarAlteracoesDoBanco();
@@ -402,13 +412,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     bloquearZoom();
 
-    // Sincroniza com a nuvem antes de desenhar a lista.
-    if (typeof sincronizarNaAbertura === 'function') {
-        try { await sincronizarNaAbertura(); } catch (e) { console.error('Falha ao sincronizar o checklist com a nuvem:', e); }
+    if (typeof prepararDadosParaEntrada === 'function') {
+        try { await prepararDadosParaEntrada(); } catch (e) { console.error('Falha ao sincronizar o checklist com a nuvem:', e); }
     }
 
     await montarChecklist();
     iniciarModalAdicionarItemChecklist();
+    consultarAtualizacoesEmSegundoPlano();
 
     const btnFecharCelebracao = document.getElementById('btnFecharCelebracaoChecklist');
     if (btnFecharCelebracao) btnFecharCelebracao.addEventListener('click', fecharCelebracaoChecklistCompleto);
